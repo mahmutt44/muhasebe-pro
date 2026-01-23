@@ -1,0 +1,306 @@
+{% extends "base.html" %}
+
+{% block title %}Gelir/Gider - Muhasebe Pro{% endblock %}
+
+{% block content %}
+<!-- Başlık -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">
+            <span style="background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                Gelir / Gider
+            </span>
+        </h2>
+        <p class="text-secondary mb-0">Finansal işlemlerinizi yönetin</p>
+    </div>
+    <button onclick="showAddModal()" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-1"></i>Yeni İşlem
+    </button>
+</div>
+
+<!-- İstatistik Kartları -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card" style="border-left: 4px solid #38ef7d;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-secondary text-uppercase small fw-semibold mb-2">Toplam Gelir</p>
+                        <h3 class="fw-bold mb-0 text-success">₺{{ "%.2f"|format(total_income) }}</h3>
+                    </div>
+                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background: var(--success-gradient);">
+                        <i class="bi bi-graph-up-arrow text-white fs-5"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card" style="border-left: 4px solid #f45c43;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-secondary text-uppercase small fw-semibold mb-2">Toplam Gider</p>
+                        <h3 class="fw-bold mb-0 text-danger">₺{{ "%.2f"|format(total_expense) }}</h3>
+                    </div>
+                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background: var(--danger-gradient);">
+                        <i class="bi bi-graph-down-arrow text-white fs-5"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card" style="border-left: 4px solid #667eea;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-secondary text-uppercase small fw-semibold mb-2">Net Bakiye</p>
+                        <h3 class="fw-bold mb-0" style="color: #667eea;">₺{{ "%.2f"|format(total_income - total_expense) }}</h3>
+                    </div>
+                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background: var(--primary-gradient);">
+                        <i class="bi bi-wallet2 text-white fs-5"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- İşlem Listesi -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center">
+            <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; background: var(--primary-gradient);">
+                <i class="bi bi-list-ul text-white"></i>
+            </div>
+            <h6 class="mb-0 fw-semibold">İşlem Geçmişi</h6>
+        </div>
+        <div class="d-flex gap-2">
+            <div class="input-group input-group-sm" style="width: 200px;">
+                <span class="input-group-text bg-transparent border-secondary">
+                    <i class="bi bi-search text-secondary"></i>
+                </span>
+                <input type="text" id="searchInput" class="form-control border-secondary" placeholder="Ara...">
+            </div>
+            <select id="filterType" class="form-select form-select-sm border-secondary" style="width: 130px;">
+                <option value="">Tümü</option>
+                <option value="income">Gelir</option>
+                <option value="expense">Gider</option>
+            </select>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>Tarih</th>
+                        <th>Açıklama</th>
+                        <th class="text-center">Tür</th>
+                        <th class="text-end">Tutar</th>
+                        <th class="text-center">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody id="transactionsList">
+                    {% for transaction in transactions.items %}
+                    <tr class="transaction-item" data-type="{{ transaction.type }}">
+                        <td>
+                            <span class="fw-semibold">{{ transaction.date.strftime('%d.%m.%Y') }}</span>
+                        </td>
+                        <td>{{ transaction.description or 'İşlem' }}</td>
+                        <td class="text-center">
+                            <span class="badge" style="background: {{ 'var(--success-gradient)' if transaction.type == 'income' else 'var(--danger-gradient)' }};">
+                                <i class="bi bi-{{ 'arrow-up' if transaction.type == 'income' else 'arrow-down' }} me-1"></i>
+                                {{ 'Gelir' if transaction.type == 'income' else 'Gider' }}
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            <span class="fw-bold text-{{ 'success' if transaction.type == 'income' else 'danger' }}">
+                                {{ '+' if transaction.type == 'income' else '-' }}₺{{ "%.2f"|format(transaction.amount) }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group btn-group-sm">
+                                <button onclick="editTransaction({{ transaction.id }})" class="btn btn-outline-warning">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button onclick="deleteTransaction({{ transaction.id }})" class="btn btn-outline-danger">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5">
+                            <i class="bi bi-inbox fs-1 text-secondary d-block mb-2"></i>
+                            <span class="text-secondary">Henüz işlem yapılmadı</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    {% if transactions.pages > 1 %}
+    <div class="card-footer bg-transparent">
+        <nav>
+            <ul class="pagination pagination-sm justify-content-center mb-0">
+                {% if transactions.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('main.transactions', page=transactions.prev_num) }}">&laquo;</a>
+                </li>
+                {% endif %}
+                
+                {% for page_num in transactions.iter_pages() %}
+                    {% if page_num %}
+                    <li class="page-item {% if page_num == transactions.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('main.transactions', page=page_num) }}">{{ page_num }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if transactions.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('main.transactions', page=transactions.next_num) }}">&raquo;</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+
+<!-- İşlem Modal -->
+<div class="modal fade" id="transactionModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" id="modalTitle">Yeni İşlem</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="transactionForm">
+                <div class="modal-body">
+                    <input type="hidden" name="id" id="transactionId">
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">İşlem Türü</label>
+                        <select name="type" id="transactionType" required class="form-select">
+                            <option value="">Seçiniz...</option>
+                            <option value="income">💰 Gelir</option>
+                            <option value="expense">💸 Gider</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Tutar (₺)</label>
+                        <input type="number" name="amount" id="transactionAmount" step="0.01" min="0" required class="form-control">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Tarih</label>
+                        <input type="date" name="date" id="transactionDate" required class="form-control">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Açıklama</label>
+                        <input type="text" name="description" id="transactionDescription" class="form-control" placeholder="İşlem açıklaması...">
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-1"></i>Kaydet
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const modal = new bootstrap.Modal(document.getElementById('transactionModal'));
+
+function showAddModal() {
+    document.getElementById('modalTitle').textContent = 'Yeni İşlem';
+    document.getElementById('transactionForm').reset();
+    document.getElementById('transactionId').value = '';
+    document.getElementById('transactionDate').value = new Date().toISOString().split('T')[0];
+    modal.show();
+}
+
+function editTransaction(id) {
+    apiCall(`/api/transactions/${id}`)
+        .then(t => {
+            document.getElementById('modalTitle').textContent = 'İşlem Düzenle';
+            document.getElementById('transactionId').value = t.id;
+            document.getElementById('transactionType').value = t.type;
+            document.getElementById('transactionAmount').value = t.amount;
+            document.getElementById('transactionDate').value = t.date;
+            document.getElementById('transactionDescription').value = t.description || '';
+            modal.show();
+        })
+        .catch(err => showNotification(err.message, 'error'));
+}
+
+function deleteTransaction(id) {
+    if (!confirm('Bu işlemi silmek istediğinizden emin misiniz?')) return;
+    
+    apiCall(`/api/transactions/${id}`, { method: 'DELETE' })
+        .then(() => {
+            showNotification('İşlem silindi', 'success');
+            location.reload();
+        })
+        .catch(err => showNotification(err.message, 'error'));
+}
+
+document.getElementById('transactionForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const id = document.getElementById('transactionId').value;
+    const data = {
+        type: document.getElementById('transactionType').value,
+        amount: parseFloat(document.getElementById('transactionAmount').value),
+        date: document.getElementById('transactionDate').value,
+        description: document.getElementById('transactionDescription').value
+    };
+    
+    try {
+        if (id) {
+            await apiCall(`/api/transactions/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+            showNotification('İşlem güncellendi', 'success');
+        } else {
+            await apiCall('/api/transactions', { method: 'POST', body: JSON.stringify(data) });
+            showNotification('İşlem eklendi', 'success');
+        }
+        modal.hide();
+        location.reload();
+    } catch (err) {
+        showNotification(err.message, 'error');
+    }
+});
+
+// Arama ve filtreleme
+document.getElementById('searchInput').addEventListener('input', filterTable);
+document.getElementById('filterType').addEventListener('change', filterTable);
+
+function filterTable() {
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    const type = document.getElementById('filterType').value;
+    
+    document.querySelectorAll('.transaction-item').forEach(row => {
+        const text = row.textContent.toLowerCase();
+        const rowType = row.dataset.type;
+        const matchSearch = !search || text.includes(search);
+        const matchType = !type || rowType === type;
+        row.style.display = (matchSearch && matchType) ? '' : 'none';
+    });
+}
+</script>
+{% endblock %}

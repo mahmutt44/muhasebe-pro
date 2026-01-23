@@ -1,0 +1,353 @@
+{% extends "base.html" %}
+
+{% block title %}Müşteriler - Muhasebe Pro{% endblock %}
+
+{% block content %}
+<!-- Başlık -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">
+            <span style="background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                Müşteriler
+            </span>
+        </h2>
+        <p class="text-secondary mb-0">Müşteri listenizi yönetin</p>
+    </div>
+    <button onclick="showAddModal()" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-1"></i>Yeni Müşteri
+    </button>
+</div>
+
+<!-- İstatistik Kartları -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-3 col-md-6">
+        <div class="card" style="border-left: 4px solid #667eea;">
+            <div class="card-body text-center py-3">
+                <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 40px; height: 40px; background: var(--primary-gradient);">
+                    <i class="bi bi-people text-white"></i>
+                </div>
+                <h4 class="fw-bold mb-0" style="color: #667eea;">{{ customers|length }}</h4>
+                <small class="text-secondary">Toplam Müşteri</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="card" style="border-left: 4px solid #f45c43;">
+            <div class="card-body text-center py-3">
+                <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 40px; height: 40px; background: var(--danger-gradient);">
+                    <i class="bi bi-exclamation-circle text-white"></i>
+                </div>
+                <h4 class="fw-bold mb-0 text-danger">{{ customers|selectattr('balance', 'gt', 0)|list|length }}</h4>
+                <small class="text-secondary">Borçlu Müşteri</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="card" style="border-left: 4px solid #f5576c;">
+            <div class="card-body text-center py-3">
+                <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 40px; height: 40px; background: var(--warning-gradient);">
+                    <i class="bi bi-cash text-white"></i>
+                </div>
+                <h4 class="fw-bold mb-0 text-warning">₺{{ "%.2f"|format(total_debt) }}</h4>
+                <small class="text-secondary">Toplam Borç</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="card" style="border-left: 4px solid #38ef7d;">
+            <div class="card-body text-center py-3">
+                <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 40px; height: 40px; background: var(--success-gradient);">
+                    <i class="bi bi-check-circle text-white"></i>
+                </div>
+                <h4 class="fw-bold mb-0 text-success">{{ customers|selectattr('balance', 'le', 0)|list|length }}</h4>
+                <small class="text-secondary">Temiz Müşteri</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Müşteri Listesi -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center">
+            <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; background: var(--primary-gradient);">
+                <i class="bi bi-list-ul text-white"></i>
+            </div>
+            <h6 class="mb-0 fw-semibold">Müşteri Listesi</h6>
+        </div>
+        <div class="input-group input-group-sm" style="width: 220px;">
+            <span class="input-group-text bg-transparent border-secondary">
+                <i class="bi bi-search text-secondary"></i>
+            </span>
+            <input type="text" id="searchInput" class="form-control border-secondary" placeholder="Müşteri ara...">
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>Müşteri</th>
+                        <th>Telefon</th>
+                        <th class="text-end">Bakiye</th>
+                        <th class="text-center">Durum</th>
+                        <th class="text-center">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody id="customersList">
+                    {% for customer in customers %}
+                    <tr class="customer-row">
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 36px; height: 36px; background: var(--primary-gradient);">
+                                    <i class="bi bi-person text-white"></i>
+                                </div>
+                                <div>
+                                    <span class="fw-semibold">{{ customer.name }}</span>
+                                    {% if customer.notes %}
+                                    <br><small class="text-secondary">{{ customer.notes[:30] }}{% if customer.notes|length > 30 %}...{% endif %}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {% if customer.phone %}
+                            <i class="bi bi-telephone text-secondary me-1"></i>{{ customer.phone }}
+                            {% else %}
+                            <span class="text-secondary">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if customer.balance > 0 %}
+                            <span class="fw-bold text-danger">₺{{ "%.2f"|format(customer.balance) }}</span>
+                            {% elif customer.balance < 0 %}
+                            <span class="fw-bold text-success">₺{{ "%.2f"|format(customer.balance|abs) }}</span>
+                            {% else %}
+                            <span class="text-secondary">₺0.00</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if customer.balance > 0 %}
+                            <span class="badge" style="background: var(--danger-gradient);">Borçlu</span>
+                            {% elif customer.balance < 0 %}
+                            <span class="badge" style="background: var(--success-gradient);">Alacaklı</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Temiz</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('main.customer_detail', customer_id=customer.id) }}" class="btn btn-outline-light" title="Detay">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <button onclick="editCustomer({{ customer.id }})" class="btn btn-outline-warning" title="Düzenle">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button onclick="showTransactionModal({{ customer.id }}, '{{ customer.name }}')" class="btn btn-outline-success" title="İşlem">
+                                    <i class="bi bi-plus"></i>
+                                </button>
+                                <button onclick="deleteCustomer({{ customer.id }})" class="btn btn-outline-danger" title="Sil">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5">
+                            <i class="bi bi-people fs-1 text-secondary d-block mb-2"></i>
+                            <span class="text-secondary">Henüz müşteri eklenmedi</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Müşteri Modal -->
+<div class="modal fade" id="customerModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" id="customerModalTitle">Yeni Müşteri</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="customerForm">
+                <div class="modal-body">
+                    <input type="hidden" name="id" id="customerId">
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Müşteri Adı *</label>
+                        <input type="text" name="name" id="customerName" required class="form-control">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Telefon</label>
+                        <input type="tel" name="phone" id="customerPhone" class="form-control">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Notlar</label>
+                        <textarea name="notes" id="customerNotes" rows="2" class="form-control"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-1"></i>Kaydet
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Müşteri İşlem Modal -->
+<div class="modal fade" id="transactionModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Müşteri İşlemi - <span id="transactionCustomerName"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="transactionForm">
+                <div class="modal-body">
+                    <input type="hidden" name="customer_id" id="transactionCustomerId">
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">İşlem Türü *</label>
+                        <select name="type" id="transactionType" required class="form-select">
+                            <option value="">Seçiniz...</option>
+                            <option value="debt">📥 Borç Ekle</option>
+                            <option value="payment">📤 Ödeme Al</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Tutar (₺) *</label>
+                        <input type="number" name="amount" id="transactionAmount" step="0.01" min="0" required class="form-control">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Tarih *</label>
+                        <input type="date" name="date" id="transactionDate" required class="form-control">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Açıklama</label>
+                        <input type="text" name="description" id="transactionDescription" class="form-control">
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-1"></i>Kaydet
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const customerModal = new bootstrap.Modal(document.getElementById('customerModal'));
+const transactionModal = new bootstrap.Modal(document.getElementById('transactionModal'));
+
+function showAddModal() {
+    document.getElementById('customerModalTitle').textContent = 'Yeni Müşteri';
+    document.getElementById('customerForm').reset();
+    document.getElementById('customerId').value = '';
+    customerModal.show();
+}
+
+function editCustomer(id) {
+    apiCall(`/api/customers/${id}`)
+        .then(c => {
+            document.getElementById('customerModalTitle').textContent = 'Müşteri Düzenle';
+            document.getElementById('customerId').value = c.id;
+            document.getElementById('customerName').value = c.name;
+            document.getElementById('customerPhone').value = c.phone || '';
+            document.getElementById('customerNotes').value = c.notes || '';
+            customerModal.show();
+        })
+        .catch(err => showNotification(err.message, 'error'));
+}
+
+function deleteCustomer(id) {
+    if (!confirm('Bu müşteriyi silmek istediğinizden emin misiniz?')) return;
+    
+    apiCall(`/api/customers/${id}`, { method: 'DELETE' })
+        .then(() => {
+            showNotification('Müşteri silindi', 'success');
+            location.reload();
+        })
+        .catch(err => showNotification(err.message, 'error'));
+}
+
+function showTransactionModal(customerId, customerName) {
+    document.getElementById('transactionCustomerId').value = customerId;
+    document.getElementById('transactionCustomerName').textContent = customerName;
+    document.getElementById('transactionForm').reset();
+    document.getElementById('transactionDate').value = new Date().toISOString().split('T')[0];
+    transactionModal.show();
+}
+
+document.getElementById('customerForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const id = document.getElementById('customerId').value;
+    const data = {
+        name: document.getElementById('customerName').value,
+        phone: document.getElementById('customerPhone').value,
+        notes: document.getElementById('customerNotes').value
+    };
+    
+    try {
+        if (id) {
+            await apiCall(`/api/customers/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+            showNotification('Müşteri güncellendi', 'success');
+        } else {
+            await apiCall('/api/customers', { method: 'POST', body: JSON.stringify(data) });
+            showNotification('Müşteri eklendi', 'success');
+        }
+        customerModal.hide();
+        location.reload();
+    } catch (err) {
+        showNotification(err.message, 'error');
+    }
+});
+
+document.getElementById('transactionForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const customerId = document.getElementById('transactionCustomerId').value;
+    const data = {
+        type: document.getElementById('transactionType').value,
+        amount: parseFloat(document.getElementById('transactionAmount').value),
+        date: document.getElementById('transactionDate').value,
+        description: document.getElementById('transactionDescription').value
+    };
+    
+    try {
+        await apiCall(`/api/customers/${customerId}/transactions`, { method: 'POST', body: JSON.stringify(data) });
+        showNotification('İşlem eklendi', 'success');
+        transactionModal.hide();
+        location.reload();
+    } catch (err) {
+        showNotification(err.message, 'error');
+    }
+});
+
+// Arama
+document.getElementById('searchInput').addEventListener('input', function() {
+    const search = this.value.toLowerCase();
+    document.querySelectorAll('.customer-row').forEach(row => {
+        row.style.display = row.textContent.toLowerCase().includes(search) ? '' : 'none';
+    });
+});
+</script>
+{% endblock %}

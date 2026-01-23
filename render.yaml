@@ -1,0 +1,51 @@
+services:
+  # Production Service
+  - type: web
+    name: muhasebe-production
+    env: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn app:app"
+    envVars:
+      - key: ENV
+        value: production
+      - key: FLASK_SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: muhasebe-prod-db
+          property: connectionString
+      - key: GOOGLE_DRIVE_CREDENTIALS_FILE
+        sync: false
+      - key: GOOGLE_DRIVE_FOLDER_ID
+        sync: false
+
+  # Demo Service  
+  - type: web
+    name: muhasebe-demo
+    env: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn app:app"
+    envVars:
+      - key: ENV
+        value: demo
+      - key: FLASK_SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: muhasebe-demo-db
+          property: connectionString
+
+databases:
+  # Production Database
+  - name: muhasebe-prod-db
+    databaseName: muhasebe_production
+    user: muhasebe_user
+    plan: free
+    
+  # Demo Database
+  - name: muhasebe-demo-db
+    databaseName: muhasebe_demo
+    user: muhasebe_demo_user
+    plan: free

@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}Fiş {{ receipt.receipt_no }} - Muhasebe Pro{% endblock %}
+
+{% block content %}
+<!-- Başlık -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center">
+        <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary me-3">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <div>
+            <h2 class="fw-bold mb-1">
+                <span style="background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                    Fiş #{{ receipt.receipt_no }}
+                </span>
+            </h2>
+            <p class="text-secondary mb-0">{{ receipt.date.strftime('%d.%m.%Y') }}</p>
+        </div>
+    </div>
+    <div class="d-flex gap-2">
+        <button onclick="printReceipt()" class="btn btn-primary">
+            <i class="bi bi-printer me-1"></i>Yazdır
+        </button>
+        <button onclick="deleteReceipt({{ receipt.id }})" class="btn btn-danger">
+            <i class="bi bi-trash me-1"></i>Sil
+        </button>
+        <a href="{{ url_for('main.receipt') }}" class="btn btn-success">
+            <i class="bi bi-plus-circle me-1"></i>Yeni Fiş
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Fiş Detayı -->
+    <div class="col-lg-8">
+        <div class="card" id="receiptCard">
+            <div class="card-header text-center text-white" style="background: var(--primary-gradient);">
+                <h4 class="mb-1 fw-bold">SATIŞ FİŞİ</h4>
+                <p class="mb-0 opacity-75">{{ receipt.receipt_no }} - {{ receipt.date.strftime('%d.%m.%Y') }}</p>
+            </div>
+            <div class="card-body">
+                <!-- Müşteri Bilgisi -->
+                <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+                    <div>
+                        <p class="text-secondary small mb-1">Müşteri</p>
+                        <h5 class="mb-0 fw-semibold">
+                            <i class="bi bi-person me-2" style="color: #667eea;"></i>{{ receipt.customer.name }}
+                        </h5>
+                    </div>
+                    <a href="{{ url_for('main.customer_detail', customer_id=receipt.customer.id) }}" class="btn btn-sm btn-outline-light">
+                        <i class="bi bi-eye me-1"></i>Müşteri Detay
+                    </a>
+                </div>
+                
+                {% if receipt.notes %}
+                <div class="alert mb-4" style="background: rgba(79, 172, 254, 0.1); border: 1px solid rgba(79, 172, 254, 0.3);">
+                    <i class="bi bi-info-circle me-2" style="color: #4facfe;"></i><strong>Not:</strong> {{ receipt.notes }}
+                </div>
+                {% endif %}
+                
+                <!-- Ürünler -->
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Ürün</th>
+                                <th class="text-center">Miktar</th>
+                                <th class="text-end">Birim Fiyat</th>
+                                <th class="text-end">Toplam</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in receipt.items %}
+                            <tr>
+                                <td><strong>{{ item.product.name }}</strong></td>
+                                <td class="text-center">{{ item.quantity }} {{ item.product.unit }}</td>
+                                <td class="text-end">₺{{ "%.2f"|format(item.unit_price) }}</td>
+                                <td class="text-end fw-bold text-success">₺{{ "%.2f"|format(item.total_price) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="border-top">
+                                <td colspan="3" class="text-end"><strong>Ara Toplam:</strong></td>
+                                <td class="text-end fw-bold">₺{{ "%.2f"|format(receipt.total_amount|float) }}</td>
+                            </tr>
+                            {% if receipt.tax_rate and receipt.tax_rate > 0 %}
+                            <tr>
+                                <td colspan="3" class="text-end">KDV (%{{ "%.0f"|format(receipt.tax_rate|float) }}):</td>
+                                <td class="text-end">₺{{ "%.2f"|format(receipt.tax_amount|float if receipt.tax_amount else 0) }}</td>
+                            </tr>
+                            {% endif %}
+                            <tr style="background: rgba(102, 126, 234, 0.1);">
+                                <td colspan="3" class="text-end"><h5 class="mb-0 fw-bold">Genel Toplam:</h5></td>
+                                <td class="text-end"><h5 class="mb-0 fw-bold" style="color: #667eea;">₺{{ "%.2f"|format(receipt.grand_total|float if receipt.grand_total else receipt.total_amount|float) }}</h5></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer text-center text-secondary">
+                <small><i class="bi bi-clock me-1"></i>Oluşturulma: {{ receipt.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sağ Panel -->
+    <div class="col-lg-4">
+        <!-- Özet -->
+        <div class="card mb-4" style="background: var(--primary-gradient);">
+            <div class="card-header bg-transparent border-bottom border-light border-opacity-25">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 28px; height: 28px; background: rgba(255,255,255,0.2);">
+                        <i class="bi bi-calculator text-white small"></i>
+                    </div>
+                    <h6 class="mb-0 fw-semibold text-white">Özet</h6>
+                </div>
+            </div>
+            <div class="card-body text-white">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="opacity-75">Ürün Sayısı:</span>
+                    <strong>{{ receipt.items|length }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="opacity-75">Ara Toplam:</span>
+                    <strong>₺{{ "%.2f"|format(receipt.total_amount|float) }}</strong>
+                </div>
+                {% if receipt.tax_rate and receipt.tax_rate > 0 %}
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="opacity-75">KDV (%{{ "%.0f"|format(receipt.tax_rate|float) }}):</span>
+                    <strong>₺{{ "%.2f"|format(receipt.tax_amount|float if receipt.tax_amount else 0) }}</strong>
+                </div>
+                {% endif %}
+                <hr class="border-light opacity-25">
+                <div class="d-flex justify-content-between">
+                    <h5 class="mb-0">Toplam:</h5>
+                    <h5 class="mb-0">₺{{ "%.2f"|format(receipt.grand_total|float if receipt.grand_total else receipt.total_amount|float) }}</h5>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Müşteri Kartı -->
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 28px; height: 28px; background: var(--info-gradient);">
+                        <i class="bi bi-person text-white small"></i>
+                    </div>
+                    <h6 class="mb-0 fw-semibold">Müşteri</h6>
+                </div>
+            </div>
+            <div class="card-body text-center">
+                <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width:50px;height:50px;background:var(--primary-gradient)">
+                    <i class="bi bi-person-fill text-white fs-4"></i>
+                </div>
+                <h6 class="mb-1 fw-semibold">{{ receipt.customer.name }}</h6>
+                {% if receipt.customer.phone %}
+                <p class="text-secondary small mb-2">
+                    <i class="bi bi-telephone me-1"></i>{{ receipt.customer.phone }}
+                </p>
+                {% endif %}
+                <a href="{{ url_for('main.customer_detail', customer_id=receipt.customer.id) }}" class="btn btn-sm btn-outline-light w-100">
+                    <i class="bi bi-eye me-1"></i>Detay Görüntüle
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function deleteReceipt(id) {
+    if (!confirm('Bu fişi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.')) return;
+    
+    apiCall(`/api/receipts/${id}`, { method: 'DELETE' })
+        .then(() => {
+            showNotification('Fiş silindi', 'success');
+            window.location.href = '{{ url_for("main.index") }}';
+        })
+        .catch(err => showNotification(err.message, 'error'));
+}
+
+function printReceipt() {
+    const content = document.getElementById('receiptCard').innerHTML;
+    const win = window.open('', '_blank');
+    win.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Fiş {{ receipt.receipt_no }}</title>
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+            <style>
+                body { padding: 20px; }
+                @media print { .no-print { display: none; } }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                ${content}
+            </div>
+        </body>
+        </html>
+    `);
+    win.document.close();
+    setTimeout(() => win.print(), 500);
+}
+</script>
+{% endblock %}

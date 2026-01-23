@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+
+{% block title %}{{ customer.name }} - Muhasebe Pro{% endblock %}
+
+{% block content %}
+<!-- Başlık -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center">
+        <a href="{{ url_for('main.customers') }}" class="btn btn-outline-secondary me-3">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <div>
+            <h2 class="fw-bold mb-1">
+                <span style="background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                    {{ customer.name }}
+                </span>
+            </h2>
+            <p class="text-secondary mb-0">Müşteri Detayları</p>
+        </div>
+    </div>
+    <div class="d-flex gap-2">
+        <button onclick="showTransactionModal()" class="btn btn-success">
+            <i class="bi bi-plus-circle me-1"></i>İşlem Ekle
+        </button>
+        <a href="{{ url_for('main.receipt') }}?customer_id={{ customer.id }}" class="btn btn-primary">
+            <i class="bi bi-receipt me-1"></i>Fiş Kes
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Müşteri Bilgileri -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 28px; height: 28px; background: var(--info-gradient);">
+                        <i class="bi bi-info-circle text-white small"></i>
+                    </div>
+                    <h6 class="mb-0 fw-semibold">Müşteri Bilgileri</h6>
+                </div>
+            </div>
+            <div class="card-body text-center">
+                <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:70px;height:70px;background:var(--primary-gradient)">
+                    <i class="bi bi-person-fill text-white fs-2"></i>
+                </div>
+                <h5 class="fw-bold mb-2">{{ customer.name }}</h5>
+                
+                {% if customer.phone %}
+                <p class="mb-2"><i class="bi bi-telephone me-2 text-secondary"></i>{{ customer.phone }}</p>
+                {% endif %}
+                
+                {% if customer.notes %}
+                <p class="text-secondary small mb-3">{{ customer.notes }}</p>
+                {% endif %}
+                
+                <hr>
+                
+                <div class="row text-center">
+                    <div class="col-6">
+                        <p class="text-secondary small mb-1">Bakiye</p>
+                        <h5 class="fw-bold {% if customer.balance > 0 %}text-danger{% elif customer.balance < 0 %}text-success{% else %}text-secondary{% endif %}">
+                            ₺{{ "%.2f"|format(customer.balance|abs) }}
+                        </h5>
+                    </div>
+                    <div class="col-6">
+                        <p class="text-secondary small mb-1">Durum</p>
+                        {% if customer.balance > 0 %}
+                        <span class="badge" style="background: var(--danger-gradient);">Borçlu</span>
+                        {% elif customer.balance < 0 %}
+                        <span class="badge" style="background: var(--success-gradient);">Alacaklı</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Temiz</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <small class="text-secondary">
+                    <i class="bi bi-calendar3 me-1"></i>Kayıt: {{ customer.created_at.strftime('%d.%m.%Y') }}
+                </small>
+            </div>
+        </div>
+    </div>
+    
+    <!-- İşlem Geçmişi ve Fişler -->
+    <div class="col-lg-8">
+        <!-- İşlem Geçmişi -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 28px; height: 28px; background: var(--warning-gradient);">
+                        <i class="bi bi-clock-history text-white small"></i>
+                    </div>
+                    <h6 class="mb-0 fw-semibold">İşlem Geçmişi</h6>
+                </div>
+                <span class="badge" style="background: var(--primary-gradient);">{{ transactions|length }}</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Tarih</th>
+                                <th>Açıklama</th>
+                                <th class="text-center">Tür</th>
+                                <th class="text-end">Tutar</th>
+                                <th class="text-center">İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for t in transactions %}
+                            <tr>
+                                <td><span class="fw-semibold">{{ t.date.strftime('%d.%m.%Y') }}</span></td>
+                                <td>{{ t.description or '-' }}</td>
+                                <td class="text-center">
+                                    <span class="badge" style="background: {{ 'var(--danger-gradient)' if t.type == 'debt' else 'var(--success-gradient)' }};">
+                                        {{ 'Borç' if t.type == 'debt' else 'Ödeme' }}
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <span class="fw-bold text-{{ 'danger' if t.type == 'debt' else 'success' }}">
+                                        {{ '+' if t.type == 'debt' else '-' }}₺{{ "%.2f"|format(t.amount) }}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-sm">
+                                        <button onclick="editCustomerTransaction({{ t.id }}, '{{ t.type }}', {{ t.amount }}, '{{ t.date }}', '{{ t.description or '' }}')" class="btn btn-outline-warning">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button onclick="deleteCustomerTransaction({{ t.id }})" class="btn btn-outline-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4">
+                                    <i class="bi bi-inbox fs-1 text-secondary d-block mb-2"></i>
+                                    <span class="text-secondary">Henüz işlem yok</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Fişler -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 28px; height: 28px; background: var(--success-gradient);">
+                        <i class="bi bi-receipt text-white small"></i>
+                    </div>
+                    <h6 class="mb-0 fw-semibold">Fişler</h6>
+                </div>
+                <span class="badge" style="background: var(--success-gradient);">{{ receipts|length }}</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Fiş No</th>
+                                <th>Tarih</th>
+                                <th class="text-end">Tutar</th>
+                                <th class="text-center">İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for r in receipts %}
+                            <tr>
+                                <td><strong>{{ r.receipt_no }}</strong></td>
+                                <td>{{ r.date.strftime('%d.%m.%Y') }}</td>
+                                <td class="text-end">
+                                    <span class="fw-bold" style="color: #667eea;">₺{{ "%.2f"|format(r.total_amount) }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <a href="{{ url_for('main.receipt_detail', receipt_id=r.id) }}" class="btn btn-sm btn-outline-light">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4">
+                                    <i class="bi bi-receipt fs-1 text-secondary d-block mb-2"></i>
+                                    <span class="text-secondary">Henüz fiş yok</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- İşlem Modal -->
+<div class="modal fade" id="transactionModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Müşteri İşlemi - {{ customer.name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="transactionForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">İşlem Türü *</label>
+                        <select name="type" id="transactionType" required class="form-select">
+                            <option value="">Seçiniz...</option>
+                            <option value="debt">📥 Borç Ekle</option>
+                            <option value="payment">📤 Ödeme Al</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Tutar (₺) *</label>
+                        <input type="number" name="amount" id="transactionAmount" step="0.01" min="0" required class="form-control">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Tarih *</label>
+                        <input type="date" name="date" id="transactionDate" required class="form-control">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Açıklama</label>
+                        <input type="text" name="description" id="transactionDescription" class="form-control">
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-1"></i>Kaydet
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const modal = new bootstrap.Modal(document.getElementById('transactionModal'));
+let editingTransactionId = null;
+
+function showTransactionModal() {
+    editingTransactionId = null;
+    document.getElementById('transactionForm').reset();
+    document.getElementById('transactionDate').value = new Date().toISOString().split('T')[0];
+    modal.show();
+}
+
+function editCustomerTransaction(id, type, amount, date, description) {
+    editingTransactionId = id;
+    document.getElementById('transactionType').value = type;
+    document.getElementById('transactionAmount').value = amount;
+    document.getElementById('transactionDate').value = date;
+    document.getElementById('transactionDescription').value = description;
+    modal.show();
+}
+
+function deleteCustomerTransaction(id) {
+    if (!confirm('Bu işlemi silmek istediğinizden emin misiniz?')) return;
+    
+    apiCall(`/api/customer-transactions/${id}`, { method: 'DELETE' })
+        .then(() => {
+            showNotification('İşlem silindi', 'success');
+            location.reload();
+        })
+        .catch(err => showNotification(err.message, 'error'));
+}
+
+document.getElementById('transactionForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const data = {
+        type: document.getElementById('transactionType').value,
+        amount: parseFloat(document.getElementById('transactionAmount').value),
+        date: document.getElementById('transactionDate').value,
+        description: document.getElementById('transactionDescription').value
+    };
+    
+    try {
+        if (editingTransactionId) {
+            await apiCall(`/api/customer-transactions/${editingTransactionId}`, { method: 'PUT', body: JSON.stringify(data) });
+            showNotification('İşlem güncellendi', 'success');
+        } else {
+            await apiCall('/api/customers/{{ customer.id }}/transactions', { method: 'POST', body: JSON.stringify(data) });
+            showNotification('İşlem eklendi', 'success');
+        }
+        modal.hide();
+        location.reload();
+    } catch (err) {
+        showNotification(err.message, 'error');
+    }
+});
+</script>
+{% endblock %}

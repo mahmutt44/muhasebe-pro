@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+
+{% block title %}Ürünler - Muhasebe Pro{% endblock %}
+
+{% block content %}
+<!-- Başlık -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">
+            <span style="background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                Ürünler
+            </span>
+        </h2>
+        <p class="text-secondary mb-0">Ürün listenizi yönetin</p>
+    </div>
+    <button onclick="showAddModal()" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-1"></i>Yeni Ürün
+    </button>
+</div>
+
+<!-- İstatistik Kartları -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card" style="border-left: 4px solid #667eea;">
+            <div class="card-body text-center py-3">
+                <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 40px; height: 40px; background: var(--primary-gradient);">
+                    <i class="bi bi-box-seam text-white"></i>
+                </div>
+                <h4 class="fw-bold mb-0" style="color: #667eea;">{{ products|length }}</h4>
+                <small class="text-secondary">Toplam Ürün</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card" style="border-left: 4px solid #38ef7d;">
+            <div class="card-body text-center py-3">
+                <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 40px; height: 40px; background: var(--success-gradient);">
+                    <i class="bi bi-currency-lira text-white"></i>
+                </div>
+                <h4 class="fw-bold mb-0 text-success">₺{{ "%.2f"|format((products|sum(attribute='unit_price') / products|length) if products else 0) }}</h4>
+                <small class="text-secondary">Ortalama Fiyat</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card" style="border-left: 4px solid #00f2fe;">
+            <div class="card-body text-center py-3">
+                <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 40px; height: 40px; background: var(--info-gradient);">
+                    <i class="bi bi-tags text-white"></i>
+                </div>
+                <h4 class="fw-bold mb-0 text-info">{{ products|map(attribute='unit')|unique|list|length }}</h4>
+                <small class="text-secondary">Farklı Birim</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ürün Listesi -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center">
+            <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; background: var(--primary-gradient);">
+                <i class="bi bi-list-ul text-white"></i>
+            </div>
+            <h6 class="mb-0 fw-semibold">Ürün Listesi</h6>
+        </div>
+        <div class="input-group input-group-sm" style="width: 220px;">
+            <span class="input-group-text bg-transparent border-secondary">
+                <i class="bi bi-search text-secondary"></i>
+            </span>
+            <input type="text" id="searchInput" class="form-control border-secondary" placeholder="Ürün ara...">
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>Ürün</th>
+                        <th class="text-center">Birim</th>
+                        <th class="text-end">Birim Fiyat</th>
+                        <th class="text-center">Kayıt Tarihi</th>
+                        <th class="text-center">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody id="productsList">
+                    {% for product in products %}
+                    <tr class="product-row">
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 36px; height: 36px; background: var(--info-gradient);">
+                                    <i class="bi bi-box text-white"></i>
+                                </div>
+                                <div>
+                                    <span class="fw-semibold">{{ product.name }}</span>
+                                    <br><small class="text-secondary">ID: {{ product.id }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge" style="background: var(--info-gradient);">{{ product.unit }}</span>
+                        </td>
+                        <td class="text-end">
+                            <span class="fw-bold" style="color: #667eea;">₺{{ "%.2f"|format(product.unit_price) }}</span>
+                            <small class="text-secondary">/{{ product.unit }}</small>
+                        </td>
+                        <td class="text-center">
+                            <small class="text-secondary">{{ product.created_at.strftime('%d.%m.%Y') }}</small>
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group btn-group-sm">
+                                <button onclick="editProduct({{ product.id }})" class="btn btn-outline-warning" title="Düzenle">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button onclick="deleteProduct({{ product.id }})" class="btn btn-outline-danger" title="Sil">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5">
+                            <i class="bi bi-box fs-1 text-secondary d-block mb-2"></i>
+                            <span class="text-secondary">Henüz ürün eklenmedi</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Ürün Modal -->
+<div class="modal fade" id="productModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" id="modalTitle">Yeni Ürün</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="productForm">
+                <div class="modal-body">
+                    <input type="hidden" name="id" id="productId">
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Ürün Adı *</label>
+                        <input type="text" name="name" id="productName" required class="form-control">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Birim *</label>
+                        <select name="unit" id="productUnit" required class="form-select">
+                            <option value="">Seçiniz...</option>
+                            <option value="adet">Adet</option>
+                            <option value="kg">Kg</option>
+                            <option value="gram">Gram</option>
+                            <option value="litre">Litre</option>
+                            <option value="paket">Paket</option>
+                            <option value="kutu">Kutu</option>
+                            <option value="fincan">Fincan</option>
+                            <option value="pet">Pet</option>
+                            <option value="şişe">Şişe</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Birim Fiyat (₺) *</label>
+                        <input type="number" name="unit_price" id="productPrice" step="0.01" min="0" required class="form-control">
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-1"></i>Kaydet
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const modal = new bootstrap.Modal(document.getElementById('productModal'));
+
+function showAddModal() {
+    document.getElementById('modalTitle').textContent = 'Yeni Ürün';
+    document.getElementById('productForm').reset();
+    document.getElementById('productId').value = '';
+    modal.show();
+}
+
+function editProduct(id) {
+    apiCall(`/api/products/${id}`)
+        .then(p => {
+            document.getElementById('modalTitle').textContent = 'Ürün Düzenle';
+            document.getElementById('productId').value = p.id;
+            document.getElementById('productName').value = p.name;
+            document.getElementById('productUnit').value = p.unit;
+            document.getElementById('productPrice').value = p.unit_price;
+            modal.show();
+        })
+        .catch(err => showNotification(err.message, 'error'));
+}
+
+function deleteProduct(id) {
+    if (!confirm('Bu ürünü silmek istediğinizden emin misiniz?')) return;
+    
+    apiCall(`/api/products/${id}`, { method: 'DELETE' })
+        .then(() => {
+            showNotification('Ürün silindi', 'success');
+            location.reload();
+        })
+        .catch(err => showNotification(err.message, 'error'));
+}
+
+document.getElementById('productForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const id = document.getElementById('productId').value;
+    const data = {
+        name: document.getElementById('productName').value,
+        unit: document.getElementById('productUnit').value,
+        unit_price: parseFloat(document.getElementById('productPrice').value)
+    };
+    
+    try {
+        if (id) {
+            await apiCall(`/api/products/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+            showNotification('Ürün güncellendi', 'success');
+        } else {
+            await apiCall('/api/products', { method: 'POST', body: JSON.stringify(data) });
+            showNotification('Ürün eklendi', 'success');
+        }
+        modal.hide();
+        location.reload();
+    } catch (err) {
+        showNotification(err.message, 'error');
+    }
+});
+
+// Arama
+document.getElementById('searchInput').addEventListener('input', function() {
+    const search = this.value.toLowerCase();
+    document.querySelectorAll('.product-row').forEach(row => {
+        row.style.display = row.textContent.toLowerCase().includes(search) ? '' : 'none';
+    });
+});
+</script>
+{% endblock %}
