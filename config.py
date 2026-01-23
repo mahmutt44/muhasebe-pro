@@ -56,13 +56,16 @@ config = {
 
 def get_database_url():
     """ENV değişkenine göre doğru veritabanı URL'ini döndürür"""
-    env = os.environ.get('ENV', 'development')
+    database_url = os.environ.get('DATABASE_URL')
     
-    if env == 'production':
-        return os.environ.get('DATABASE_URL')
+    if database_url:
+        # Railway/Heroku postgres:// formatını postgresql:// olarak düzelt
+        if database_url.startswith('postgres://'):
+            database_url = database_url.replace('postgres://', 'postgresql://', 1)
+        return database_url
     else:
-        # Demo ve development için SQLite
-        return os.environ.get('DATABASE_URL', 'sqlite:///muhasebe_demo.db')
+        # Lokal geliştirme için SQLite
+        return 'sqlite:///muhasebe_demo.db'
 
 def is_production():
     """Production ortamında mı çalıştığını kontrol eder"""
