@@ -59,11 +59,11 @@ def get_database_url():
     database_url = os.environ.get('DATABASE_URL')
     
     if database_url:
-        # Railway/Heroku postgres:// formatını postgresql+psycopg:// olarak düzelt (psycopg3 için)
+        # Railway/Heroku postgres:// formatını postgresql+pg8000:// olarak düzelt
         if database_url.startswith('postgres://'):
-            database_url = database_url.replace('postgres://', 'postgresql+psycopg://', 1)
+            database_url = database_url.replace('postgres://', 'postgresql+pg8000://', 1)
         elif database_url.startswith('postgresql://'):
-            database_url = database_url.replace('postgresql://', 'postgresql+psycopg://', 1)
+            database_url = database_url.replace('postgresql://', 'postgresql+pg8000://', 1)
         return database_url
     else:
         # Lokal geliştirme için SQLite
