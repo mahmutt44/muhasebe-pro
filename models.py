@@ -1,8 +1,19 @@
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 
 db = SQLAlchemy()
+
+# Türkiye saat dilimi (UTC+3)
+TURKEY_TZ = timezone(timedelta(hours=3))
+
+def get_turkey_time():
+    """Türkiye saatini döndürür"""
+    return datetime.now(TURKEY_TZ)
+
+def get_turkey_date():
+    """Türkiye tarihini döndürür"""
+    return datetime.now(TURKEY_TZ).date()
 
 class Transaction(db.Model):
     """Gelir/Gider işlemleri"""
@@ -12,8 +23,8 @@ class Transaction(db.Model):
     type = db.Column(db.String(10), nullable=False)  # 'income' veya 'expense'
     amount = db.Column(db.Numeric(15, 2), nullable=False)
     description = db.Column(db.Text)
-    date = db.Column(db.Date, nullable=False, default=datetime.utcnow().date)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    date = db.Column(db.Date, nullable=False, default=get_turkey_date)
+    created_at = db.Column(db.DateTime, default=get_turkey_time)
     
     def to_dict(self):
         return {
@@ -33,8 +44,8 @@ class Customer(db.Model):
     name = db.Column(db.String(100), nullable=False)
     phone = db.Column(db.String(20))
     notes = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_turkey_time)
+    updated_at = db.Column(db.DateTime, default=get_turkey_time, onupdate=get_turkey_time)
     
     # İlişkiler
     transactions = db.relationship('CustomerTransaction', backref='customer', lazy=True, cascade='all, delete-orphan')
@@ -83,8 +94,8 @@ class CustomerTransaction(db.Model):
     type = db.Column(db.String(10), nullable=False)  # 'debt' veya 'payment'
     amount = db.Column(db.Numeric(15, 2), nullable=False)
     description = db.Column(db.Text)
-    date = db.Column(db.Date, nullable=False, default=datetime.utcnow().date)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    date = db.Column(db.Date, nullable=False, default=get_turkey_date)
+    created_at = db.Column(db.DateTime, default=get_turkey_time)
     
     def to_dict(self):
         return {
@@ -105,8 +116,8 @@ class Product(db.Model):
     name = db.Column(db.String(100), nullable=False)
     unit = db.Column(db.String(20), nullable=False)  # adet, kg, gram, paket vb.
     unit_price = db.Column(db.Numeric(15, 2), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_turkey_time)
+    updated_at = db.Column(db.DateTime, default=get_turkey_time, onupdate=get_turkey_time)
     
     def to_dict(self):
         return {
@@ -141,8 +152,8 @@ class Receipt(db.Model):
     tax_amount = db.Column(db.Numeric(15, 2), default=0)
     grand_total = db.Column(db.Numeric(15, 2), nullable=False)
     notes = db.Column(db.Text)
-    date = db.Column(db.Date, nullable=False, default=datetime.now().date)
-    created_at = db.Column(db.DateTime, default=datetime.now)
+    date = db.Column(db.Date, nullable=False, default=get_turkey_date)
+    created_at = db.Column(db.DateTime, default=get_turkey_time)
     
     # İlişkiler
     items = db.relationship('ReceiptItem', backref='receipt', lazy=True, cascade='all, delete-orphan')
