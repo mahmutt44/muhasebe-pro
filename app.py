@@ -1,9 +1,21 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
 from models import db, Transaction, Customer, CustomerTransaction, Product, Receipt, ReceiptItem
 from config import config, get_database_url, is_production, is_demo
-from datetime import datetime, date
+from datetime import datetime, date, timedelta, timezone
 from decimal import Decimal
 import os
+
+# Türkiye saat dilimi (UTC+3)
+TURKEY_TZ = timezone(timedelta(hours=3))
+
+def to_turkey_time(dt):
+    """UTC datetime'ı Türkiye saatine dönüştürür"""
+    if dt is None:
+        return None
+    # Eğer naive datetime ise UTC olarak kabul et
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(TURKEY_TZ)
 
 def create_app(config_name=None):
     app = Flask(__name__)
@@ -20,6 +32,15 @@ def create_app(config_name=None):
     
     # Veritabanı başlatma
     db.init_app(app)
+    
+    # Jinja2 filter - Türkiye saati
+    @app.template_filter('turkey_time')
+    def turkey_time_filter(dt, format='%d.%m.%Y %H:%M'):
+        """Template'de Türkiye saatini göster"""
+        turkey_dt = to_turkey_time(dt)
+        if turkey_dt:
+            return turkey_dt.strftime(format)
+        return ''
     
     # Tabloları oluşturma
     with app.app_context():

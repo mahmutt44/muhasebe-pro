@@ -100,7 +100,7 @@
                 </div>
             </div>
             <div class="card-footer text-center text-secondary">
-                <small><i class="bi bi-clock me-1"></i>Oluşturulma: {{ receipt.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
+                <small><i class="bi bi-clock me-1"></i>Oluşturulma: {{ receipt.created_at|turkey_time }}</small>
             </div>
         </div>
     </div>
