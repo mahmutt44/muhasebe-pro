@@ -59,25 +59,32 @@
                         <div class="card-body">
                             <h6 class="mb-3 fw-semibold"><i class="bi bi-plus-circle me-2" style="color: #667eea;"></i>Ürün Ekle</h6>
                             <div class="row g-2">
-                                <div class="col-md-5">
-                                    <select id="productSelect" class="form-select">
+                                <div class="col-md-4 col-6">
+                                    <select id="productSelect" class="form-select" onchange="updatePriceInput()">
                                         <option value="">Ürün Seçiniz...</option>
                                         {% for product in products %}
                                         <option value="{{ product.id }}" data-name="{{ product.name }}" data-unit="{{ product.unit }}" data-price="{{ product.unit_price }}">
-                                            {{ product.name }} ({{ product.unit }}) - ₺{{ "%.2f"|format(product.unit_price) }}
+                                            {{ product.name }} ({{ product.unit }})
                                         </option>
                                         {% endfor %}
                                     </select>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-2 col-6">
                                     <input type="number" id="quantityInput" min="0.01" step="0.01" class="form-control" placeholder="Miktar">
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3 col-6">
+                                    <div class="input-group">
+                                        <span class="input-group-text">₺</span>
+                                        <input type="number" id="priceInput" min="0" step="0.01" class="form-control" placeholder="Fiyat">
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-6">
                                     <button type="button" onclick="addProduct()" class="btn btn-success w-100">
                                         <i class="bi bi-plus-circle me-1"></i>Ekle
                                     </button>
                                 </div>
                             </div>
+                            <small class="text-secondary mt-2 d-block"><i class="bi bi-info-circle me-1"></i>Özel fiyat için fiyat alanını değiştirebilirsiniz</small>
                         </div>
                     </div>
                     
@@ -250,10 +257,24 @@ document.getElementById('customerSelect').addEventListener('change', function() 
     }
 });
 
+// Ürün seçildiğinde fiyatı otomatik doldur
+function updatePriceInput() {
+    const select = document.getElementById('productSelect');
+    const priceInput = document.getElementById('priceInput');
+    
+    if (select.value) {
+        const option = select.options[select.selectedIndex];
+        priceInput.value = parseFloat(option.dataset.price).toFixed(2);
+    } else {
+        priceInput.value = '';
+    }
+}
+
 // Ürün ekleme
 function addProduct() {
     const select = document.getElementById('productSelect');
     const quantity = parseFloat(document.getElementById('quantityInput').value);
+    const customPrice = parseFloat(document.getElementById('priceInput').value);
     
     if (!select.value) {
         showNotification('Lütfen bir ürün seçin', 'error');
@@ -263,15 +284,21 @@ function addProduct() {
         showNotification('Lütfen geçerli bir miktar girin', 'error');
         return;
     }
+    if (isNaN(customPrice) || customPrice < 0) {
+        showNotification('Lütfen geçerli bir fiyat girin', 'error');
+        return;
+    }
     
     const option = select.options[select.selectedIndex];
+    const unitPrice = customPrice; // Kullanıcının girdiği fiyatı kullan
+    
     const item = {
         product_id: parseInt(select.value),
         product_name: option.dataset.name,
         product_unit: option.dataset.unit,
-        unit_price: parseFloat(option.dataset.price),
+        unit_price: unitPrice,
         quantity: quantity,
-        total_price: parseFloat(option.dataset.price) * quantity
+        total_price: unitPrice * quantity
     };
     
     receiptItems.push(item);
@@ -279,6 +306,7 @@ function addProduct() {
     
     select.value = '';
     document.getElementById('quantityInput').value = '';
+    document.getElementById('priceInput').value = '';
     showNotification('Ürün eklendi', 'success');
 }
 
