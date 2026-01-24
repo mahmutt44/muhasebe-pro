@@ -200,6 +200,10 @@ function deleteReceipt(id) {
 
 function printReceipt() {
     const content = document.getElementById('receiptCard').innerHTML;
+    const customerBalance = `{{ "%.2f"|format(receipt.customer.balance) }}`;
+    const balanceStatus = {{ receipt.customer.balance }} > 0 ? 'Borçlu' : ({{ receipt.customer.balance }} < 0 ? 'Alacaklı' : 'Temiz');
+    const balanceColor = {{ receipt.customer.balance }} > 0 ? '#dc3545' : ({{ receipt.customer.balance }} < 0 ? '#198754' : '#6c757d');
+    
     const win = window.open('', '_blank');
     win.document.write(`
         <!DOCTYPE html>
@@ -210,11 +214,17 @@ function printReceipt() {
             <style>
                 body { padding: 20px; }
                 @media print { .no-print { display: none; } }
+                .balance-box { border: 2px solid ${balanceColor}; padding: 10px; border-radius: 8px; margin-top: 15px; text-align: center; }
             </style>
         </head>
         <body>
             <div class="container">
                 ${content}
+                <div class="balance-box">
+                    <strong>Müşteri Toplam Bakiyesi:</strong> 
+                    <span style="color: ${balanceColor}; font-size: 1.2em; font-weight: bold;">₺${Math.abs({{ receipt.customer.balance }}).toFixed(2)}</span>
+                    <span style="background: ${balanceColor}; color: white; padding: 2px 8px; border-radius: 4px; margin-left: 5px;">${balanceStatus}</span>
+                </div>
             </div>
         </body>
         </html>
