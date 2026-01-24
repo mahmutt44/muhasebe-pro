@@ -164,16 +164,9 @@
                 <!-- Müşteri Bakiyesi -->
                 <div class="p-2 rounded mb-2" style="background: rgba(255,255,255,0.05);">
                     <small class="text-secondary d-block">Toplam Bakiye</small>
-                    {% if receipt.customer.balance > 0 %}
-                    <span class="fw-bold text-danger fs-5">₺{{ "%.2f"|format(receipt.customer.balance) }}</span>
-                    <span class="badge" style="background: var(--danger-gradient);">Borçlu</span>
-                    {% elif receipt.customer.balance < 0 %}
-                    <span class="fw-bold text-success fs-5">₺{{ "%.2f"|format(receipt.customer.balance|abs) }}</span>
-                    <span class="badge" style="background: var(--success-gradient);">Alacaklı</span>
-                    {% else %}
-                    <span class="fw-bold text-secondary fs-5">₺0.00</span>
-                    <span class="badge bg-secondary">Temiz</span>
-                    {% endif %}
+                    <span class="fw-bold fs-5 {% if receipt.customer.balance > 0 %}text-danger{% elif receipt.customer.balance < 0 %}text-success{% else %}text-secondary{% endif %}">
+                        ₺{{ "%.2f"|format(receipt.customer.balance|abs) }}
+                    </span>
                 </div>
                 
                 <a href="{{ url_for('main.customer_detail', customer_id=receipt.customer.id) }}" class="btn btn-sm btn-outline-light w-100">
@@ -200,9 +193,7 @@ function deleteReceipt(id) {
 
 function printReceipt() {
     const content = document.getElementById('receiptCard').innerHTML;
-    const customerBalance = `{{ "%.2f"|format(receipt.customer.balance) }}`;
-    const balanceStatus = {{ receipt.customer.balance }} > 0 ? 'Borçlu' : ({{ receipt.customer.balance }} < 0 ? 'Alacaklı' : 'Temiz');
-    const balanceColor = {{ receipt.customer.balance }} > 0 ? '#dc3545' : ({{ receipt.customer.balance }} < 0 ? '#198754' : '#6c757d');
+    const customerBalance = {{ receipt.customer.balance|abs }};
     
     const win = window.open('', '_blank');
     win.document.write(`
@@ -214,7 +205,7 @@ function printReceipt() {
             <style>
                 body { padding: 20px; }
                 @media print { .no-print { display: none; } }
-                .balance-box { border: 2px solid ${balanceColor}; padding: 10px; border-radius: 8px; margin-top: 15px; text-align: center; }
+                .balance-box { border: 2px solid #333; padding: 10px; border-radius: 8px; margin-top: 15px; text-align: center; }
             </style>
         </head>
         <body>
@@ -222,8 +213,7 @@ function printReceipt() {
                 ${content}
                 <div class="balance-box">
                     <strong>Müşteri Toplam Bakiyesi:</strong> 
-                    <span style="color: ${balanceColor}; font-size: 1.2em; font-weight: bold;">₺${Math.abs({{ receipt.customer.balance }}).toFixed(2)}</span>
-                    <span style="background: ${balanceColor}; color: white; padding: 2px 8px; border-radius: 4px; margin-left: 5px;">${balanceStatus}</span>
+                    <span style="font-size: 1.2em; font-weight: bold;">₺${customerBalance.toFixed(2)}</span>
                 </div>
             </div>
         </body>
