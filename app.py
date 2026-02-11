@@ -29,6 +29,12 @@ def create_app(config_name=None):
     
     # Veritabanı URL'i
     app.config['SQLALCHEMY_DATABASE_URI'] = get_database_url()
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        'pool_pre_ping': True,
+        'pool_recycle': 300,
+        'pool_timeout': 30,
+        'max_overflow': 0
+    }
     
     # Veritabanı başlatma
     db.init_app(app)
@@ -42,9 +48,18 @@ def create_app(config_name=None):
             return turkey_dt.strftime(format)
         return ''
     
-    # Tabloları oluşturma
-    with app.app_context():
-        db.create_all()
+    # Tabloları oluşturma (hata varsa fallback)
+    try:
+        with app.app_context():
+            db.create_all()
+            app.logger.info('Database tables created successfully')
+    except Exception as e:
+        app.logger.error(f'Database connection failed: {e}')
+        # SQLite fallback
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///muhasebe_fallback.db'
+        with app.app_context():
+            db.create_all()
+        app.logger.info('Fallback to SQLite database')
     
     # Route'ları kaydetme
     from routes.main import main_bp
