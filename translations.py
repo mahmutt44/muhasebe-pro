@@ -242,6 +242,22 @@ TRANSLATIONS = {
     }
 }
 
+class TranslationDict:
+    """Dict wrapper that allows attribute access without conflicting with built-in methods"""
+    def __init__(self, data):
+        self._data = data
+    
+    def __getattr__(self, key):
+        if key.startswith('_'):
+            return object.__getattribute__(self, key)
+        return self._data.get(key, key)
+    
+    def __getitem__(self, key):
+        return self._data.get(key, key)
+    
+    def get(self, key, default=None):
+        return self._data.get(key, default if default is not None else key)
+
 def get_translation(key, lang='tr'):
     """Belirtilen dilde çeviriyi döndürür"""
     if lang not in TRANSLATIONS:
@@ -252,4 +268,4 @@ def get_all_translations(lang='tr'):
     """Belirtilen dilin tüm çevirilerini döndürür"""
     if lang not in TRANSLATIONS:
         lang = 'tr'
-    return TRANSLATIONS.get(lang, TRANSLATIONS['tr'])
+    return TranslationDict(TRANSLATIONS.get(lang, TRANSLATIONS['tr']))
