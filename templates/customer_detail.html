@@ -110,26 +110,26 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for t in transactions %}
+                            {% for trans in transactions %}
                             <tr>
-                                <td><span class="fw-semibold">{{ t.date.strftime('%d.%m.%Y') }}</span></td>
-                                <td>{{ t.description or '-' }}</td>
+                                <td><span class="fw-semibold">{{ trans.date.strftime('%d.%m.%Y') }}</span></td>
+                                <td>{{ trans.description or '-' }}</td>
                                 <td class="text-center">
-                                    <span class="badge" style="background: {{ 'var(--danger-gradient)' if t.type == 'debt' else 'var(--success-gradient)' }};">
-                                        {{ 'Borç' if t.type == 'debt' else 'Ödeme' }}
+                                    <span class="badge" style="background: {{ 'var(--danger-gradient)' if trans.type == 'debt' else 'var(--success-gradient)' }};">
+                                        {{ t.debt if trans.type == 'debt' else t.payment }}
                                     </span>
                                 </td>
                                 <td class="text-end">
-                                    <span class="fw-bold text-{{ 'danger' if t.type == 'debt' else 'success' }}">
-                                        {{ '+' if t.type == 'debt' else '-' }}₺{{ "%.2f"|format(t.amount) }}
+                                    <span class="fw-bold text-{{ 'danger' if trans.type == 'debt' else 'success' }}">
+                                        {{ '+' if trans.type == 'debt' else '-' }}₺{{ "%.2f"|format(trans.amount) }}
                                     </span>
                                 </td>
                                 <td class="text-center">
                                     <div class="btn-group btn-group-sm">
-                                        <button onclick="editCustomerTransaction({{ t.id }}, '{{ t.type }}', {{ t.amount }}, '{{ t.date }}', '{{ t.description or '' }}')" class="btn btn-outline-warning">
+                                        <button onclick="editCustomerTransaction({{ trans.id }}, '{{ trans.type }}', {{ trans.amount }}, '{{ trans.date }}', '{{ trans.description or '' }}')" class="btn btn-outline-warning">
                                             <i class="bi bi-pencil"></i>
                                         </button>
-                                        <button onclick="deleteCustomerTransaction({{ t.id }})" class="btn btn-outline-danger">
+                                        <button onclick="deleteCustomerTransaction({{ trans.id }})" class="btn btn-outline-danger">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </div>
