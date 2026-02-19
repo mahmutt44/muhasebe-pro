@@ -105,7 +105,7 @@
                             <small class="text-secondary">/{{ product.unit }}</small>
                         </td>
                         <td class="text-center">
-                            <small class="text-secondary">{{ product.created_at.strftime('%d.%m.%Y') }}</small>
+                            <small class="text-secondary">{{ product.created_at|format_date }}</small>
                         </td>
                         <td class="text-center">
                             <div class="btn-group btn-group-sm">

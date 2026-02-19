@@ -108,7 +108,7 @@
                     {% for transaction in transactions.items %}
                     <tr class="transaction-item" data-type="{{ transaction.type }}">
                         <td>
-                            <span class="fw-semibold">{{ transaction.date.strftime('%d.%m.%Y') }}</span>
+                            <span class="fw-semibold">{{ transaction.date|format_date }}</span>
                         </td>
                         <td>{{ transaction.description or '-' }}</td>
                         <td class="text-center">

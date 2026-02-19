@@ -40,14 +40,37 @@ def create_app(config_name=None):
     # Veritabanı başlatma
     db.init_app(app)
     
-    # Jinja2 filter - Türkiye saati
+    # Jinja2 filter - Türkiye saati (dil desteği ile)
     @app.template_filter('turkey_time')
     def turkey_time_filter(dt, format='%d.%m.%Y %H:%M'):
         """Template'de Türkiye saatini göster"""
         turkey_dt = to_turkey_time(dt)
         if turkey_dt:
-            return turkey_dt.strftime(format)
+            lang = session.get('lang', 'tr')
+            formatted = turkey_dt.strftime(format)
+            if lang == 'ar':
+                # Arapça rakamlarına çevir
+                arabic_numerals = str.maketrans('0123456789', '٠١٢٣٤٥٦٧٨٩')
+                formatted = formatted.translate(arabic_numerals)
+            return formatted
         return ''
+    
+    # Jinja2 filter - Sadece tarih (dil desteği ile)
+    @app.template_filter('format_date')
+    def format_date_filter(dt, format='%d.%m.%Y'):
+        """Template'de tarihi formatla"""
+        if dt is None:
+            return ''
+        lang = session.get('lang', 'tr')
+        if hasattr(dt, 'strftime'):
+            formatted = dt.strftime(format)
+        else:
+            formatted = str(dt)
+        if lang == 'ar':
+            # Arapça rakamlarına çevir
+            arabic_numerals = str.maketrans('0123456789', '٠١٢٣٤٥٦٧٨٩')
+            formatted = formatted.translate(arabic_numerals)
+        return formatted
     
     # Dil context processor - tüm template'lerde kullanılabilir
     @app.context_processor

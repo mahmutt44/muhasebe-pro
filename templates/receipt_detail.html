@@ -15,7 +15,7 @@
                     {{ t.receipt_no }} #{{ receipt.receipt_no }}
                 </span>
             </h2>
-            <p class="text-secondary mb-0">{{ receipt.date.strftime('%d.%m.%Y') }}</p>
+            <p class="text-secondary mb-0">{{ receipt.date|format_date }}</p>
         </div>
     </div>
     <div class="d-flex gap-2">
@@ -37,7 +37,7 @@
         <div class="card" id="receiptCard">
             <div class="card-header text-center text-white" style="background: var(--primary-gradient);">
                 <h4 class="mb-1 fw-bold">{{ t.sales_receipt }}</h4>
-                <p class="mb-0 opacity-75">{{ receipt.receipt_no }} - {{ receipt.date.strftime('%d.%m.%Y') }}</p>
+                <p class="mb-0 opacity-75">{{ receipt.receipt_no }} - {{ receipt.date|format_date }}</p>
             </div>
             <div class="card-body">
                 <!-- Müşteri Bilgisi -->

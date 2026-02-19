@@ -78,7 +78,7 @@
                 <hr>
                 
                 <small class="text-secondary">
-                    <i class="bi bi-calendar3 me-1"></i>{{ t.date }}: {{ customer.created_at.strftime('%d.%m.%Y') }}
+                    <i class="bi bi-calendar3 me-1"></i>{{ t.date }}: {{ customer.created_at|format_date }}
                 </small>
             </div>
         </div>
@@ -112,7 +112,7 @@
                         <tbody>
                             {% for trans in transactions %}
                             <tr>
-                                <td><span class="fw-semibold">{{ trans.date.strftime('%d.%m.%Y') }}</span></td>
+                                <td><span class="fw-semibold">{{ trans.date|format_date }}</span></td>
                                 <td>{{ trans.description or '-' }}</td>
                                 <td class="text-center">
                                     <span class="badge" style="background: {{ 'var(--danger-gradient)' if trans.type == 'debt' else 'var(--success-gradient)' }};">
@@ -175,7 +175,7 @@
                             {% for r in receipts %}
                             <tr>
                                 <td><strong>{{ r.receipt_no }}</strong></td>
-                                <td>{{ r.date.strftime('%d.%m.%Y') }}</td>
+                                <td>{{ r.date|format_date }}</td>
                                 <td class="text-end">
                                     <span class="fw-bold" style="color: #667eea;">₺{{ "%.2f"|format(r.total_amount) }}</span>
                                 </td>
