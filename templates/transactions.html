@@ -254,7 +254,7 @@ function deleteTransaction(id) {
     
     apiCall(`/api/transactions/${id}`, { method: 'DELETE' })
         .then(() => {
-            showNotification('İşlem silindi', 'success');
+            showNotification('{{ t.transaction_deleted }}', 'success');
             location.reload();
         })
         .catch(err => showNotification(err.message, 'error'));
@@ -274,10 +274,10 @@ document.getElementById('transactionForm').addEventListener('submit', async func
     try {
         if (id) {
             await apiCall(`/api/transactions/${id}`, { method: 'PUT', body: JSON.stringify(data) });
-            showNotification('İşlem güncellendi', 'success');
+            showNotification('{{ t.transaction_updated }}', 'success');
         } else {
             await apiCall('/api/transactions', { method: 'POST', body: JSON.stringify(data) });
-            showNotification('İşlem eklendi', 'success');
+            showNotification('{{ t.transaction_added }}', 'success');
         }
         modal.hide();
         location.reload();

@@ -211,7 +211,7 @@ function deleteProduct(id) {
     
     apiCall(`/api/products/${id}`, { method: 'DELETE' })
         .then(() => {
-            showNotification('Ürün silindi', 'success');
+            showNotification('{{ t.product_deleted }}', 'success');
             location.reload();
         })
         .catch(err => showNotification(err.message, 'error'));
@@ -230,10 +230,10 @@ document.getElementById('productForm').addEventListener('submit', async function
     try {
         if (id) {
             await apiCall(`/api/products/${id}`, { method: 'PUT', body: JSON.stringify(data) });
-            showNotification('Ürün güncellendi', 'success');
+            showNotification('{{ t.product_updated }}', 'success');
         } else {
             await apiCall('/api/products', { method: 'POST', body: JSON.stringify(data) });
-            showNotification('Ürün eklendi', 'success');
+            showNotification('{{ t.product_added }}', 'success');
         }
         modal.hide();
         location.reload();

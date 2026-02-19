@@ -277,15 +277,15 @@ function addProduct() {
     const customPrice = parseFloat(document.getElementById('priceInput').value);
     
     if (!select.value) {
-        showNotification('Lütfen bir ürün seçin', 'error');
+        showNotification('{{ t.select_product_error }}', 'error');
         return;
     }
     if (!quantity || quantity <= 0) {
-        showNotification('Lütfen geçerli bir miktar girin', 'error');
+        showNotification('{{ t.invalid_quantity_error }}', 'error');
         return;
     }
     if (isNaN(customPrice) || customPrice < 0) {
-        showNotification('Lütfen geçerli bir fiyat girin', 'error');
+        showNotification('{{ t.invalid_price_error }}', 'error');
         return;
     }
     
@@ -307,7 +307,7 @@ function addProduct() {
     select.value = '';
     document.getElementById('quantityInput').value = '';
     document.getElementById('priceInput').value = '';
-    showNotification('Ürün eklendi', 'success');
+    showNotification('{{ t.product_added }}', 'success');
 }
 
 // KDV toggle
@@ -371,7 +371,7 @@ function updateItemsList() {
 function removeItem(index) {
     receiptItems.splice(index, 1);
     updateItemsList();
-    showNotification('Ürün kaldırıldı', 'info');
+    showNotification('{{ t.product_removed }}', 'info');
 }
 
 // Form temizleme
@@ -392,7 +392,7 @@ function clearForm() {
 // Önizleme
 function previewReceipt() {
     if (receiptItems.length === 0) {
-        showNotification('Lütfen en az bir ürün ekleyin', 'error');
+        showNotification('{{ t.add_product_error }}', 'error');
         return;
     }
     
@@ -453,7 +453,7 @@ document.getElementById('receiptForm').addEventListener('submit', async function
     e.preventDefault();
     
     if (receiptItems.length === 0) {
-        showNotification('Lütfen en az bir ürün ekleyin', 'error');
+        showNotification('{{ t.add_product_error }}', 'error');
         return;
     }
     
@@ -471,7 +471,7 @@ document.getElementById('receiptForm').addEventListener('submit', async function
     
     try {
         await apiCall('/api/receipts', { method: 'POST', body: JSON.stringify(data) });
-        showNotification('Fiş başarıyla oluşturuldu', 'success');
+        showNotification('{{ t.receipt_created }}', 'success');
         
         receiptItems = [];
         updateItemsList();

@@ -185,7 +185,7 @@ function deleteReceipt(id) {
     
     apiCall(`/api/receipts/${id}`, { method: 'DELETE' })
         .then(() => {
-            showNotification('Fiş silindi', 'success');
+            showNotification('{{ t.receipt_deleted }}', 'success');
             window.location.href = '{{ url_for("main.index") }}';
         })
         .catch(err => showNotification(err.message, 'error'));

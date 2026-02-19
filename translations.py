@@ -119,6 +119,24 @@ TRANSLATIONS = {
         'error': 'Hata',
         'no_data': 'Veri bulunamadı',
         'loading': 'Yükleniyor...',
+        
+        # Bildirim Mesajları
+        'transaction_deleted': 'İşlem silindi',
+        'transaction_updated': 'İşlem güncellendi',
+        'transaction_added': 'İşlem eklendi',
+        'customer_deleted': 'Müşteri silindi',
+        'customer_updated': 'Müşteri güncellendi',
+        'customer_added': 'Müşteri eklendi',
+        'product_deleted': 'Ürün silindi',
+        'product_updated': 'Ürün güncellendi',
+        'product_added': 'Ürün eklendi',
+        'product_removed': 'Ürün kaldırıldı',
+        'receipt_deleted': 'Fiş silindi',
+        'receipt_created': 'Fiş başarıyla oluşturuldu',
+        'select_product_error': 'Lütfen bir ürün seçin',
+        'invalid_quantity_error': 'Lütfen geçerli bir miktar girin',
+        'invalid_price_error': 'Lütfen geçerli bir fiyat girin',
+        'add_product_error': 'Lütfen en az bir ürün ekleyin',
     },
     
     'ar': {
@@ -239,6 +257,24 @@ TRANSLATIONS = {
         'error': 'خطأ',
         'no_data': 'لا توجد بيانات',
         'loading': 'جاري التحميل...',
+        
+        # رسائل الإشعارات
+        'transaction_deleted': 'تم حذف المعاملة',
+        'transaction_updated': 'تم تحديث المعاملة',
+        'transaction_added': 'تمت إضافة المعاملة',
+        'customer_deleted': 'تم حذف العميل',
+        'customer_updated': 'تم تحديث العميل',
+        'customer_added': 'تمت إضافة العميل',
+        'product_deleted': 'تم حذف المنتج',
+        'product_updated': 'تم تحديث المنتج',
+        'product_added': 'تمت إضافة المنتج',
+        'product_removed': 'تمت إزالة المنتج',
+        'receipt_deleted': 'تم حذف الفاتورة',
+        'receipt_created': 'تم إنشاء الفاتورة بنجاح',
+        'select_product_error': 'يرجى اختيار منتج',
+        'invalid_quantity_error': 'يرجى إدخال كمية صحيحة',
+        'invalid_price_error': 'يرجى إدخال سعر صحيح',
+        'add_product_error': 'يرجى إضافة منتج واحد على الأقل',
     }
 }
 
