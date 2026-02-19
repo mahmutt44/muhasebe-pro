@@ -187,7 +187,7 @@
 const modal = new bootstrap.Modal(document.getElementById('productModal'));
 
 function showAddModal() {
-    document.getElementById('modalTitle').textContent = 'Yeni Ürün';
+    document.getElementById('modalTitle').textContent = '{{ t.new_product }}';
     document.getElementById('productForm').reset();
     document.getElementById('productId').value = '';
     modal.show();
@@ -196,7 +196,7 @@ function showAddModal() {
 function editProduct(id) {
     apiCall(`/api/products/${id}`)
         .then(p => {
-            document.getElementById('modalTitle').textContent = 'Ürün Düzenle';
+            document.getElementById('modalTitle').textContent = '{{ t.edit_product }}';
             document.getElementById('productId').value = p.id;
             document.getElementById('productName').value = p.name;
             document.getElementById('productUnit').value = p.unit;

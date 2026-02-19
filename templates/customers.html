@@ -258,7 +258,7 @@ const customerModal = new bootstrap.Modal(document.getElementById('customerModal
 const transactionModal = new bootstrap.Modal(document.getElementById('transactionModal'));
 
 function showAddModal() {
-    document.getElementById('customerModalTitle').textContent = 'Yeni Müşteri';
+    document.getElementById('customerModalTitle').textContent = '{{ t.new_customer }}';
     document.getElementById('customerForm').reset();
     document.getElementById('customerId').value = '';
     customerModal.show();
@@ -267,7 +267,7 @@ function showAddModal() {
 function editCustomer(id) {
     apiCall(`/api/customers/${id}`)
         .then(c => {
-            document.getElementById('customerModalTitle').textContent = 'Müşteri Düzenle';
+            document.getElementById('customerModalTitle').textContent = '{{ t.edit_customer }}';
             document.getElementById('customerId').value = c.id;
             document.getElementById('customerName').value = c.name;
             document.getElementById('customerPhone').value = c.phone || '';

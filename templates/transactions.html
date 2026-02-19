@@ -110,11 +110,11 @@
                         <td>
                             <span class="fw-semibold">{{ transaction.date.strftime('%d.%m.%Y') }}</span>
                         </td>
-                        <td>{{ transaction.description or 'İşlem' }}</td>
+                        <td>{{ transaction.description or '-' }}</td>
                         <td class="text-center">
                             <span class="badge" style="background: {{ 'var(--success-gradient)' if transaction.type == 'income' else 'var(--danger-gradient)' }};">
                                 <i class="bi bi-{{ 'arrow-up' if transaction.type == 'income' else 'arrow-down' }} me-1"></i>
-                                {{ 'Gelir' if transaction.type == 'income' else 'Gider' }}
+                                {{ t.income if transaction.type == 'income' else t.expense }}
                             </span>
                         </td>
                         <td class="text-end">
@@ -228,7 +228,7 @@
 const modal = new bootstrap.Modal(document.getElementById('transactionModal'));
 
 function showAddModal() {
-    document.getElementById('modalTitle').textContent = 'Yeni İşlem';
+    document.getElementById('modalTitle').textContent = '{{ t.new_transaction }}';
     document.getElementById('transactionForm').reset();
     document.getElementById('transactionId').value = '';
     document.getElementById('transactionDate').value = new Date().toISOString().split('T')[0];
@@ -238,7 +238,7 @@ function showAddModal() {
 function editTransaction(id) {
     apiCall(`/api/transactions/${id}`)
         .then(t => {
-            document.getElementById('modalTitle').textContent = 'İşlem Düzenle';
+            document.getElementById('modalTitle').textContent = '{{ t.edit_transaction }}';
             document.getElementById('transactionId').value = t.id;
             document.getElementById('transactionType').value = t.type;
             document.getElementById('transactionAmount').value = t.amount;
