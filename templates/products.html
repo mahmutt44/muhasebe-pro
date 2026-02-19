@@ -77,9 +77,9 @@
                 <thead>
                     <tr>
                         <th>{{ t.product_name }}</th>
-                        <th class="text-center">{{ t.unit }}</th>
+                        <th class="text-center hide-mobile">{{ t.unit }}</th>
                         <th class="text-end">{{ t.unit_price }}</th>
-                        <th class="text-center">{{ t.date }}</th>
+                        <th class="text-center hide-mobile">{{ t.date }}</th>
                         <th class="text-center">{{ t.actions }}</th>
                     </tr>
                 </thead>
@@ -97,14 +97,14 @@
                                 </div>
                             </div>
                         </td>
-                        <td class="text-center">
+                        <td class="text-center hide-mobile">
                             <span class="badge" style="background: var(--info-gradient);">{{ product.unit }}</span>
                         </td>
                         <td class="text-end">
                             <span class="fw-bold" style="color: #667eea;">₺{{ "%.2f"|format(product.unit_price) }}</span>
                             <small class="text-secondary">/{{ product.unit }}</small>
                         </td>
-                        <td class="text-center">
+                        <td class="text-center hide-mobile">
                             <small class="text-secondary">{{ product.created_at|format_date }}</small>
                         </td>
                         <td class="text-center">

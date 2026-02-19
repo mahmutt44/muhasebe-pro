@@ -98,7 +98,7 @@
                 <thead>
                     <tr>
                         <th>{{ t.date }}</th>
-                        <th>{{ t.description }}</th>
+                        <th class="hide-mobile">{{ t.description }}</th>
                         <th class="text-center">{{ t.transaction_type }}</th>
                         <th class="text-end">{{ t.amount }}</th>
                         <th class="text-center">{{ t.actions }}</th>
@@ -110,7 +110,7 @@
                         <td>
                             <span class="fw-semibold">{{ transaction.date|format_date }}</span>
                         </td>
-                        <td>{{ transaction.description or '-' }}</td>
+                        <td class="hide-mobile">{{ transaction.description or '-' }}</td>
                         <td class="text-center">
                             <span class="badge" style="background: {{ 'var(--success-gradient)' if transaction.type == 'income' else 'var(--danger-gradient)' }};">
                                 <i class="bi bi-{{ 'arrow-up' if transaction.type == 'income' else 'arrow-down' }} me-1"></i>

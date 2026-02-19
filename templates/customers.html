@@ -88,9 +88,9 @@
                 <thead>
                     <tr>
                         <th>{{ t.customer_name }}</th>
-                        <th>{{ t.phone }}</th>
+                        <th class="hide-mobile">{{ t.phone }}</th>
                         <th class="text-end">{{ t.balance }}</th>
-                        <th class="text-center">{{ t.transaction_type }}</th>
+                        <th class="text-center hide-mobile">{{ t.transaction_type }}</th>
                         <th class="text-center">{{ t.actions }}</th>
                     </tr>
                 </thead>
@@ -110,7 +110,7 @@
                                 </div>
                             </div>
                         </td>
-                        <td>
+                        <td class="hide-mobile">
                             {% if customer.phone %}
                             <i class="bi bi-telephone text-secondary me-1"></i>{{ customer.phone }}
                             {% else %}
@@ -126,7 +126,7 @@
                             <span class="text-secondary">₺0.00</span>
                             {% endif %}
                         </td>
-                        <td class="text-center">
+                        <td class="text-center hide-mobile">
                             {% if customer.balance > 0 %}
                             <span class="badge" style="background: var(--danger-gradient);">{{ t.debtor }}</span>
                             {% elif customer.balance < 0 %}

@@ -586,18 +586,84 @@
             }
             
             .table-responsive {
+                font-size: 0.75rem;
+                margin: 0 -0.5rem;
+                width: calc(100% + 1rem);
+            }
+            
+            .table {
+                margin-bottom: 0;
+            }
+            
+            .table td, .table th {
+                padding: 0.5rem 0.35rem;
+                font-size: 0.75rem;
+                white-space: nowrap;
+            }
+            
+            /* Mobilde bazı sütunları gizle */
+            .table .hide-mobile {
+                display: none !important;
+            }
+            
+            /* Mobilde işlem butonlarını küçült */
+            .btn-group-sm .btn {
+                padding: 0.25rem 0.4rem;
+                font-size: 0.75rem;
+            }
+            
+            .btn-group-sm .btn i {
                 font-size: 0.8rem;
             }
             
             .badge {
-                font-size: 0.7rem;
-                padding: 0.35em 0.5em;
+                font-size: 0.65rem;
+                padding: 0.25em 0.4em;
             }
             
             /* Stack buttons on very small screens */
             .d-flex.justify-content-between.align-items-center {
                 flex-wrap: wrap;
                 gap: 0.5rem;
+            }
+            
+            /* Kart başlıkları */
+            .card-header {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.85rem;
+            }
+            
+            .card-header h5, .card-header h6 {
+                font-size: 0.9rem;
+            }
+            
+            /* İstatistik kartları */
+            .col-xl-3.col-md-6, .col-lg-3.col-md-6 {
+                padding-left: 0.25rem;
+                padding-right: 0.25rem;
+            }
+            
+            .col-xl-3.col-md-6 .card-body, .col-lg-3.col-md-6 .card-body {
+                padding: 0.75rem 0.5rem;
+            }
+            
+            .col-xl-3.col-md-6 h4, .col-lg-3.col-md-6 h4 {
+                font-size: 1.1rem;
+            }
+            
+            .col-xl-3.col-md-6 small, .col-lg-3.col-md-6 small {
+                font-size: 0.7rem;
+            }
+            
+            /* Sayfa başlıkları */
+            h2.fw-bold {
+                font-size: 1.25rem;
+            }
+            
+            /* Fiş detay sayfası */
+            .col-lg-8, .col-lg-4 {
+                padding-left: 0.5rem;
+                padding-right: 0.5rem;
             }
         }
         

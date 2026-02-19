@@ -66,7 +66,7 @@
                             <tr>
                                 <th>{{ t.product }}</th>
                                 <th class="text-center">{{ t.quantity }}</th>
-                                <th class="text-end">{{ t.unit_price }}</th>
+                                <th class="text-end hide-mobile">{{ t.unit_price }}</th>
                                 <th class="text-end">{{ t.total }}</th>
                             </tr>
                         </thead>
@@ -75,24 +75,27 @@
                             <tr>
                                 <td><strong>{{ item.product.name }}</strong></td>
                                 <td class="text-center">{{ item.quantity }} {{ item.product.unit }}</td>
-                                <td class="text-end">₺{{ "%.2f"|format(item.unit_price) }}</td>
+                                <td class="text-end hide-mobile">₺{{ "%.2f"|format(item.unit_price) }}</td>
                                 <td class="text-end fw-bold text-success">₺{{ "%.2f"|format(item.total_price) }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
                         <tfoot>
                             <tr class="border-top">
-                                <td colspan="3" class="text-end"><strong>{{ t.subtotal }}:</strong></td>
+                                <td colspan="3" class="text-end d-none d-sm-table-cell"><strong>{{ t.subtotal }}:</strong></td>
+                                <td colspan="2" class="text-end d-table-cell d-sm-none"><strong>{{ t.subtotal }}:</strong></td>
                                 <td class="text-end fw-bold">₺{{ "%.2f"|format(receipt.total_amount|float) }}</td>
                             </tr>
                             {% if receipt.tax_rate and receipt.tax_rate > 0 %}
                             <tr>
-                                <td colspan="3" class="text-end">KDV (%{{ "%.0f"|format(receipt.tax_rate|float) }}):</td>
+                                <td colspan="3" class="text-end d-none d-sm-table-cell">KDV (%{{ "%.0f"|format(receipt.tax_rate|float) }}):</td>
+                                <td colspan="2" class="text-end d-table-cell d-sm-none">KDV (%{{ "%.0f"|format(receipt.tax_rate|float) }}):</td>
                                 <td class="text-end">₺{{ "%.2f"|format(receipt.tax_amount|float if receipt.tax_amount else 0) }}</td>
                             </tr>
                             {% endif %}
                             <tr style="background: rgba(102, 126, 234, 0.1);">
-                                <td colspan="3" class="text-end"><h5 class="mb-0 fw-bold">{{ t.grand_total }}:</h5></td>
+                                <td colspan="3" class="text-end d-none d-sm-table-cell"><h5 class="mb-0 fw-bold">{{ t.grand_total }}:</h5></td>
+                                <td colspan="2" class="text-end d-table-cell d-sm-none"><h5 class="mb-0 fw-bold">{{ t.grand_total }}:</h5></td>
                                 <td class="text-end"><h5 class="mb-0 fw-bold" style="color: #667eea;">₺{{ "%.2f"|format(receipt.grand_total|float if receipt.grand_total else receipt.total_amount|float) }}</h5></td>
                             </tr>
                         </tfoot>
