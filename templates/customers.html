@@ -99,14 +99,11 @@
                     <tr class="customer-row">
                         <td>
                             <div class="d-flex align-items-center">
-                                <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 36px; height: 36px; background: var(--primary-gradient);">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center me-2 d-none d-sm-flex" style="width: 36px; height: 36px; background: var(--primary-gradient);">
                                     <i class="bi bi-person text-white"></i>
                                 </div>
                                 <div>
-                                    <span class="fw-semibold">{{ customer.name }}</span>
-                                    {% if customer.notes %}
-                                    <br><small class="text-secondary">{{ customer.notes[:30] }}{% if customer.notes|length > 30 %}...{% endif %}</small>
-                                    {% endif %}
+                                    <span class="fw-semibold customer-name">{{ customer.name }}</span>
                                 </div>
                             </div>
                         </td>
@@ -140,13 +137,13 @@
                                 <a href="{{ url_for('main.customer_detail', customer_id=customer.id) }}" class="btn btn-outline-light" title="Detay">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                <button onclick="editCustomer({{ customer.id }})" class="btn btn-outline-warning" title="Düzenle">
+                                <button onclick="editCustomer({{ customer.id }})" class="btn btn-outline-warning d-none d-sm-inline-block" title="Düzenle">
                                     <i class="bi bi-pencil"></i>
                                 </button>
                                 <button onclick="showTransactionModal({{ customer.id }}, '{{ customer.name }}')" class="btn btn-outline-success" title="İşlem">
                                     <i class="bi bi-plus"></i>
                                 </button>
-                                <button onclick="deleteCustomer({{ customer.id }})" class="btn btn-outline-danger" title="Sil">
+                                <button onclick="deleteCustomer({{ customer.id }})" class="btn btn-outline-danger d-none d-sm-inline-block" title="Sil">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </div>

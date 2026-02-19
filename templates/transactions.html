@@ -113,8 +113,8 @@
                         <td class="hide-mobile">{{ transaction.description or '-' }}</td>
                         <td class="text-center">
                             <span class="badge" style="background: {{ 'var(--success-gradient)' if transaction.type == 'income' else 'var(--danger-gradient)' }};">
-                                <i class="bi bi-{{ 'arrow-up' if transaction.type == 'income' else 'arrow-down' }} me-1"></i>
-                                {{ t.income if transaction.type == 'income' else t.expense }}
+                                <i class="bi bi-{{ 'arrow-up' if transaction.type == 'income' else 'arrow-down' }}"></i>
+                                <span class="d-none d-sm-inline ms-1">{{ t.income if transaction.type == 'income' else t.expense }}</span>
                             </span>
                         </td>
                         <td class="text-end">
