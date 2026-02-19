@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Ürünler - Muhasebe Pro{% endblock %}
+{% block title %}{{ t.products }} - {{ t.app_name }}{% endblock %}
 
 {% block content %}
 <!-- Başlık -->
@@ -8,13 +8,13 @@
     <div>
         <h2 class="fw-bold mb-1">
             <span style="background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-                Ürünler
+                {{ t.products }}
             </span>
         </h2>
-        <p class="text-secondary mb-0">Ürün listenizi yönetin</p>
+        <p class="text-secondary mb-0">{{ t.products }}</p>
     </div>
     <button onclick="showAddModal()" class="btn btn-primary">
-        <i class="bi bi-plus-circle me-1"></i>Yeni Ürün
+        <i class="bi bi-plus-circle me-1"></i>{{ t.new_product }}
     </button>
 </div>
 
@@ -27,7 +27,7 @@
                     <i class="bi bi-box-seam text-white"></i>
                 </div>
                 <h4 class="fw-bold mb-0" style="color: #667eea;">{{ products|length }}</h4>
-                <small class="text-secondary">Toplam Ürün</small>
+                <small class="text-secondary">{{ t.total_products }}</small>
             </div>
         </div>
     </div>
@@ -38,7 +38,7 @@
                     <i class="bi bi-currency-lira text-white"></i>
                 </div>
                 <h4 class="fw-bold mb-0 text-success">₺{{ "%.2f"|format((products|sum(attribute='unit_price') / products|length) if products else 0) }}</h4>
-                <small class="text-secondary">Ortalama Fiyat</small>
+                <small class="text-secondary">{{ t.average_price }}</small>
             </div>
         </div>
     </div>
@@ -49,7 +49,7 @@
                     <i class="bi bi-tags text-white"></i>
                 </div>
                 <h4 class="fw-bold mb-0 text-info">{{ products|map(attribute='unit')|unique|list|length }}</h4>
-                <small class="text-secondary">Farklı Birim</small>
+                <small class="text-secondary">{{ t.unit }}</small>
             </div>
         </div>
     </div>
@@ -62,13 +62,13 @@
             <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; background: var(--primary-gradient);">
                 <i class="bi bi-list-ul text-white"></i>
             </div>
-            <h6 class="mb-0 fw-semibold">Ürün Listesi</h6>
+            <h6 class="mb-0 fw-semibold">{{ t.product_list }}</h6>
         </div>
         <div class="input-group input-group-sm" style="width: 220px;">
             <span class="input-group-text bg-transparent border-secondary">
                 <i class="bi bi-search text-secondary"></i>
             </span>
-            <input type="text" id="searchInput" class="form-control border-secondary" placeholder="Ürün ara...">
+            <input type="text" id="searchInput" class="form-control border-secondary" placeholder="{{ t.search_product }}">
         </div>
     </div>
     <div class="card-body p-0">
@@ -76,11 +76,11 @@
             <table class="table mb-0">
                 <thead>
                     <tr>
-                        <th>Ürün</th>
-                        <th class="text-center">Birim</th>
-                        <th class="text-end">Birim Fiyat</th>
-                        <th class="text-center">Kayıt Tarihi</th>
-                        <th class="text-center">İşlemler</th>
+                        <th>{{ t.product_name }}</th>
+                        <th class="text-center">{{ t.unit }}</th>
+                        <th class="text-end">{{ t.unit_price }}</th>
+                        <th class="text-center">{{ t.date }}</th>
+                        <th class="text-center">{{ t.actions }}</th>
                     </tr>
                 </thead>
                 <tbody id="productsList">

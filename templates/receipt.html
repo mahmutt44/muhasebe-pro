@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Fiş Kes - Muhasebe Pro{% endblock %}
+{% block title %}{{ t.add_receipt }} - {{ t.app_name }}{% endblock %}
 
 {% block content %}
 <!-- Başlık -->
@@ -8,10 +8,10 @@
     <div>
         <h2 class="fw-bold mb-1">
             <span style="background: var(--success-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-                Fiş Kes
+                {{ t.add_receipt }}
             </span>
         </h2>
-        <p class="text-secondary mb-0">Yeni satış fişi oluşturun</p>
+        <p class="text-secondary mb-0">{{ t.new_receipt }}</p>
     </div>
     <span class="badge fs-5" style="background: var(--primary-gradient);">#{{ receipt_no }}</span>
 </div>
@@ -25,7 +25,7 @@
                     <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; background: var(--primary-gradient);">
                         <i class="bi bi-clipboard-data text-white"></i>
                     </div>
-                    <h6 class="mb-0 fw-semibold">Fiş Bilgileri</h6>
+                    <h6 class="mb-0 fw-semibold">{{ t.receipt_details }}</h6>
                 </div>
             </div>
             <form id="receiptForm">
@@ -33,9 +33,9 @@
                     <!-- Müşteri ve Tarih -->
                     <div class="row g-3 mb-4">
                         <div class="col-md-8">
-                            <label class="form-label fw-semibold">Müşteri *</label>
+                            <label class="form-label fw-semibold">{{ t.customers }} *</label>
                             <select name="customer_id" id="customerSelect" required class="form-select">
-                                <option value="">Müşteri Seçiniz...</option>
+                                <option value="">{{ t.select_customer }}</option>
                                 {% for customer in customers %}
                                 <option value="{{ customer.id }}" data-balance="{{ customer.balance }}" {% if selected_customer_id == customer.id %}selected{% endif %}>
                                     {{ customer.name }} (Bakiye: ₺{{ "%.2f"|format(customer.balance) }})
@@ -44,24 +44,24 @@
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label fw-semibold">Tarih *</label>
+                            <label class="form-label fw-semibold">{{ t.date }} *</label>
                             <input type="date" name="date" id="receiptDate" required class="form-control" value="{{ today_date.strftime('%Y-%m-%d') }}">
                         </div>
                     </div>
                     
                     <div class="mb-4">
-                        <label class="form-label fw-semibold">Notlar</label>
+                        <label class="form-label fw-semibold">{{ t.notes }}</label>
                         <input type="text" name="notes" id="receiptNotes" class="form-control" placeholder="Fiş notu...">
                     </div>
                     
                     <!-- Ürün Ekleme -->
                     <div class="card mb-4" style="background: rgba(102, 126, 234, 0.1); border: 1px dashed #667eea;">
                         <div class="card-body">
-                            <h6 class="mb-3 fw-semibold"><i class="bi bi-plus-circle me-2" style="color: #667eea;"></i>Ürün Ekle</h6>
+                            <h6 class="mb-3 fw-semibold"><i class="bi bi-plus-circle me-2" style="color: #667eea;"></i>{{ t.add_item }}</h6>
                             <div class="row g-2">
                                 <div class="col-md-4 col-6">
                                     <select id="productSelect" class="form-select" onchange="updatePriceInput()">
-                                        <option value="">Ürün Seçiniz...</option>
+                                        <option value="">{{ t.select_product }}</option>
                                         {% for product in products %}
                                         <option value="{{ product.id }}" data-name="{{ product.name }}" data-unit="{{ product.unit }}" data-price="{{ product.unit_price }}">
                                             {{ product.name }} ({{ product.unit }})
@@ -70,21 +70,21 @@
                                     </select>
                                 </div>
                                 <div class="col-md-2 col-6">
-                                    <input type="number" id="quantityInput" min="0.01" step="0.01" class="form-control" placeholder="Miktar">
+                                    <input type="number" id="quantityInput" min="0.01" step="0.01" class="form-control" placeholder="{{ t.quantity }}">
                                 </div>
                                 <div class="col-md-3 col-6">
                                     <div class="input-group">
                                         <span class="input-group-text">₺</span>
-                                        <input type="number" id="priceInput" min="0" step="0.01" class="form-control" placeholder="Fiyat">
+                                        <input type="number" id="priceInput" min="0" step="0.01" class="form-control" placeholder="{{ t.price }}">
                                     </div>
                                 </div>
                                 <div class="col-md-3 col-6">
                                     <button type="button" onclick="addProduct()" class="btn btn-success w-100">
-                                        <i class="bi bi-plus-circle me-1"></i>Ekle
+                                        <i class="bi bi-plus-circle me-1"></i>{{ t.add_item }}
                                     </button>
                                 </div>
                             </div>
-                            <small class="text-secondary mt-2 d-block"><i class="bi bi-info-circle me-1"></i>Özel fiyat için fiyat alanını değiştirebilirsiniz</small>
+                            <small class="text-secondary mt-2 d-block"><i class="bi bi-info-circle me-1"></i>{{ t.custom_price_hint }}</small>
                         </div>
                     </div>
                     
@@ -93,11 +93,11 @@
                         <table class="table">
                             <thead>
                                 <tr>
-                                    <th>Ürün</th>
-                                    <th class="text-center">Miktar</th>
-                                    <th class="text-end">Birim Fiyat</th>
-                                    <th class="text-end">Toplam</th>
-                                    <th class="text-center">Sil</th>
+                                    <th>{{ t.product_name }}</th>
+                                    <th class="text-center">{{ t.quantity }}</th>
+                                    <th class="text-end">{{ t.unit_price }}</th>
+                                    <th class="text-end">{{ t.total }}</th>
+                                    <th class="text-center">{{ t.delete }}</th>
                                 </tr>
                             </thead>
                             <tbody id="itemsList">
@@ -115,14 +115,14 @@
                 <div class="card-footer bg-transparent">
                     <div class="d-flex justify-content-between align-items-center">
                         <button type="button" onclick="clearForm()" class="btn btn-outline-secondary">
-                            <i class="bi bi-x-circle me-1"></i>Temizle
+                            <i class="bi bi-x-circle me-1"></i>{{ t.cancel }}
                         </button>
                         <div class="d-flex gap-2">
                             <button type="button" onclick="previewReceipt()" class="btn btn-outline-primary">
-                                <i class="bi bi-eye me-1"></i>Önizle
+                                <i class="bi bi-eye me-1"></i>{{ t.view }}
                             </button>
                             <button type="submit" class="btn btn-success">
-                                <i class="bi bi-check-circle me-1"></i>Fişi Kaydet
+                                <i class="bi bi-check-circle me-1"></i>{{ t.save }}
                             </button>
                         </div>
                     </div>
@@ -140,7 +140,7 @@
                     <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 28px; height: 28px; background: var(--info-gradient);">
                         <i class="bi bi-person text-white small"></i>
                     </div>
-                    <h6 class="mb-0 fw-semibold">Müşteri Bilgileri</h6>
+                    <h6 class="mb-0 fw-semibold">{{ t.customer_details }}</h6>
                 </div>
             </div>
             <div class="card-body" id="customerInfo">
@@ -158,16 +158,16 @@
                     <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 28px; height: 28px; background: var(--warning-gradient);">
                         <i class="bi bi-percent text-white small"></i>
                     </div>
-                    <h6 class="mb-0 fw-semibold">KDV Ayarları</h6>
+                    <h6 class="mb-0 fw-semibold">{{ t.tax }}</h6>
                 </div>
             </div>
             <div class="card-body">
                 <div class="form-check form-switch mb-3">
                     <input class="form-check-input" type="checkbox" id="taxEnabled" onchange="updateItemsList()">
-                    <label class="form-check-label" for="taxEnabled">KDV Ekle</label>
+                    <label class="form-check-label" for="taxEnabled">{{ t.tax_included }}</label>
                 </div>
                 <div id="taxRateDiv" style="display:none;">
-                    <label class="form-label fw-semibold">KDV Oranı (%)</label>
+                    <label class="form-label fw-semibold">{{ t.tax_rate }} (%)</label>
                     <input type="number" id="taxRate" class="form-control" value="18" min="0" max="100" step="1" onchange="updateItemsList()">
                 </div>
             </div>

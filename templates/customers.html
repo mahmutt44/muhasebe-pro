@@ -79,7 +79,7 @@
             <span class="input-group-text bg-transparent border-secondary">
                 <i class="bi bi-search text-secondary"></i>
             </span>
-            <input type="text" id="searchInput" class="form-control border-secondary" placeholder="Müşteri ara...">
+            <input type="text" id="searchInput" class="form-control border-secondary" placeholder="{{ t.search_customer }}">
         </div>
     </div>
     <div class="card-body p-0">
@@ -87,11 +87,11 @@
             <table class="table mb-0">
                 <thead>
                     <tr>
-                        <th>Müşteri</th>
-                        <th>Telefon</th>
-                        <th class="text-end">Bakiye</th>
-                        <th class="text-center">Durum</th>
-                        <th class="text-center">İşlemler</th>
+                        <th>{{ t.customer_name }}</th>
+                        <th>{{ t.phone }}</th>
+                        <th class="text-end">{{ t.balance }}</th>
+                        <th class="text-center">{{ t.transaction_type }}</th>
+                        <th class="text-center">{{ t.actions }}</th>
                     </tr>
                 </thead>
                 <tbody id="customersList">
@@ -128,11 +128,11 @@
                         </td>
                         <td class="text-center">
                             {% if customer.balance > 0 %}
-                            <span class="badge" style="background: var(--danger-gradient);">Borçlu</span>
+                            <span class="badge" style="background: var(--danger-gradient);">{{ t.debtor }}</span>
                             {% elif customer.balance < 0 %}
-                            <span class="badge" style="background: var(--success-gradient);">Alacaklı</span>
+                            <span class="badge" style="background: var(--success-gradient);">{{ t.creditor }}</span>
                             {% else %}
-                            <span class="badge bg-secondary">Temiz</span>
+                            <span class="badge bg-secondary">{{ t.balance_clear }}</span>
                             {% endif %}
                         </td>
                         <td class="text-center">
@@ -156,7 +156,7 @@
                     <tr>
                         <td colspan="5" class="text-center py-5">
                             <i class="bi bi-people fs-1 text-secondary d-block mb-2"></i>
-                            <span class="text-secondary">Henüz müşteri eklenmedi</span>
+                            <span class="text-secondary">{{ t.no_data }}</span>
                         </td>
                     </tr>
                     {% endfor %}
@@ -171,7 +171,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold" id="customerModalTitle">Yeni Müşteri</h5>
+                <h5 class="modal-title fw-bold" id="customerModalTitle">{{ t.new_customer }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="customerForm">

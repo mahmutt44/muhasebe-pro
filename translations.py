@@ -22,6 +22,9 @@ TRANSLATIONS = {
         'total_income': 'Toplam Gelir',
         'total_expense': 'Toplam Gider',
         'net_balance': 'Net Bakiye',
+        'current_balance': 'Güncel bakiye',
+        'all_time': 'Tüm zamanlar',
+        'total_receivable': 'Toplam alacak',
         'quick_actions': 'Hızlı İşlemler',
         'new_customer': 'Yeni Müşteri',
         'new_product': 'Yeni Ürün',
@@ -38,8 +41,13 @@ TRANSLATIONS = {
         'delete_customer': 'Müşteri Sil',
         'customer_details': 'Müşteri Detayları',
         'debtor': 'Borçlu',
+        'debtor_customers': 'Borçlu Müşteri',
         'creditor': 'Alacaklı',
-        'clear': 'Temiz',
+        'balance_clear': 'Temiz',
+        'clear_customers': 'Temiz Müşteri',
+        'total_debt': 'Toplam Borç',
+        'customer_list': 'Müşteri Listesi',
+        'search_customer': 'Müşteri ara...',
         
         # Ürünler
         'product_name': 'Ürün Adı',
@@ -48,6 +56,9 @@ TRANSLATIONS = {
         'add_product': 'Ürün Ekle',
         'edit_product': 'Ürün Düzenle',
         'delete_product': 'Ürün Sil',
+        'product_list': 'Ürün Listesi',
+        'average_price': 'Ortalama Fiyat',
+        'search_product': 'Ürün ara...',
         
         # Fişler
         'receipt_no': 'Fiş No',
@@ -55,6 +66,8 @@ TRANSLATIONS = {
         'total': 'Toplam',
         'subtotal': 'Ara Toplam',
         'tax': 'KDV',
+        'tax_included': 'KDV Dahil',
+        'tax_rate': 'KDV Oranı',
         'grand_total': 'Genel Toplam',
         'add_receipt': 'Fiş Oluştur',
         'receipt_details': 'Fiş Detayları',
@@ -68,6 +81,9 @@ TRANSLATIONS = {
         'delete_receipt': 'Fiş Sil',
         'customer_balance': 'Müşteri Bakiyesi',
         'created_at': 'Oluşturulma',
+        'receipt_items': 'Fiş Kalemleri',
+        'receipt_summary': 'Fiş Özeti',
+        'custom_price_hint': 'Özel fiyat için fiyat alanını değiştirebilirsiniz',
         
         # İşlemler
         'transaction_type': 'İşlem Türü',
@@ -80,6 +96,9 @@ TRANSLATIONS = {
         'add_transaction': 'İşlem Ekle',
         'edit_transaction': 'İşlem Düzenle',
         'delete_transaction': 'İşlem Sil',
+        'transaction_list': 'İşlem Listesi',
+        'search_transaction': 'İşlem ara...',
+        'income_expense': 'Gelir/Gider',
         
         # Butonlar
         'save': 'Kaydet',
@@ -92,6 +111,7 @@ TRANSLATIONS = {
         'all': 'Tümü',
         'back': 'Geri',
         'view': 'Görüntüle',
+        'actions': 'İşlemler',
         
         # Mesajlar
         'confirm_delete': 'Silmek istediğinize emin misiniz?',
@@ -122,6 +142,9 @@ TRANSLATIONS = {
         'total_income': 'إجمالي الدخل',
         'total_expense': 'إجمالي المصروفات',
         'net_balance': 'الرصيد الصافي',
+        'current_balance': 'الرصيد الحالي',
+        'all_time': 'كل الأوقات',
+        'total_receivable': 'إجمالي المستحقات',
         'quick_actions': 'إجراءات سريعة',
         'new_customer': 'عميل جديد',
         'new_product': 'منتج جديد',
@@ -138,8 +161,13 @@ TRANSLATIONS = {
         'delete_customer': 'حذف العميل',
         'customer_details': 'تفاصيل العميل',
         'debtor': 'مدين',
+        'debtor_customers': 'عملاء مدينون',
         'creditor': 'دائن',
-        'clear': 'صافي',
+        'balance_clear': 'صافي',
+        'clear_customers': 'عملاء بدون ديون',
+        'total_debt': 'إجمالي الديون',
+        'customer_list': 'قائمة العملاء',
+        'search_customer': 'بحث عن عميل...',
         
         # المنتجات
         'product_name': 'اسم المنتج',
@@ -148,6 +176,9 @@ TRANSLATIONS = {
         'add_product': 'إضافة منتج',
         'edit_product': 'تعديل المنتج',
         'delete_product': 'حذف المنتج',
+        'product_list': 'قائمة المنتجات',
+        'average_price': 'متوسط السعر',
+        'search_product': 'بحث عن منتج...',
         
         # الفواتير
         'receipt_no': 'رقم الفاتورة',
@@ -155,6 +186,8 @@ TRANSLATIONS = {
         'total': 'المجموع',
         'subtotal': 'المجموع الفرعي',
         'tax': 'الضريبة',
+        'tax_included': 'شامل الضريبة',
+        'tax_rate': 'نسبة الضريبة',
         'grand_total': 'المجموع الكلي',
         'add_receipt': 'إنشاء فاتورة',
         'receipt_details': 'تفاصيل الفاتورة',
@@ -168,6 +201,9 @@ TRANSLATIONS = {
         'delete_receipt': 'حذف الفاتورة',
         'customer_balance': 'رصيد العميل',
         'created_at': 'تاريخ الإنشاء',
+        'receipt_items': 'بنود الفاتورة',
+        'receipt_summary': 'ملخص الفاتورة',
+        'custom_price_hint': 'يمكنك تغيير السعر للسعر المخصص',
         
         # المعاملات
         'transaction_type': 'نوع المعاملة',
@@ -180,6 +216,9 @@ TRANSLATIONS = {
         'add_transaction': 'إضافة معاملة',
         'edit_transaction': 'تعديل المعاملة',
         'delete_transaction': 'حذف المعاملة',
+        'transaction_list': 'قائمة المعاملات',
+        'search_transaction': 'بحث عن معاملة...',
+        'income_expense': 'الدخل/المصروفات',
         
         # الأزرار
         'save': 'حفظ',
@@ -192,6 +231,7 @@ TRANSLATIONS = {
         'all': 'الكل',
         'back': 'رجوع',
         'view': 'عرض',
+        'actions': 'إجراءات',
         
         # الرسائل
         'confirm_delete': 'هل أنت متأكد من الحذف؟',

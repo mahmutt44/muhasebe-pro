@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Gelir/Gider - Muhasebe Pro{% endblock %}
+{% block title %}{{ t.income_expense }} - {{ t.app_name }}{% endblock %}
 
 {% block content %}
 <!-- Başlık -->
@@ -8,13 +8,13 @@
     <div>
         <h2 class="fw-bold mb-1">
             <span style="background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-                Gelir / Gider
+                {{ t.income_expense }}
             </span>
         </h2>
-        <p class="text-secondary mb-0">Finansal işlemlerinizi yönetin</p>
+        <p class="text-secondary mb-0">{{ t.transactions }}</p>
     </div>
     <button onclick="showAddModal()" class="btn btn-primary">
-        <i class="bi bi-plus-circle me-1"></i>Yeni İşlem
+        <i class="bi bi-plus-circle me-1"></i>{{ t.new_transaction }}
     </button>
 </div>
 
@@ -25,7 +25,7 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <p class="text-secondary text-uppercase small fw-semibold mb-2">Toplam Gelir</p>
+                        <p class="text-secondary text-uppercase small fw-semibold mb-2">{{ t.total_income }}</p>
                         <h3 class="fw-bold mb-0 text-success">₺{{ "%.2f"|format(total_income) }}</h3>
                     </div>
                     <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background: var(--success-gradient);">
@@ -41,7 +41,7 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <p class="text-secondary text-uppercase small fw-semibold mb-2">Toplam Gider</p>
+                        <p class="text-secondary text-uppercase small fw-semibold mb-2">{{ t.total_expense }}</p>
                         <h3 class="fw-bold mb-0 text-danger">₺{{ "%.2f"|format(total_expense) }}</h3>
                     </div>
                     <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background: var(--danger-gradient);">
@@ -57,7 +57,7 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <p class="text-secondary text-uppercase small fw-semibold mb-2">Net Bakiye</p>
+                        <p class="text-secondary text-uppercase small fw-semibold mb-2">{{ t.net_balance }}</p>
                         <h3 class="fw-bold mb-0" style="color: #667eea;">₺{{ "%.2f"|format(total_income - total_expense) }}</h3>
                     </div>
                     <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background: var(--primary-gradient);">
@@ -76,19 +76,19 @@
             <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; background: var(--primary-gradient);">
                 <i class="bi bi-list-ul text-white"></i>
             </div>
-            <h6 class="mb-0 fw-semibold">İşlem Geçmişi</h6>
+            <h6 class="mb-0 fw-semibold">{{ t.transaction_list }}</h6>
         </div>
         <div class="d-flex gap-2">
             <div class="input-group input-group-sm" style="width: 200px;">
                 <span class="input-group-text bg-transparent border-secondary">
                     <i class="bi bi-search text-secondary"></i>
                 </span>
-                <input type="text" id="searchInput" class="form-control border-secondary" placeholder="Ara...">
+                <input type="text" id="searchInput" class="form-control border-secondary" placeholder="{{ t.search }}">
             </div>
             <select id="filterType" class="form-select form-select-sm border-secondary" style="width: 130px;">
-                <option value="">Tümü</option>
-                <option value="income">Gelir</option>
-                <option value="expense">Gider</option>
+                <option value="">{{ t.all }}</option>
+                <option value="income">{{ t.income }}</option>
+                <option value="expense">{{ t.expense }}</option>
             </select>
         </div>
     </div>
@@ -97,11 +97,11 @@
             <table class="table mb-0">
                 <thead>
                     <tr>
-                        <th>Tarih</th>
-                        <th>Açıklama</th>
-                        <th class="text-center">Tür</th>
-                        <th class="text-end">Tutar</th>
-                        <th class="text-center">İşlemler</th>
+                        <th>{{ t.date }}</th>
+                        <th>{{ t.description }}</th>
+                        <th class="text-center">{{ t.transaction_type }}</th>
+                        <th class="text-end">{{ t.amount }}</th>
+                        <th class="text-center">{{ t.actions }}</th>
                     </tr>
                 </thead>
                 <tbody id="transactionsList">
