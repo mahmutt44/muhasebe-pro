@@ -90,7 +90,6 @@
                         <th>{{ t.customer_name }}</th>
                         <th class="hide-mobile">{{ t.phone }}</th>
                         <th class="text-end">{{ t.balance }}</th>
-                        <th class="text-center hide-mobile">{{ t.transaction_type }}</th>
                         <th class="text-center">{{ t.actions }}</th>
                     </tr>
                 </thead>
@@ -123,15 +122,6 @@
                             <span class="text-secondary">₺0.00</span>
                             {% endif %}
                         </td>
-                        <td class="text-center hide-mobile">
-                            {% if customer.balance > 0 %}
-                            <span class="badge" style="background: var(--danger-gradient);">{{ t.debtor }}</span>
-                            {% elif customer.balance < 0 %}
-                            <span class="badge" style="background: var(--success-gradient);">{{ t.creditor }}</span>
-                            {% else %}
-                            <span class="badge bg-secondary">{{ t.balance_clear }}</span>
-                            {% endif %}
-                        </td>
                         <td class="text-center">
                             <div class="btn-group btn-group-sm">
                                 <a href="{{ url_for('main.customer_detail', customer_id=customer.id) }}" class="btn btn-outline-light" title="Detay">
@@ -151,7 +141,7 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="5" class="text-center py-5">
+                        <td colspan="4" class="text-center py-5">
                             <i class="bi bi-people fs-1 text-secondary d-block mb-2"></i>
                             <span class="text-secondary">{{ t.no_data }}</span>
                         </td>
