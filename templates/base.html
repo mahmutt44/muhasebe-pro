@@ -355,14 +355,20 @@
             border-bottom-right-radius: 0.25rem;
         }
         
-        /* RTL - Modal header düzeltmesi (kapatma butonu sol tarafa) */
+        /* RTL - Modal header düzeltmesi (yazı sağda, çarpı solda) */
         [dir="rtl"] .modal-header {
             flex-direction: row-reverse;
+            justify-content: space-between;
+        }
+        
+        [dir="rtl"] .modal-header .modal-title {
+            text-align: right;
+            order: 1;
         }
         
         [dir="rtl"] .modal-header .btn-close {
-            margin: 0;
-            margin-right: auto;
+            margin: 0 !important;
+            order: 0;
         }
         
         /* RTL - Simgelerin ters dönmesini engelle */
