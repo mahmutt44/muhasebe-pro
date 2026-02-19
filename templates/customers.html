@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Müşteriler - Muhasebe Pro{% endblock %}
+{% block title %}{{ t.customers }} - {{ t.app_name }}{% endblock %}
 
 {% block content %}
 <!-- Başlık -->
@@ -8,13 +8,13 @@
     <div>
         <h2 class="fw-bold mb-1">
             <span style="background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-                Müşteriler
+                {{ t.customers }}
             </span>
         </h2>
-        <p class="text-secondary mb-0">Müşteri listenizi yönetin</p>
+        <p class="text-secondary mb-0">{{ t.customers }}</p>
     </div>
     <button onclick="showAddModal()" class="btn btn-primary">
-        <i class="bi bi-plus-circle me-1"></i>Yeni Müşteri
+        <i class="bi bi-plus-circle me-1"></i>{{ t.new_customer }}
     </button>
 </div>
 
@@ -27,7 +27,7 @@
                     <i class="bi bi-people text-white"></i>
                 </div>
                 <h4 class="fw-bold mb-0" style="color: #667eea;">{{ customers|length }}</h4>
-                <small class="text-secondary">Toplam Müşteri</small>
+                <small class="text-secondary">{{ t.total_customers }}</small>
             </div>
         </div>
     </div>
@@ -38,7 +38,7 @@
                     <i class="bi bi-exclamation-circle text-white"></i>
                 </div>
                 <h4 class="fw-bold mb-0 text-danger">{{ customers|selectattr('balance', 'gt', 0)|list|length }}</h4>
-                <small class="text-secondary">Borçlu Müşteri</small>
+                <small class="text-secondary">{{ t.debtor }}</small>
             </div>
         </div>
     </div>
@@ -49,7 +49,7 @@
                     <i class="bi bi-cash text-white"></i>
                 </div>
                 <h4 class="fw-bold mb-0 text-warning">₺{{ "%.2f"|format(total_debt) }}</h4>
-                <small class="text-secondary">Toplam Borç</small>
+                <small class="text-secondary">{{ t.debt }}</small>
             </div>
         </div>
     </div>
@@ -60,7 +60,7 @@
                     <i class="bi bi-check-circle text-white"></i>
                 </div>
                 <h4 class="fw-bold mb-0 text-success">{{ customers|selectattr('balance', 'le', 0)|list|length }}</h4>
-                <small class="text-secondary">Temiz Müşteri</small>
+                <small class="text-secondary">{{ t.clear }}</small>
             </div>
         </div>
     </div>
@@ -73,7 +73,7 @@
             <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; background: var(--primary-gradient);">
                 <i class="bi bi-list-ul text-white"></i>
             </div>
-            <h6 class="mb-0 fw-semibold">Müşteri Listesi</h6>
+            <h6 class="mb-0 fw-semibold">{{ t.customers }}</h6>
         </div>
         <div class="input-group input-group-sm" style="width: 220px;">
             <span class="input-group-text bg-transparent border-secondary">

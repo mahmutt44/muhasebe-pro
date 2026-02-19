@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="tr" class="h-100">
+<html lang="{{ current_lang }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}" class="h-100">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Muhasebe Uygulaması{% endblock %}</title>
+    <title>{% block title %}{{ t.app_name }}{% endblock %}</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -285,6 +285,77 @@
             height: 1.5rem;
         }
         
+        /* RTL Support for Arabic */
+        [dir="rtl"] {
+            text-align: right;
+        }
+        
+        [dir="rtl"] .text-end {
+            text-align: left !important;
+        }
+        
+        [dir="rtl"] .text-start {
+            text-align: right !important;
+        }
+        
+        [dir="rtl"] .ms-auto {
+            margin-left: 0 !important;
+            margin-right: auto !important;
+        }
+        
+        [dir="rtl"] .me-auto {
+            margin-right: 0 !important;
+            margin-left: auto !important;
+        }
+        
+        [dir="rtl"] .me-1, [dir="rtl"] .me-2, [dir="rtl"] .me-3 {
+            margin-right: 0 !important;
+            margin-left: 0.25rem !important;
+        }
+        
+        [dir="rtl"] .ms-1, [dir="rtl"] .ms-2, [dir="rtl"] .ms-3 {
+            margin-left: 0 !important;
+            margin-right: 0.25rem !important;
+        }
+        
+        [dir="rtl"] .navbar-nav {
+            flex-direction: row-reverse;
+        }
+        
+        [dir="rtl"] .dropdown-menu {
+            text-align: right;
+        }
+        
+        /* Language Selector */
+        .lang-selector {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .lang-btn {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        
+        .lang-btn.active {
+            background: var(--primary-gradient);
+            color: white;
+        }
+        
+        .lang-btn:not(.active) {
+            color: #8b949e;
+            border: 1px solid var(--border-color);
+        }
+        
+        .lang-btn:hover:not(.active) {
+            color: #c9d1d9;
+            border-color: #667eea;
+        }
+        
         /* Mobile Bottom Navigation */
         .mobile-nav {
             display: none;
@@ -479,7 +550,7 @@
         <div class="container-fluid">
             <a class="navbar-brand d-flex align-items-center" href="{{ url_for('main.index') }}">
                 <i class="bi bi-cash-stack me-2 fs-4"></i>
-                <span>Muhasebe Pro</span>
+                <span>{{ t.app_name }}</span>
             </a>
             
             <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -490,28 +561,35 @@
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint == 'main.index' %}active{% endif %}" href="{{ url_for('main.index') }}">
-                            <i class="bi bi-speedometer2 me-1"></i> Dashboard
+                            <i class="bi bi-speedometer2 me-1"></i> {{ t.dashboard }}
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint == 'main.transactions' %}active{% endif %}" href="{{ url_for('main.transactions') }}">
-                            <i class="bi bi-arrow-left-right me-1"></i> Gelir/Gider
+                            <i class="bi bi-arrow-left-right me-1"></i> {{ t.transactions }}
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint == 'main.customers' %}active{% endif %}" href="{{ url_for('main.customers') }}">
-                            <i class="bi bi-people me-1"></i> Müşteriler
+                            <i class="bi bi-people me-1"></i> {{ t.customers }}
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint == 'main.products' %}active{% endif %}" href="{{ url_for('main.products') }}">
-                            <i class="bi bi-box-seam me-1"></i> Ürünler
+                            <i class="bi bi-box-seam me-1"></i> {{ t.products }}
                         </a>
                     </li>
                     <li class="nav-item ms-lg-2">
                         <a class="nav-link btn btn-success text-white px-3 {% if request.endpoint == 'main.receipt' %}active{% endif %}" href="{{ url_for('main.receipt') }}">
-                            <i class="bi bi-receipt me-1"></i> Fiş Kes
+                            <i class="bi bi-receipt me-1"></i> {{ t.add_receipt }}
                         </a>
+                    </li>
+                    <!-- Dil Seçici -->
+                    <li class="nav-item ms-lg-3 d-flex align-items-center">
+                        <div class="lang-selector">
+                            <a href="{{ url_for('set_language', lang='tr') }}" class="lang-btn {{ 'active' if current_lang == 'tr' else '' }}">TR</a>
+                            <a href="{{ url_for('set_language', lang='ar') }}" class="lang-btn {{ 'active' if current_lang == 'ar' else '' }}">ع</a>
+                        </div>
                     </li>
                 </ul>
             </div>
@@ -530,7 +608,7 @@
         <div class="container">
             <small>
                 <i class="bi bi-shield-check me-1"></i>
-                Muhasebe Pro &copy; 2024 | Tüm Hakları Saklıdır
+                {{ t.app_name }} &copy; 2024
             </small>
         </div>
     </footer>
@@ -539,23 +617,23 @@
     <nav class="mobile-nav">
         <a href="{{ url_for('main.index') }}" class="mobile-nav-item {% if request.endpoint == 'main.index' %}active{% endif %}">
             <i class="bi bi-house-fill"></i>
-            <span>Ana Sayfa</span>
+            <span>{{ t.dashboard }}</span>
         </a>
         <a href="{{ url_for('main.transactions') }}" class="mobile-nav-item {% if request.endpoint == 'main.transactions' %}active{% endif %}">
             <i class="bi bi-arrow-left-right"></i>
-            <span>İşlemler</span>
+            <span>{{ t.transactions }}</span>
         </a>
         <a href="{{ url_for('main.receipt') }}" class="mobile-nav-item {% if request.endpoint == 'main.receipt' %}active{% endif %}" style="color: #38ef7d;">
             <i class="bi bi-plus-circle-fill" style="font-size: 1.75rem;"></i>
-            <span>Fiş Kes</span>
+            <span>{{ t.receipts }}</span>
         </a>
         <a href="{{ url_for('main.customers') }}" class="mobile-nav-item {% if request.endpoint == 'main.customers' or request.endpoint == 'main.customer_detail' %}active{% endif %}">
             <i class="bi bi-people-fill"></i>
-            <span>Müşteriler</span>
+            <span>{{ t.customers }}</span>
         </a>
         <a href="{{ url_for('main.products') }}" class="mobile-nav-item {% if request.endpoint == 'main.products' %}active{% endif %}">
             <i class="bi bi-box-seam-fill"></i>
-            <span>Ürünler</span>
+            <span>{{ t.products }}</span>
         </a>
     </nav>
     

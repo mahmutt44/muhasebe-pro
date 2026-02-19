@@ -1,6 +1,7 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session
 from models import db, Transaction, Customer, CustomerTransaction, Product, Receipt, ReceiptItem
 from config import config, get_database_url, is_production, is_demo
+from translations import get_all_translations, get_translation
 from datetime import datetime, date, timedelta, timezone
 from decimal import Decimal
 import os
@@ -47,6 +48,23 @@ def create_app(config_name=None):
         if turkey_dt:
             return turkey_dt.strftime(format)
         return ''
+    
+    # Dil context processor - tüm template'lerde kullanılabilir
+    @app.context_processor
+    def inject_translations():
+        lang = session.get('lang', 'tr')
+        return {
+            't': get_all_translations(lang),
+            'current_lang': lang,
+            'is_rtl': lang == 'ar'
+        }
+    
+    # Dil değiştirme route'u
+    @app.route('/set-language/<lang>')
+    def set_language(lang):
+        if lang in ['tr', 'ar']:
+            session['lang'] = lang
+        return redirect(request.referrer or url_for('main.index'))
     
     # Tabloları oluşturma (hata varsa fallback)
     try:
