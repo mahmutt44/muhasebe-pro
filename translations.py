@@ -84,6 +84,14 @@ TRANSLATIONS = {
         'receipt_items': 'Fiş Kalemleri',
         'receipt_summary': 'Fiş Özeti',
         'custom_price_hint': 'Özel fiyat için fiyat alanını değiştirebilirsiniz',
+        'sales_receipt': 'SATIŞ FİŞİ',
+        'customer': 'Müşteri',
+        'customer_detail': 'Müşteri Detay',
+        'product': 'Ürün',
+        'product_count': 'Ürün Sayısı',
+        'total_balance': 'Toplam Bakiye',
+        'view_details': 'Detay Görüntüle',
+        'customer_total_balance': 'Müşteri Toplam Bakiyesi',
         
         # İşlemler
         'transaction_type': 'İşlem Türü',
@@ -229,6 +237,14 @@ TRANSLATIONS = {
         'receipt_items': 'بنود الفاتورة',
         'receipt_summary': 'ملخص الفاتورة',
         'custom_price_hint': 'يمكنك تغيير السعر للسعر المخصص',
+        'sales_receipt': 'فاتورة مبيعات',
+        'customer': 'العميل',
+        'customer_detail': 'تفاصيل العميل',
+        'product': 'المنتج',
+        'product_count': 'عدد المنتجات',
+        'total_balance': 'الرصيد الإجمالي',
+        'view_details': 'عرض التفاصيل',
+        'customer_total_balance': 'الرصيد الإجمالي للعميل',
         
         # المعاملات
         'transaction_type': 'نوع المعاملة',
