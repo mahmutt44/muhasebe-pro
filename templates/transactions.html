@@ -137,7 +137,7 @@
                     <tr>
                         <td colspan="5" class="text-center py-5">
                             <i class="bi bi-inbox fs-1 text-secondary d-block mb-2"></i>
-                            <span class="text-secondary">Henüz işlem yapılmadı</span>
+                            <span class="text-secondary">{{ t.no_data }}</span>
                         </td>
                     </tr>
                     {% endfor %}
@@ -180,7 +180,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold" id="modalTitle">Yeni İşlem</h5>
+                <h5 class="modal-title fw-bold" id="modalTitle">{{ t.new_transaction }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="transactionForm">
@@ -188,33 +188,33 @@
                     <input type="hidden" name="id" id="transactionId">
                     
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">İşlem Türü</label>
+                        <label class="form-label fw-semibold">{{ t.transaction_type }}</label>
                         <select name="type" id="transactionType" required class="form-select">
-                            <option value="">Seçiniz...</option>
-                            <option value="income">💰 Gelir</option>
-                            <option value="expense">💸 Gider</option>
+                            <option value="">{{ t.select_customer }}...</option>
+                            <option value="income">💰 {{ t.income }}</option>
+                            <option value="expense">💸 {{ t.expense }}</option>
                         </select>
                     </div>
                     
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Tutar (₺)</label>
+                        <label class="form-label fw-semibold">{{ t.amount }} (₺)</label>
                         <input type="number" name="amount" id="transactionAmount" step="0.01" min="0" required class="form-control">
                     </div>
                     
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Tarih</label>
+                        <label class="form-label fw-semibold">{{ t.date }}</label>
                         <input type="date" name="date" id="transactionDate" required class="form-control">
                     </div>
                     
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Açıklama</label>
-                        <input type="text" name="description" id="transactionDescription" class="form-control" placeholder="İşlem açıklaması...">
+                        <label class="form-label fw-semibold">{{ t.description }}</label>
+                        <input type="text" name="description" id="transactionDescription" class="form-control" placeholder="{{ t.description }}...">
                     </div>
                 </div>
                 <div class="modal-footer border-0 pt-0">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ t.cancel }}</button>
                     <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-check-circle me-1"></i>Kaydet
+                        <i class="bi bi-check-circle me-1"></i>{{ t.save }}
                     </button>
                 </div>
             </form>

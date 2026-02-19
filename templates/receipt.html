@@ -51,7 +51,7 @@
                     
                     <div class="mb-4">
                         <label class="form-label fw-semibold">{{ t.notes }}</label>
-                        <input type="text" name="notes" id="receiptNotes" class="form-control" placeholder="Fiş notu...">
+                        <input type="text" name="notes" id="receiptNotes" class="form-control" placeholder="{{ t.notes }}...">
                     </div>
                     
                     <!-- Ürün Ekleme -->
@@ -104,7 +104,7 @@
                                 <tr id="emptyRow">
                                     <td colspan="5" class="text-center py-5">
                                         <i class="bi bi-cart fs-1 text-secondary d-block mb-2"></i>
-                                        <span class="text-secondary">Henüz ürün eklenmedi</span>
+                                        <span class="text-secondary">{{ t.no_data }}</span>
                                     </td>
                                 </tr>
                             </tbody>
@@ -180,25 +180,25 @@
                     <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 28px; height: 28px; background: rgba(255,255,255,0.2);">
                         <i class="bi bi-calculator text-white small"></i>
                     </div>
-                    <h6 class="mb-0 fw-semibold text-white">Özet</h6>
+                    <h6 class="mb-0 fw-semibold text-white">{{ t.receipt_summary }}</h6>
                 </div>
             </div>
             <div class="card-body text-white">
                 <div class="d-flex justify-content-between mb-2">
-                    <span class="opacity-75">Ürün Sayısı:</span>
+                    <span class="opacity-75">{{ t.items }}:</span>
                     <strong id="itemCount">0</strong>
                 </div>
                 <div class="d-flex justify-content-between mb-2">
-                    <span class="opacity-75">Ara Toplam:</span>
+                    <span class="opacity-75">{{ t.subtotal }}:</span>
                     <strong id="subtotal">₺0.00</strong>
                 </div>
                 <div class="d-flex justify-content-between mb-2" id="taxRow" style="display:none;">
-                    <span class="opacity-75">KDV (<span id="taxRateDisplay">0</span>%):</span>
+                    <span class="opacity-75">{{ t.tax }} (<span id="taxRateDisplay">0</span>%):</span>
                     <strong id="tax">₺0.00</strong>
                 </div>
                 <hr class="border-light opacity-25">
                 <div class="d-flex justify-content-between">
-                    <h5 class="mb-0">Toplam:</h5>
+                    <h5 class="mb-0">{{ t.total }}:</h5>
                     <h5 class="mb-0" id="total">₺0.00</h5>
                 </div>
             </div>
@@ -211,15 +211,15 @@
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header border-0">
-                <h5 class="modal-title fw-bold">Fiş Önizleme</h5>
+                <h5 class="modal-title fw-bold">{{ t.receipt_details }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="receiptPreview"></div>
             <div class="modal-footer border-0">
                 <button type="button" onclick="printReceipt()" class="btn btn-primary">
-                    <i class="bi bi-printer me-1"></i>Yazdır
+                    <i class="bi bi-printer me-1"></i>{{ t.print }}
                 </button>
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Kapat</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ t.close }}</button>
             </div>
         </div>
     </div>

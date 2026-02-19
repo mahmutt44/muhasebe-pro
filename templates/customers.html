@@ -179,24 +179,24 @@
                     <input type="hidden" name="id" id="customerId">
                     
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Müşteri Adı *</label>
+                        <label class="form-label fw-semibold">{{ t.customer_name }} *</label>
                         <input type="text" name="name" id="customerName" required class="form-control">
                     </div>
                     
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Telefon</label>
+                        <label class="form-label fw-semibold">{{ t.phone }}</label>
                         <input type="tel" name="phone" id="customerPhone" class="form-control">
                     </div>
                     
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Notlar</label>
+                        <label class="form-label fw-semibold">{{ t.notes }}</label>
                         <textarea name="notes" id="customerNotes" rows="2" class="form-control"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer border-0 pt-0">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ t.cancel }}</button>
                     <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-check-circle me-1"></i>Kaydet
+                        <i class="bi bi-check-circle me-1"></i>{{ t.save }}
                     </button>
                 </div>
             </form>
@@ -209,7 +209,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold">Müşteri İşlemi - <span id="transactionCustomerName"></span></h5>
+                <h5 class="modal-title fw-bold">{{ t.transactions }} - <span id="transactionCustomerName"></span></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="transactionForm">
@@ -217,33 +217,33 @@
                     <input type="hidden" name="customer_id" id="transactionCustomerId">
                     
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">İşlem Türü *</label>
+                        <label class="form-label fw-semibold">{{ t.transaction_type }} *</label>
                         <select name="type" id="transactionType" required class="form-select">
-                            <option value="">Seçiniz...</option>
-                            <option value="debt">📥 Borç Ekle</option>
-                            <option value="payment">📤 Ödeme Al</option>
+                            <option value="">{{ t.all }}...</option>
+                            <option value="debt">📥 {{ t.debt }}</option>
+                            <option value="payment">📤 {{ t.payment }}</option>
                         </select>
                     </div>
                     
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Tutar (₺) *</label>
+                        <label class="form-label fw-semibold">{{ t.amount }} (₺) *</label>
                         <input type="number" name="amount" id="transactionAmount" step="0.01" min="0" required class="form-control">
                     </div>
                     
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Tarih *</label>
+                        <label class="form-label fw-semibold">{{ t.date }} *</label>
                         <input type="date" name="date" id="transactionDate" required class="form-control">
                     </div>
                     
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Açıklama</label>
+                        <label class="form-label fw-semibold">{{ t.description }}</label>
                         <input type="text" name="description" id="transactionDescription" class="form-control">
                     </div>
                 </div>
                 <div class="modal-footer border-0 pt-0">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ t.cancel }}</button>
                     <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-check-circle me-1"></i>Kaydet
+                        <i class="bi bi-check-circle me-1"></i>{{ t.save }}
                     </button>
                 </div>
             </form>

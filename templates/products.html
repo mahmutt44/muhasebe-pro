@@ -122,7 +122,7 @@
                     <tr>
                         <td colspan="5" class="text-center py-5">
                             <i class="bi bi-box fs-1 text-secondary d-block mb-2"></i>
-                            <span class="text-secondary">Henüz ürün eklenmedi</span>
+                            <span class="text-secondary">{{ t.no_data }}</span>
                         </td>
                     </tr>
                     {% endfor %}
@@ -137,7 +137,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold" id="modalTitle">Yeni Ürün</h5>
+                <h5 class="modal-title fw-bold" id="modalTitle">{{ t.new_product }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="productForm">
@@ -145,14 +145,14 @@
                     <input type="hidden" name="id" id="productId">
                     
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Ürün Adı *</label>
+                        <label class="form-label fw-semibold">{{ t.product_name }} *</label>
                         <input type="text" name="name" id="productName" required class="form-control">
                     </div>
                     
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Birim *</label>
+                        <label class="form-label fw-semibold">{{ t.unit }} *</label>
                         <select name="unit" id="productUnit" required class="form-select">
-                            <option value="">Seçiniz...</option>
+                            <option value="">{{ t.all }}...</option>
                             <option value="adet">Adet</option>
                             <option value="kg">Kg</option>
                             <option value="gram">Gram</option>
@@ -166,14 +166,14 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Birim Fiyat (₺) *</label>
+                        <label class="form-label fw-semibold">{{ t.unit_price }} (₺) *</label>
                         <input type="number" name="unit_price" id="productPrice" step="0.01" min="0" required class="form-control">
                     </div>
                 </div>
                 <div class="modal-footer border-0 pt-0">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ t.cancel }}</button>
                     <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-check-circle me-1"></i>Kaydet
+                        <i class="bi bi-check-circle me-1"></i>{{ t.save }}
                     </button>
                 </div>
             </form>
