@@ -137,6 +137,13 @@ TRANSLATIONS = {
         'invalid_quantity_error': 'Lütfen geçerli bir miktar girin',
         'invalid_price_error': 'Lütfen geçerli bir fiyat girin',
         'add_product_error': 'Lütfen en az bir ürün ekleyin',
+        
+        # Onay Mesajları
+        'confirm_delete_transaction': 'Bu işlemi silmek istediğinizden emin misiniz?',
+        'confirm_delete_customer': 'Bu müşteriyi silmek istediğinizden emin misiniz?',
+        'confirm_delete_product': 'Bu ürünü silmek istediğinizden emin misiniz?',
+        'confirm_delete_receipt': 'Bu fişi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.',
+        'confirm_clear_form': 'Formu temizlemek istediğinizden emin misiniz?',
     },
     
     'ar': {
@@ -275,6 +282,13 @@ TRANSLATIONS = {
         'invalid_quantity_error': 'يرجى إدخال كمية صحيحة',
         'invalid_price_error': 'يرجى إدخال سعر صحيح',
         'add_product_error': 'يرجى إضافة منتج واحد على الأقل',
+        
+        # رسائل التأكيد
+        'confirm_delete_transaction': 'هل أنت متأكد من حذف هذه المعاملة؟',
+        'confirm_delete_customer': 'هل أنت متأكد من حذف هذا العميل؟',
+        'confirm_delete_product': 'هل أنت متأكد من حذف هذا المنتج؟',
+        'confirm_delete_receipt': 'هل أنت متأكد من حذف هذه الفاتورة؟ لا يمكن التراجع عن هذا الإجراء.',
+        'confirm_clear_form': 'هل أنت متأكد من مسح النموذج؟',
     }
 }
 

@@ -278,7 +278,7 @@ function editCustomer(id) {
 }
 
 function deleteCustomer(id) {
-    if (!confirm('Bu müşteriyi silmek istediğinizden emin misiniz?')) return;
+    if (!confirm('{{ t.confirm_delete_customer }}')) return;
     
     apiCall(`/api/customers/${id}`, { method: 'DELETE' })
         .then(() => {

@@ -207,7 +207,7 @@ function editProduct(id) {
 }
 
 function deleteProduct(id) {
-    if (!confirm('Bu ürünü silmek istediğinizden emin misiniz?')) return;
+    if (!confirm('{{ t.confirm_delete_product }}')) return;
     
     apiCall(`/api/products/${id}`, { method: 'DELETE' })
         .then(() => {

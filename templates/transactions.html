@@ -250,7 +250,7 @@ function editTransaction(id) {
 }
 
 function deleteTransaction(id) {
-    if (!confirm('Bu işlemi silmek istediğinizden emin misiniz?')) return;
+    if (!confirm('{{ t.confirm_delete_transaction }}')) return;
     
     apiCall(`/api/transactions/${id}`, { method: 'DELETE' })
         .then(() => {

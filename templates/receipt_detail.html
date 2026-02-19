@@ -181,7 +181,7 @@
 {% block scripts %}
 <script>
 function deleteReceipt(id) {
-    if (!confirm('Bu fişi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.')) return;
+    if (!confirm('{{ t.confirm_delete_receipt }}')) return;
     
     apiCall(`/api/receipts/${id}`, { method: 'DELETE' })
         .then(() => {

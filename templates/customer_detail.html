@@ -269,7 +269,7 @@ function editCustomerTransaction(id, type, amount, date, description) {
 }
 
 function deleteCustomerTransaction(id) {
-    if (!confirm('Bu işlemi silmek istediğinizden emin misiniz?')) return;
+    if (!confirm('{{ t.confirm_delete_transaction }}')) return;
     
     apiCall(`/api/customer-transactions/${id}`, { method: 'DELETE' })
         .then(() => {

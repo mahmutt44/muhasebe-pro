@@ -376,7 +376,7 @@ function removeItem(index) {
 
 // Form temizleme
 function clearForm() {
-    if (confirm('Formu temizlemek istediğinizden emin misiniz?')) {
+    if (confirm('{{ t.confirm_clear_form }}')) {
         receiptItems = [];
         updateItemsList();
         document.getElementById('receiptForm').reset();
