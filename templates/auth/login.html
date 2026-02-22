@@ -18,14 +18,6 @@
                 <p class="app-tagline">{{ t.login if t.login else 'Giriş Yap' }}</p>
             </div>
             
-            <!-- İşletme Hesabı Talep Et -->
-            <div class="text-center mt-4">
-                <a href="{{ url_for('auth.request_account') }}" class="btn btn-outline-light w-100">
-                    <i class="bi bi-building me-2"></i>
-                    İşletme Hesabı Talep Et
-                </a>
-            </div>
-            
             <!-- Login Form -->
             <form method="POST" action="{{ url_for('auth.login') }}" class="login-form">
                 <div class="form-group">
@@ -46,6 +38,14 @@
                     {{ t.login if t.login else 'Giriş Yap' }}
                 </button>
             </form>
+
+            <!-- İşletme Hesabı Talep Et -->
+            <div class="text-center mt-3">
+                <a href="{{ url_for('auth.request_account') }}" class="btn btn-outline-light w-100">
+                    <i class="bi bi-building me-2"></i>
+                    {{ t.request_account if t.request_account else 'İşletme Hesabı Talep Et' }}
+                </a>
+            </div>
         </div>
         
         <!-- Language Footer -->

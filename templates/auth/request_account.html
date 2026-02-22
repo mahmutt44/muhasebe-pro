@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 
-{% block title %}İşletme Hesabı Talep Et - {{ t.app_name }}{% endblock %}
+{% block title %}{{ t.request_account if t.request_account else 'İşletme Hesabı Talep Et' }} - {{ t.app_name }}{% endblock %}
+
+{% block navbar %}{% endblock %}
 
 {% block content %}
 <div class="container py-4">
@@ -9,9 +11,9 @@
         <div>
             <h4 class="mb-3">
                 <i class="bi bi-building me-2" style="color: #667eea;"></i>
-                İşletme Hesabı Talep Et
+                {{ t.request_account if t.request_account else 'İşletme Hesabı Talep Et' }}
             </h4>
-            <p class="text-secondary mb-0">Yeni bir işletme hesabı oluşturmak için talep gönderin</p>
+            <p class="text-secondary mb-0">{{ t.request_account_subtitle if t.request_account_subtitle else 'Yeni bir işletme hesabı oluşturmak için talep gönderin' }}</p>
         </div>
     </div>
 
@@ -19,51 +21,51 @@
     <div class="card" style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px;">
         <div class="card-header" style="background: rgba(102, 126, 234, 0.1); border-bottom: 1px solid var(--border-color);">
             <h6 class="mb-0 fw-semibold text-light">
-                <i class="bi bi-envelope-plus me-2"></i>İşletme Bilgileri
+                <i class="bi bi-envelope-plus me-2"></i>{{ t.business_info if t.business_info else 'İşletme Bilgileri' }}
             </h6>
         </div>
         <div class="card-body p-4">
             <form method="POST" action="{{ url_for('auth.request_account') }}">
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label class="form-label text-light small">İşletme Adı *</label>
-                        <input type="text" name="company_name" class="form-control" required style="background: var(--card-bg); border-color: var(--border-color); color: white;" placeholder="Şirket Adı">
+                        <label class="form-label text-light small">{{ t.company_name if t.company_name else 'İşletme Adı' }} *</label>
+                        <input type="text" name="company_name" class="form-control" required style="background: var(--card-bg); border-color: var(--border-color); color: white;" placeholder="{{ t.company_name if t.company_name else 'İşletme Adı' }}">
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label text-light small">İşletme Türü *</label>
+                        <label class="form-label text-light small">{{ t.business_type if t.business_type else 'İşletme Türü' }} *</label>
                         <select name="business_type" class="form-select" required style="background: var(--card-bg); border-color: var(--border-color); color: white;">
-                            <option value="">Seçiniz...</option>
-                            <option value="kafe">Kafe</option>
-                            <option value="market">Market</option>
-                            <option value="restoran">Restoran</option>
-                            <option value="genel">Genel</option>
+                            <option value="">{{ t.select_option if t.select_option else 'Seçiniz...' }}</option>
+                            <option value="kafe">{{ t.cafe if t.cafe else 'Kafe' }}</option>
+                            <option value="market">{{ t.market if t.market else 'Market' }}</option>
+                            <option value="restoran">{{ t.restaurant if t.restaurant else 'Restoran' }}</option>
+                            <option value="genel">{{ t.general if t.general else 'Genel' }}</option>
                         </select>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label text-light small">Yetkili Adı *</label>
-                        <input type="text" name="authorized_person" class="form-control" required style="background: var(--card-bg); border-color: var(--border-color); color: white;" placeholder="Yetkili Kişi">
+                        <label class="form-label text-light small">{{ t.authorized_person if t.authorized_person else 'Yetkili Adı' }} *</label>
+                        <input type="text" name="authorized_person" class="form-control" required style="background: var(--card-bg); border-color: var(--border-color); color: white;" placeholder="{{ t.authorized_person if t.authorized_person else 'Yetkili Adı' }}">
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label text-light small">Telefon *</label>
+                        <label class="form-label text-light small">{{ t.phone if t.phone else 'Telefon' }} *</label>
                         <input type="tel" name="phone" class="form-control" required style="background: var(--card-bg); border-color: var(--border-color); color: white;" placeholder="0555 555 55 55">
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label text-light small">E-posta *</label>
+                        <label class="form-label text-light small">{{ t.email if t.email else 'E-posta' }} *</label>
                         <input type="email" name="email" class="form-control" required style="background: var(--card-bg); border-color: var(--border-color); color: white;" placeholder="ornek@sirket.com">
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label text-light small">Şehir</label>
+                        <label class="form-label text-light small">{{ t.city if t.city else 'Şehir' }}</label>
                         <input type="text" name="city" class="form-control" style="background: var(--card-bg); border-color: var(--border-color); color: white;" placeholder="İstanbul">
                     </div>
                     <div class="col-md-12">
-                        <label class="form-label text-light small">Kısa Not</label>
-                        <textarea name="notes" class="form-control" rows="3" style="background: var(--card-bg); border-color: var(--border-color); color: white;" placeholder="İşletme hakkında kısa bilgi..."></textarea>
+                        <label class="form-label text-light small">{{ t.short_note if t.short_note else 'Kısa Not' }}</label>
+                        <textarea name="notes" class="form-control" rows="3" style="background: var(--card-bg); border-color: var(--border-color); color: white;" placeholder="{{ t.short_note_placeholder if t.short_note_placeholder else 'İşletme hakkında kısa bilgi...' }}"></textarea>
                     </div>
                 </div>
                 <div class="row mt-4">
                     <div class="col-12 text-center">
                         <button type="submit" class="btn btn-lg px-5" style="background: var(--primary-gradient); border: none; color: white;">
-                            <i class="bi bi-send me-2"></i>Talep Gönder
+                            <i class="bi bi-send me-2"></i>{{ t.submit_request if t.submit_request else 'Talep Gönder' }}
                         </button>
                     </div>
                 </div>
@@ -71,4 +73,15 @@
         </div>
     </div>
 </div>
+
+<style>
+    .navbar, nav, .mobile-nav, .sidebar, .mobile-menu-toggle {
+        display: none !important;
+    }
+
+    .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+</style>
 {% endblock %}

@@ -14,7 +14,7 @@
         </div>
         <div class="d-flex align-items-center gap-2">
             <a href="{{ url_for('auth.admin_company_requests') }}" class="btn btn-sm" style="background: rgba(102, 126, 234, 0.18); color: #dbe4ff; border: 1px solid rgba(102, 126, 234, 0.35);">
-                <i class="bi bi-building me-1"></i>Hesap Talepleri
+                <i class="bi bi-building me-1"></i>{{ t.account_requests if t.account_requests else 'Hesap Talepleri' }}
             </a>
             <span class="badge" style="background: var(--primary-gradient);">
                 <i class="bi bi-people me-1"></i>{{ users|length }} {{ t.users if t.users else 'Kullanıcı' }}

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Hesap Talepleri - {{ t.app_name }}{% endblock %}
+{% block title %}{{ t.account_requests if t.account_requests else 'Hesap Talepleri' }} - {{ t.app_name }}{% endblock %}
 
 {% block content %}
 <div class="container py-4">
@@ -9,12 +9,12 @@
         <div>
             <h4 class="mb-3">
                 <i class="bi bi-building me-2" style="color: #667eea;"></i>
-                Hesap Talepleri
+                {{ t.account_requests if t.account_requests else 'Hesap Talepleri' }}
             </h4>
-            <p class="text-secondary mb-0">İşletme hesabı taleplerini yönetin</p>
+            <p class="text-secondary mb-0">{{ t.account_requests_subtitle if t.account_requests_subtitle else 'İşletme hesabı taleplerini yönetin' }}</p>
         </div>
         <span class="badge" style="background: var(--primary-gradient);">
-            <i class="bi bi-envelope me-1"></i>{{ requests|length }} Talep
+            <i class="bi bi-envelope me-1"></i>{{ requests|length }} {{ t.request_list if t.request_list else 'Talep' }}
         </span>
     </div>
 
@@ -22,7 +22,7 @@
     <div class="card" style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px;">
         <div class="card-header" style="background: rgba(102, 126, 234, 0.1); border-bottom: 1px solid var(--border-color);">
             <h6 class="mb-0 fw-semibold text-light">
-                <i class="bi bi-list-check me-2"></i>Talep Listesi
+                <i class="bi bi-list-check me-2"></i>{{ t.request_list if t.request_list else 'Talep Listesi' }}
             </h6>
         </div>
         <div class="card-body p-0">
@@ -30,15 +30,15 @@
                 <table class="table table-dark table-hover mb-0">
                     <thead style="background: rgba(255,255,255,0.05);">
                         <tr>
-                            <th class="text-light">İşletme Adı</th>
-                            <th class="text-light">Yetkili</th>
-                            <th class="text-light">Telefon</th>
-                            <th class="text-light">E-posta</th>
-                            <th class="text-light">Şehir</th>
-                            <th class="text-light">Türü</th>
-                            <th class="text-light">Durum</th>
-                            <th class="text-center">Talep Tarihi</th>
-                            <th class="text-center">İşlemler</th>
+                            <th class="text-light">{{ t.company_name if t.company_name else 'İşletme Adı' }}</th>
+                            <th class="text-light">{{ t.authorized_person if t.authorized_person else 'Yetkili' }}</th>
+                            <th class="text-light">{{ t.phone if t.phone else 'Telefon' }}</th>
+                            <th class="text-light">{{ t.email if t.email else 'E-posta' }}</th>
+                            <th class="text-light">{{ t.city if t.city else 'Şehir' }}</th>
+                            <th class="text-light">{{ t.business_type if t.business_type else 'Türü' }}</th>
+                            <th class="text-light">{{ t.status if t.status else 'Durum' }}</th>
+                            <th class="text-center">{{ t.request_date if t.request_date else 'Talep Tarihi' }}</th>
+                            <th class="text-center">{{ t.actions if t.actions else 'İşlemler' }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -56,11 +56,11 @@
                             </td>
                             <td class="text-center">
                                 {% if request.status == 'pending' %}
-                                    <span class="badge bg-warning text-dark">Beklemede</span>
+                                    <span class="badge bg-warning text-dark">{{ t.pending if t.pending else 'Beklemede' }}</span>
                                 {% elif request.status == 'approved' %}
-                                    <span class="badge bg-success">Onaylandı</span>
+                                    <span class="badge bg-success">{{ t.approved if t.approved else 'Onaylandı' }}</span>
                                 {% elif request.status == 'rejected' %}
-                                    <span class="badge bg-danger">Reddedildi</span>
+                                    <span class="badge bg-danger">{{ t.rejected if t.rejected else 'Reddedildi' }}</span>
                                 {% endif %}
                             </td>
                             <td class="text-center">{{ request.created_at|turkey_time('%d.%m.%Y') }}</td>
@@ -68,10 +68,10 @@
                                 <div class="btn-group btn-group-sm">
                                     {% if request.status == 'pending' %}
                                     <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#approveModal{{ request.id }}">
-                                        <i class="bi bi-check-circle"></i> Onayla
+                                        <i class="bi bi-check-circle"></i> {{ t.approve if t.approve else 'Onayla' }}
                                     </button>
                                     <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#rejectModal{{ request.id }}">
-                                        <i class="bi bi-x-circle"></i> Reddet
+                                        <i class="bi bi-x-circle"></i> {{ t.reject if t.reject else 'Reddet' }}
                                     </button>
                                     {% endif %}
                                 </div>
@@ -81,7 +81,7 @@
                         <tr>
                             <td colspan="9" class="text-center py-5">
                                 <i class="bi bi-inbox fs-1 text-secondary d-block mb-2"></i>
-                                <span class="text-secondary">Henüz talep bulunmuyor</span>
+                                <span class="text-secondary">{{ t.no_requests if t.no_requests else 'Henüz talep bulunmuyor' }}</span>
                             </td>
                         </tr>
                         {% endfor %}
@@ -100,23 +100,23 @@
                 <div class="modal-header" style="border-bottom: 1px solid var(--border-color);">
                     <h6 class="modal-title text-light">
                         <i class="bi bi-check-circle text-success me-2"></i>
-                        Talebi Onayla
+                        {{ t.approve_request_title if t.approve_request_title else 'Talebi Onayla' }}
                     </h6>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <p class="text-light mb-3">
-                        <strong>{{ request.company_name }}</strong> talebini onaylamak istediğinizden emin misiniz?
+                        {{ (t.approve_request_confirm if t.approve_request_confirm else '{company} talebini onaylamak istediğinizden emin misiniz?').format(company=request.company_name) }}
                     </p>
                     <p class="text-secondary small">
-                        Onaylandığında yeni bir işletme kaydı ve admin kullanıcısı oluşturulacaktır.
+                        {{ t.approve_request_info if t.approve_request_info else 'Onaylandığında yeni bir işletme kaydı ve admin kullanıcısı oluşturulacaktır.' }}
                     </p>
                 </div>
                 <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ t.cancel if t.cancel else 'İptal' }}</button>
                     <form method="POST" action="{{ url_for('auth.approve_request', request_id=request.id) }}" class="d-inline">
                         <button type="submit" class="btn btn-success">
-                            <i class="bi bi-check-circle me-1"></i>Onayla
+                            <i class="bi bi-check-circle me-1"></i>{{ t.approve if t.approve else 'Onayla' }}
                         </button>
                     </form>
                 </div>
@@ -132,20 +132,20 @@
                     <div class="modal-header" style="border-bottom: 1px solid var(--border-color);">
                         <h6 class="modal-title text-light">
                             <i class="bi bi-x-circle text-danger me-2"></i>
-                            Talebi Reddet
+                            {{ t.reject_request_title if t.reject_request_title else 'Talebi Reddet' }}
                         </h6>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label class="form-label text-light">Reddetme Sebebi</label>
-                            <textarea name="rejection_reason" class="form-control" rows="3" style="background: var(--card-bg); border-color: var(--border-color); color: white;" placeholder="Reddetme sebebinizi belirtin..." required></textarea>
+                            <label class="form-label text-light">{{ t.rejection_reason if t.rejection_reason else 'Reddetme Sebebi' }}</label>
+                            <textarea name="rejection_reason" class="form-control" rows="3" style="background: var(--card-bg); border-color: var(--border-color); color: white;" placeholder="{{ t.rejection_reason_placeholder if t.rejection_reason_placeholder else 'Reddetme sebebinizi belirtin...' }}" required></textarea>
                         </div>
                     </div>
                     <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ t.cancel if t.cancel else 'İptal' }}</button>
                         <button type="submit" class="btn btn-danger">
-                            <i class="bi bi-x-circle me-1"></i>Reddet
+                            <i class="bi bi-x-circle me-1"></i>{{ t.reject if t.reject else 'Reddet' }}
                         </button>
                     </div>
                 </form>

@@ -105,7 +105,7 @@ def approve_request(request_id):
     company_request = CompanyRequest.query.get_or_404(request_id)
 
     if company_request.status != 'pending':
-        flash('Bu talep daha önce işlenmiş.', 'warning')
+        flash(get_translation('request_already_processed', session.get('lang', 'tr')), 'warning')
         return redirect(url_for('auth.admin_company_requests'))
     
     # Yeni şirket oluştur
@@ -167,7 +167,7 @@ def reject_request(request_id):
     company_request = CompanyRequest.query.get_or_404(request_id)
 
     if company_request.status != 'pending':
-        flash('Bu talep daha önce işlenmiş.', 'warning')
+        flash(get_translation('request_already_processed', session.get('lang', 'tr')), 'warning')
         return redirect(url_for('auth.admin_company_requests'))
     
     rejection_reason = request.form.get('rejection_reason', '').strip()
