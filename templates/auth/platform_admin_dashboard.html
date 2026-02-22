@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t.platform_admin_dashboard if t.platform_admin_dashboard else 'Platform Admin Paneli' }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="mb-0 text-light">
+                            <i class="bi bi-shield-lock me-2 text-primary"></i>
+                            {{ t.platform_admin_dashboard if t.platform_admin_dashboard else 'Platform Admin Paneli' }}
+                        </h4>
+                        <small class="text-secondary">{{ t.global_system_management if t.global_system_management else 'Global Sistem Yönetimi' }}</small>
+                    </div>
+                    <span class="badge bg-primary">Platform Admin</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card h-100" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                <div class="card-body text-center">
+                    <i class="bi bi-building fs-1 text-info mb-2"></i>
+                    <h5 class="text-light mb-1">{{ total_companies }}</h5>
+                    <small class="text-secondary">{{ t.total_companies if t.total_companies else 'Toplam İşletme' }}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                <div class="card-body text-center">
+                    <i class="bi bi-people fs-1 text-success mb-2"></i>
+                    <h5 class="text-light mb-1">{{ total_users }}</h5>
+                    <small class="text-secondary">{{ t.total_company_users if t.total_company_users else 'Şirket Kullanıcıları' }}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                <div class="card-body text-center">
+                    <i class="bi bi-shield-check fs-1 text-warning mb-2"></i>
+                    <h5 class="text-light mb-1">{{ platform_admins }}</h5>
+                    <small class="text-secondary">{{ t.platform_admins if t.platform_admins else 'Platform Admin' }}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                <div class="card-body text-center">
+                    <i class="bi bi-inbox fs-1 text-danger mb-2"></i>
+                    <h5 class="text-light mb-1">{{ pending_requests }}</h5>
+                    <small class="text-secondary">{{ t.pending_requests if t.pending_requests else 'Bekleyen Talepler' }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                <div class="card-header" style="background: rgba(255,255,255,0.05);">
+                    <h6 class="mb-0 text-light">{{ t.quick_actions if t.quick_actions else 'Hızlı İşlemler' }}</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <a href="{{ url_for('auth.admin_company_requests') }}" class="btn btn-outline-info w-100">
+                                <i class="bi bi-inbox me-2"></i>{{ t.account_requests if t.account_requests else 'Hesap Talepleri' }}
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="{{ url_for('auth.platform_admin_companies') }}" class="btn btn-outline-success w-100">
+                                <i class="bi bi-building me-2"></i>{{ t.manage_companies if t.manage_companies else 'İşletmeleri Yönet' }}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Companies -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                <div class="card-header d-flex justify-content-between align-items-center" style="background: rgba(255,255,255,0.05);">
+                    <h6 class="mb-0 text-light">{{ t.recent_companies if t.recent_companies else 'Son Eklenen İşletmeler' }}</h6>
+                    <a href="{{ url_for('auth.platform_admin_companies') }}" class="btn btn-sm btn-outline-light">
+                        {{ t.view_all if t.view_all else 'Tümünü Gör' }}
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover mb-0">
+                            <thead style="background: rgba(255,255,255,0.05);">
+                                <tr>
+                                    <th class="text-light">{{ t.company_name if t.company_name else 'İşletme' }}</th>
+                                    <th class="text-light">{{ t.authorized_person if t.authorized_person else 'Yetkili' }}</th>
+                                    <th class="text-light">{{ t.email if t.email else 'E-posta' }}</th>
+                                    <th class="text-light">{{ t.status if t.status else 'Durum' }}</th>
+                                    <th class="text-center">{{ t.created_at if t.created_at else 'Tarih' }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for company in recent_companies %}
+                                <tr>
+                                    <td class="text-light fw-semibold">{{ company.name }}</td>
+                                    <td class="text-light">{{ company.authorized_person }}</td>
+                                    <td class="text-light">{{ company.email }}</td>
+                                    <td>
+                                        {% if company.status == 'approved' %}
+                                            <span class="badge bg-success">{{ t.approved if t.approved else 'Onaylı' }}</span>
+                                        {% elif company.status == 'pending' %}
+                                            <span class="badge bg-warning text-dark">{{ t.pending if t.pending else 'Beklemede' }}</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ company.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center text-secondary">{{ company.created_at|turkey_time('%d.%m.%Y') }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-secondary">
+                                        <i class="bi bi-inbox fs-4 d-block mb-2"></i>
+                                        {{ t.no_companies_yet if t.no_companies_yet else 'Henüz işletme bulunmuyor' }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

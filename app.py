@@ -126,6 +126,20 @@ def create_app(config_name=None):
     app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(auth, url_prefix='/auth')
 
+    # Context processor to inject global variables into all templates
+    @app.context_processor
+    def inject_globals():
+        from flask_login import current_user
+        from models import CompanyRequest
+        
+        context = {}
+        if current_user.is_authenticated and current_user.is_platform_admin:
+            # Platform admin için bekleyen talep sayısı
+            context['pending_requests_count'] = CompanyRequest.query.filter_by(status='pending').count()
+        else:
+            context['pending_requests_count'] = 0
+        return context
+    
     # SaaS şema bootstrap (eski DB'ler için güvenli)
     with app.app_context():
         ensure_saas_schema()
@@ -171,6 +185,12 @@ def ensure_saas_schema():
     if 'receipts' in table_columns and 'company_id' not in table_columns['receipts']:
         alter_statements.append("ALTER TABLE receipts ADD COLUMN company_id INTEGER DEFAULT 1")
 
+    if 'company_requests' in table_columns and 'approved_username' not in table_columns['company_requests']:
+        alter_statements.append("ALTER TABLE company_requests ADD COLUMN approved_username VARCHAR(100)")
+
+    if 'company_requests' in table_columns and 'temporary_password' not in table_columns['company_requests']:
+        alter_statements.append("ALTER TABLE company_requests ADD COLUMN temporary_password VARCHAR(100)")
+
     with db.engine.begin() as conn:
         for stmt in alter_statements:
             conn.execute(text(stmt))
@@ -195,6 +215,8 @@ def ensure_saas_schema():
         conn.execute(text("UPDATE transactions SET company_id = 1 WHERE company_id IS NULL"))
         conn.execute(text("UPDATE products SET company_id = 1 WHERE company_id IS NULL"))
         conn.execute(text("UPDATE receipts SET company_id = 1 WHERE company_id IS NULL"))
+        conn.execute(text("UPDATE users SET role = 'platform_admin' WHERE company_id IS NULL AND role = 'admin'"))
+        conn.execute(text("UPDATE users SET company_id = 1 WHERE company_id IS NULL AND role = 'observer'"))
 
 def create_production_admin():
     """Production ortamı için admin kullanıcısı oluşturur"""
@@ -203,7 +225,7 @@ def create_production_admin():
         company_id=1,
         username='admin',
         email='admin@railway.com',
-        role='admin',
+        role='platform_admin',
         is_active=True
     )
     admin_user.set_password('admin123')
@@ -329,7 +351,7 @@ def create_demo_data():
         company_id=company.id,
         username='admin',
         email='admin@example.com',
-        role='admin',
+        role='platform_admin',
         is_active=True
     )
     admin_user.set_password('admin123')

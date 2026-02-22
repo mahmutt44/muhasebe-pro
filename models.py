@@ -68,6 +68,8 @@ class CompanyRequest(db.Model):
     notes = db.Column(db.Text)
     status = db.Column(db.String(20), default='pending')  # pending, approved, rejected
     rejection_reason = db.Column(db.Text)
+    approved_username = db.Column(db.String(100))
+    temporary_password = db.Column(db.String(100))
     created_at = db.Column(db.DateTime, default=get_turkey_time)
     updated_at = db.Column(db.DateTime, default=get_turkey_time, onupdate=get_turkey_time)
     
@@ -83,13 +85,15 @@ class CompanyRequest(db.Model):
             'notes': self.notes,
             'status': self.status,
             'rejection_reason': self.rejection_reason or '',
+            'approved_username': self.approved_username or '',
+            'temporary_password': self.temporary_password or '',
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
 
 
 class User(db.Model, UserMixin):
-    """Kullanıcılar (admin ve gözlemci rolleri)"""
+    """Kullanıcılar (platform_admin, admin ve observer rolleri)"""
     __tablename__ = 'users'
     
     id = db.Column(db.Integer, primary_key=True)
@@ -97,15 +101,20 @@ class User(db.Model, UserMixin):
     username = db.Column(db.String(50), unique=True, nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
-    role = db.Column(db.String(20), nullable=False, default='admin')  # 'admin' veya 'observer'
+    role = db.Column(db.String(20), nullable=False, default='admin')
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=get_turkey_time)
     last_login = db.Column(db.DateTime)
     
     @property
     def is_admin(self):
-        """Kullanıcının admin olup olmadığını kontrol eder"""
-        return self.role == 'admin'
+        """Admin yetkisi olan rolleri kontrol eder"""
+        return self.role in ('admin', 'platform_admin')
+
+    @property
+    def is_platform_admin(self):
+        """Platform admin kontrolü"""
+        return self.role == 'platform_admin'
     
     @property
     def is_observer(self):

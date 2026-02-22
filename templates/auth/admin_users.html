@@ -13,9 +13,11 @@
             </h4>
         </div>
         <div class="d-flex align-items-center gap-2">
+            {% if current_user.is_platform_admin %}
             <a href="{{ url_for('auth.admin_company_requests') }}" class="btn btn-sm" style="background: rgba(102, 126, 234, 0.18); color: #dbe4ff; border: 1px solid rgba(102, 126, 234, 0.35);">
                 <i class="bi bi-building me-1"></i>{{ t.account_requests if t.account_requests else 'Hesap Talepleri' }}
             </a>
+            {% endif %}
             <span class="badge" style="background: var(--primary-gradient);">
                 <i class="bi bi-people me-1"></i>{{ users|length }} {{ t.users if t.users else 'Kullanıcı' }}
             </span>
@@ -49,6 +51,9 @@
                         <select name="role" class="form-select" style="background: rgba(30,30,30,0.9); border-color: var(--border-color); color: #ffffff; cursor: pointer;">
                             <option value="admin" style="color: #ffffff; background: rgba(30,30,30,0.9);">{{ t.admin if t.admin else 'Admin' }}</option>
                             <option value="observer" style="color: #ffffff; background: rgba(30,30,30,0.9);">{{ t.observer if t.observer else 'Gözlemci' }}</option>
+                            {% if current_user.is_platform_admin %}
+                            <option value="platform_admin" style="color: #ffffff; background: rgba(30,30,30,0.9);">{{ t.platform_admin if t.platform_admin else 'Platform Admin' }}</option>
+                            {% endif %}
                         </select>
                     </div>
                     <div class="col-md-2">
@@ -102,8 +107,11 @@
                             <td class="text-center">
                                 <form method="POST" action="{{ url_for('auth.admin_change_role', user_id=user.id) }}" class="d-inline">
                                     <select name="new_role" class="form-select form-select-sm d-inline-block w-auto" style="background: rgba(30,30,30,0.9); border-color: var(--border-color); color: #ffffff; font-size: 0.8rem;" onchange="this.form.submit()" {% if user.id == current_user.id %}disabled{% endif %}>
-                                        <option value="admin" {% if user.is_admin %}selected{% endif %} style="color: #ffffff; background: rgba(30,30,30,0.9);">{{ t.admin if t.admin else 'Admin' }}</option>
+                                        <option value="admin" {% if user.role == 'admin' %}selected{% endif %} style="color: #ffffff; background: rgba(30,30,30,0.9);">{{ t.admin if t.admin else 'Admin' }}</option>
                                         <option value="observer" {% if user.is_observer %}selected{% endif %} style="color: #ffffff; background: rgba(30,30,30,0.9);">{{ t.observer if t.observer else 'Gözlemci' }}</option>
+                                        {% if current_user.is_platform_admin %}
+                                        <option value="platform_admin" {% if user.is_platform_admin %}selected{% endif %} style="color: #ffffff; background: rgba(30,30,30,0.9);">{{ t.platform_admin if t.platform_admin else 'Platform Admin' }}</option>
+                                        {% endif %}
                                     </select>
                                 </form>
                             </td>

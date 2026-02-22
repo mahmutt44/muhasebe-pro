@@ -3,7 +3,7 @@
 {% block title %}{{ t.account_requests if t.account_requests else 'Hesap Talepleri' }} - {{ t.app_name }}{% endblock %}
 
 {% block content %}
-<div class="container py-4">
+<div class="container-fluid py-4" style="max-width: 1600px;">
     <!-- Page Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -13,12 +13,17 @@
             </h4>
             <p class="text-secondary mb-0">{{ t.account_requests_subtitle if t.account_requests_subtitle else 'İşletme hesabı taleplerini yönetin' }}</p>
         </div>
-        <span class="badge" style="background: var(--primary-gradient);">
-            <i class="bi bi-envelope me-1"></i>{{ requests|length }} {{ t.request_list if t.request_list else 'Talep' }}
-        </span>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{{ url_for('auth.platform_admin_dashboard') }}" class="btn btn-outline-light">
+                <i class="bi bi-arrow-left me-2"></i>{{ t.back if t.back else 'Geri' }}
+            </a>
+            <span class="badge" style="background: var(--primary-gradient);">
+                <i class="bi bi-envelope me-1"></i>{{ requests|length }} {{ t.request_list if t.request_list else 'Talep' }}
+            </span>
+        </div>
     </div>
 
-    <!-- Requests List -->
+    <!-- Requests List - Geniş Tablo -->
     <div class="card" style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px;">
         <div class="card-header" style="background: rgba(102, 126, 234, 0.1); border-bottom: 1px solid var(--border-color);">
             <h6 class="mb-0 fw-semibold text-light">
@@ -27,33 +32,42 @@
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-dark table-hover mb-0">
+                <table class="table table-dark table-hover mb-0" style="min-width: 1200px;">
                     <thead style="background: rgba(255,255,255,0.05);">
                         <tr>
-                            <th class="text-light">{{ t.company_name if t.company_name else 'İşletme Adı' }}</th>
-                            <th class="text-light">{{ t.authorized_person if t.authorized_person else 'Yetkili' }}</th>
-                            <th class="text-light">{{ t.phone if t.phone else 'Telefon' }}</th>
-                            <th class="text-light">{{ t.email if t.email else 'E-posta' }}</th>
-                            <th class="text-light">{{ t.city if t.city else 'Şehir' }}</th>
-                            <th class="text-light">{{ t.business_type if t.business_type else 'Türü' }}</th>
-                            <th class="text-light">{{ t.status if t.status else 'Durum' }}</th>
-                            <th class="text-center">{{ t.request_date if t.request_date else 'Talep Tarihi' }}</th>
-                            <th class="text-center">{{ t.actions if t.actions else 'İşlemler' }}</th>
+                            <th class="text-light" style="width: 20%;">{{ t.company_name if t.company_name else 'İşletme' }}</th>
+                            <th class="text-light" style="width: 18%;">{{ t.contact_info if t.contact_info else 'İletişim' }}</th>
+                            <th class="text-light" style="width: 12%;">{{ t.business_type if t.business_type else 'Tür / Şehir' }}</th>
+                            <th class="text-light text-center" style="width: 10%;">{{ t.status if t.status else 'Durum' }}</th>
+                            <th class="text-light" style="width: 20%;">{{ t.login_credentials if t.login_credentials else 'Giriş Bilgileri' }}</th>
+                            <th class="text-light text-center" style="width: 12%;">{{ t.request_date if t.request_date else 'Talep Tarihi' }}</th>
+                            <th class="text-center" style="width: 8%;">{{ t.actions if t.actions else 'İşlemler' }}</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for request in requests %}
                         <tr>
-                            <td class="text-light fw-semibold">{{ request.company_name }}</td>
-                            <td class="text-light">{{ request.authorized_person }}</td>
-                            <td class="text-light">{{ request.phone or '-' }}</td>
-                            <td class="text-light">{{ request.email }}</td>
-                            <td class="text-light">{{ request.city or '-' }}</td>
-                            <td class="text-center">
-                                <span class="badge" style="background: rgba(255,255,255,0.1); font-size: 0.8rem;">
-                                    {{ request.business_type }}
-                                </span>
+                            <!-- İşletme Adı -->
+                            <td class="text-light fw-semibold">
+                                {{ request.company_name }}
+                                <br><small class="text-secondary">{{ request.authorized_person }}</small>
                             </td>
+                            
+                            <!-- İletişim (Telefon + Email) -->
+                            <td class="text-light">
+                                <div><i class="bi bi-telephone me-1 text-secondary"></i> {{ request.phone or '-' }}</div>
+                                <div class="mt-1"><i class="bi bi-envelope me-1 text-secondary"></i> {{ request.email }}</div>
+                            </td>
+                            
+                            <!-- Tür ve Şehir -->
+                            <td class="text-light">
+                                <span class="badge" style="background: rgba(255,255,255,0.1); font-size: 0.8rem;">
+                                    {{ request.business_type or 'Genel' }}
+                                </span>
+                                <br><small class="text-secondary">{{ request.city or '-' }}</small>
+                            </td>
+                            
+                            <!-- Durum -->
                             <td class="text-center">
                                 {% if request.status == 'pending' %}
                                     <span class="badge bg-warning text-dark">{{ t.pending if t.pending else 'Beklemede' }}</span>
@@ -63,23 +77,50 @@
                                     <span class="badge bg-danger">{{ t.rejected if t.rejected else 'Reddedildi' }}</span>
                                 {% endif %}
                             </td>
-                            <td class="text-center">{{ request.created_at|turkey_time('%d.%m.%Y') }}</td>
+                            
+                            <!-- Giriş Bilgileri (onaylananlar için) -->
+                            <td class="text-light">
+                                {% if request.status == 'approved' and request.approved_username %}
+                                    <div class="small">
+                                        <div><i class="bi bi-person me-1 text-success"></i> <strong>{{ request.approved_username }}</strong></div>
+                                        <div class="mt-1"><i class="bi bi-key me-1 text-warning"></i> <code class="text-light">{{ request.temporary_password }}</code></div>
+                                    </div>
+                                {% else %}
+                                    <span class="text-secondary">-</span>
+                                {% endif %}
+                            </td>
+                            
+                            <!-- Tarih -->
+                            <td class="text-center">
+                                <div class="text-light">{{ request.created_at|turkey_time('%d.%m.%Y') }}</div>
+                                <small class="text-secondary">{{ request.created_at|turkey_time('%H:%M') }}</small>
+                            </td>
+                            
+                            <!-- İşlemler -->
                             <td class="text-center">
                                 <div class="btn-group btn-group-sm">
                                     {% if request.status == 'pending' %}
-                                    <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#approveModal{{ request.id }}">
-                                        <i class="bi bi-check-circle"></i> {{ t.approve if t.approve else 'Onayla' }}
+                                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#approveModal{{ request.id }}" title="{{ t.approve if t.approve else 'Onayla' }}">
+                                        <i class="bi bi-check-lg"></i>
                                     </button>
-                                    <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#rejectModal{{ request.id }}">
-                                        <i class="bi bi-x-circle"></i> {{ t.reject if t.reject else 'Reddet' }}
+                                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal{{ request.id }}" title="{{ t.reject if t.reject else 'Reddet' }}">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                    {% else %}
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#detailsModal{{ request.id }}">
+                                        <i class="bi bi-eye"></i>
                                     </button>
                                     {% endif %}
+                                    <!-- Silme butonu (tüm talepler için) -->
+                                    <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteRequestModal{{ request.id }}" title="{{ t.delete if t.delete else 'Sil' }}">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="9" class="text-center py-5">
+                            <td colspan="7" class="text-center py-5">
                                 <i class="bi bi-inbox fs-1 text-secondary d-block mb-2"></i>
                                 <span class="text-secondary">{{ t.no_requests if t.no_requests else 'Henüz talep bulunmuyor' }}</span>
                             </td>
@@ -117,7 +158,7 @@
                     <form method="POST" action="{{ url_for('auth.approve_request', request_id=request.id) }}" class="d-inline">
                         <button type="submit" class="btn btn-success">
                             <i class="bi bi-check-circle me-1"></i>{{ t.approve if t.approve else 'Onayla' }}
-                        </button>
+                            </button>
                     </form>
                 </div>
             </div>
@@ -149,6 +190,75 @@
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Delete Request Modal (tüm talepler için) -->
+    <div class="modal fade" id="deleteRequestModal{{ request.id }}" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                <div class="modal-header" style="border-bottom: 1px solid var(--border-color);">
+                    <h6 class="modal-title text-danger">
+                        <i class="bi bi-trash me-2"></i>{{ t.delete_request if t.delete_request else 'Talebi Sil' }}
+                    </h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-light">
+                        <strong>{{ request.company_name }}</strong> {{ t.delete_request_confirm if t.delete_request_confirm else 'talebini tamamen silmek istediğinizden emin misiniz?' }}
+                    </p>
+                    <p class="text-secondary small mb-0">
+                        {{ t.delete_request_warning if t.delete_request_warning else 'Bu işlem geri alınamaz!' }}
+                    </p>
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ t.cancel if t.cancel else 'İptal' }}</button>
+                    <form method="POST" action="{{ url_for('auth.delete_request', request_id=request.id) }}" class="d-inline">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash me-1"></i>{{ t.delete if t.delete else 'Sil' }}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Details Modal (for approved/rejected) -->
+    {% if request.status != 'pending' %}
+    <div class="modal fade" id="detailsModal{{ request.id }}" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                <div class="modal-header" style="border-bottom: 1px solid var(--border-color);">
+                    <h6 class="modal-title text-light">
+                        <i class="bi bi-info-circle me-2 text-info"></i>{{ t.request_details if t.request_details else 'Talep Detayları' }}
+                    </h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="text-secondary small">{{ t.company_name if t.company_name else 'İşletme' }}</label>
+                        <p class="text-light fw-semibold mb-0">{{ request.company_name }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="text-secondary small">{{ t.authorized_person if t.authorized_person else 'Yetkili' }}</label>
+                        <p class="text-light mb-0">{{ request.authorized_person }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="text-secondary small">{{ t.contact_info if t.contact_info else 'İletişim' }}</label>
+                        <p class="text-light mb-0">{{ request.phone }}<br>{{ request.email }}</p>
+                    </div>
+                    {% if request.approved_username %}
+                    <div class="alert alert-success" style="background: rgba(25,135,84,0.1); border-color: rgba(25,135,84,0.3);">
+                        <label class="text-secondary small">{{ t.login_credentials if t.login_credentials else 'Giriş Bilgileri' }}</label>
+                        <p class="mb-0"><strong class="text-light">{{ request.approved_username }}</strong> / <code class="text-warning">{{ request.temporary_password }}</code></p>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ t.close if t.close else 'Kapat' }}</button>
+                </div>
             </div>
         </div>
     </div>

@@ -1038,7 +1038,7 @@
     <!-- Navbar - Sadece dil ve kullanıcı -->
     <nav class="navbar navbar-expand-lg sticky-top">
         <div class="container-fluid">
-            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('main.index') }}">
+            <a class="navbar-brand d-flex align-items-center" href="{% if current_user.is_authenticated and current_user.is_platform_admin %}{{ url_for('auth.platform_admin_dashboard') }}{% else %}{{ url_for('main.index') }}{% endif %}">
                 <i class="bi bi-cash-stack me-2 fs-4"></i>
                 <span>{{ t.app_name }}</span>
             </a>
@@ -1065,10 +1065,30 @@
                         <ul class="dropdown-menu dropdown-menu-end" style="background: var(--card-bg); border-color: var(--border-color);">
                             <li><span class="dropdown-item-text text-secondary small">{{ current_user.email }}</span></li>
                             <li><hr class="dropdown-divider" style="border-color: var(--border-color);"></li>
-                            {% if current_user.is_admin %}
+                            {% if current_user.is_platform_admin %}
+                            <!-- Platform Admin Menüsü -->
+                            <li>
+                                <a class="dropdown-item text-light" href="{{ url_for('auth.platform_admin_dashboard') }}">
+                                    <i class="bi bi-shield-lock me-2 text-warning"></i>{{ t.platform_admin_panel if t.platform_admin_panel else 'Platform Admin Paneli' }}
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item text-light" href="{{ url_for('auth.admin_company_requests') }}">
+                                    <i class="bi bi-inbox me-2 text-info"></i>{{ t.account_requests if t.account_requests else 'Hesap Talepleri' }}
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item text-light" href="{{ url_for('auth.platform_admin_companies') }}">
+                                    <i class="bi bi-building me-2 text-success"></i>{{ t.all_companies if t.all_companies else 'Tüm İşletmeler' }}
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider" style="border-color: var(--border-color);"></li>
+                            {% endif %}
+                            {% if current_user.is_admin and not current_user.is_platform_admin %}
+                            <!-- Şirket Admin Menüsü (sadece company admin için) -->
                             <li>
                                 <a class="dropdown-item text-light" href="{{ url_for('auth.admin_users') }}">
-                                    <i class="bi bi-shield-lock me-2 text-success"></i>{{ t.admin_panel if t.admin_panel else 'Admin Paneli' }}
+                                    <i class="bi bi-people-gear me-2 text-success"></i>{{ t.company_admin_panel if t.company_admin_panel else 'Şirket Admin Paneli' }}
                                 </a>
                             </li>
                             <li><hr class="dropdown-divider" style="border-color: var(--border-color);"></li>
@@ -1092,6 +1112,31 @@
         <nav class="sidebar d-none d-lg-block">
             <div class="sidebar-content">
                 <ul class="nav flex-column">
+                    {% if current_user.is_authenticated and current_user.is_platform_admin %}
+                    <!-- Platform Admin Menüsü - SADECE Platform Yönetimi -->
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'auth.platform_admin_dashboard' %}active{% endif %}" href="{{ url_for('auth.platform_admin_dashboard') }}">
+                            <i class="bi bi-shield-lock text-warning"></i>
+                            <span>{{ t.platform_admin_panel if t.platform_admin_panel else 'Platform Admin' }}</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'auth.platform_admin_companies' or request.endpoint == 'auth.platform_admin_company_detail' %}active{% endif %}" href="{{ url_for('auth.platform_admin_companies') }}">
+                            <i class="bi bi-building text-success"></i>
+                            <span>{{ t.all_companies if t.all_companies else 'Tüm İşletmeler' }}</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'auth.admin_company_requests' %}active{% endif %}" href="{{ url_for('auth.admin_company_requests') }}">
+                            <i class="bi bi-inbox text-info"></i>
+                            <span>{{ t.account_requests if t.account_requests else 'Hesap Talepleri' }}</span>
+                            {% if pending_requests_count > 0 %}
+                            <span class="badge bg-danger ms-auto">{{ pending_requests_count }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    {% else %}
+                    <!-- Normal Kullanıcı Menüsü - Şirket İşlemleri -->
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint == 'main.index' %}active{% endif %}" href="{{ url_for('main.index') }}">
                             <i class="bi bi-speedometer2"></i>
@@ -1123,6 +1168,7 @@
                             <span>{{ t.add_receipt }}</span>
                         </a>
                     </li>
+                    {% endif %}
                     {% endif %}
                 </ul>
             </div>

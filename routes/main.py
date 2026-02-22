@@ -11,29 +11,37 @@ main_bp = Blueprint('main', __name__)
 
 
 def get_current_company_id():
+    """Platform admin için None (işlem yapamaz), diğerleri için kendi şirketi."""
+    if current_user.is_platform_admin:
+        return None
     return current_user.company_id or 1
 
 
 def scoped_transactions_query():
-    if current_user.company_id is None:
+    """Platform admin veri görüntüleyebilir ama işlem yapamaz (company_id=None)."""
+    if current_user.is_platform_admin:
+        # Platform admin tüm transactionları görebilir ama kendi company_id'si yoktur
         return Transaction.query
     return Transaction.query.filter_by(company_id=current_user.company_id)
 
 
 def scoped_customers_query():
-    if current_user.company_id is None:
+    """Platform admin tüm müşterileri görebilir."""
+    if current_user.is_platform_admin:
         return Customer.query
     return Customer.query.filter_by(company_id=current_user.company_id)
 
 
 def scoped_products_query():
-    if current_user.company_id is None:
+    """Platform admin tüm ürünleri görebilir."""
+    if current_user.is_platform_admin:
         return Product.query
     return Product.query.filter_by(company_id=current_user.company_id)
 
 
 def scoped_receipts_query():
-    if current_user.company_id is None:
+    """Platform admin tüm fişleri görebilir."""
+    if current_user.is_platform_admin:
         return Receipt.query
     return Receipt.query.filter_by(company_id=current_user.company_id)
 
