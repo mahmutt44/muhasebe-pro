@@ -131,7 +131,58 @@ def create_app(config_name=None):
             if Customer.query.count() == 0:
                 create_demo_data()
     
+    # Production için admin kullanıcısı oluştur
+    elif is_production():
+        with app.app_context():
+            # Migration kontrolü
+            try:
+                # company_id sütunu var mı kontrol et
+                from sqlalchemy import inspect
+                inspector = inspect(db.engine)
+                columns = [column['name'] for column in inspector.get_columns('users')]
+                
+                if 'company_id' not in columns:
+                    print("Migration needed: company_id column missing")
+                    # Migration'ı burada çalıştır
+                    from migrate_saas import migrate_database
+                    migrate_database()
+                else:
+                    print("Migration already completed")
+                    
+                if User.query.count() == 0:
+                    create_production_admin()
+            except Exception as e:
+                print(f"Migration error: {e}")
+                # Hata durumunda eski mantıkla devam et
+                if User.query.count() == 0:
+                    create_production_admin()
+    
     return app
+
+def create_production_admin():
+    """Production ortamı için admin kullanıcısı oluşturur"""
+    # Production admin kullanıcısı
+    admin_user = User(
+        username='admin',
+        email='admin@railway.com',
+        role='admin',
+        is_active=True
+    )
+    admin_user.set_password('admin123')
+    db.session.add(admin_user)
+    
+    # Production gözlemci kullanıcısı
+    observer_user = User(
+        username='gozlemci',
+        email='gozlemci@railway.com',
+        role='observer',
+        is_active=True
+    )
+    observer_user.set_password('gozlemci123')
+    db.session.add(observer_user)
+    
+    db.session.commit()
+    app.logger.info('Production admin kullanıcısı oluşturuldu!')
 
 def create_demo_data():
     """Demo ortamı için sahte veriler oluşturur"""
