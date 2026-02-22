@@ -1,21 +1,38 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, session
+from flask_login import login_required, current_user
 from models import db, Transaction, Customer, CustomerTransaction, Product, Receipt, ReceiptItem
 from datetime import datetime, date
 from decimal import Decimal
 from sqlalchemy.exc import IntegrityError
+from functools import wraps
+from translations import get_translation
 
 api_bp = Blueprint('api', __name__)
 
+
+def admin_required_api(f):
+    """API için sadece admin kullanıcıları decorator'ü"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or not current_user.is_admin:
+            return jsonify({'error': get_translation('admin_required', session.get('lang', 'tr'))}), 403
+        return f(*args, **kwargs)
+    return decorated_function
+
+
 # Gelir/Gider API'leri
 @api_bp.route('/transactions', methods=['GET'])
+@login_required
 def get_transactions():
     """Tüm gelir/gider işlemlerini getir"""
     transactions = Transaction.query.order_by(Transaction.date.desc(), Transaction.created_at.desc()).all()
     return jsonify([t.to_dict() for t in transactions])
 
 @api_bp.route('/transactions', methods=['POST'])
+@login_required
+@admin_required_api
 def create_transaction():
-    """Yeni gelir/gider işlemi ekle"""
+    """Yeni gelir/gider işlemi ekle - Sadece admin"""
     data = request.get_json()
     
     try:
@@ -40,16 +57,20 @@ def get_transaction(transaction_id):
     return jsonify(transaction.to_dict())
 
 @api_bp.route('/transactions/<int:transaction_id>', methods=['DELETE'])
+@login_required
+@admin_required_api
 def delete_transaction(transaction_id):
-    """Gelir/gider işlemi sil"""
+    """Gelir/gider işlemi sil - Sadece admin"""
     transaction = Transaction.query.get_or_404(transaction_id)
     db.session.delete(transaction)
     db.session.commit()
     return jsonify({'message': 'İşlem silindi'})
 
 @api_bp.route('/transactions/<int:transaction_id>', methods=['PUT'])
+@login_required
+@admin_required_api
 def update_transaction(transaction_id):
-    """Gelir/gider işlemini güncelle"""
+    """Gelir/gider işlemini güncelle - Sadece admin"""
     transaction = Transaction.query.get_or_404(transaction_id)
     
     data = request.get_json()
@@ -88,8 +109,10 @@ def get_customers():
         return jsonify({'error': str(e)}), 500
 
 @api_bp.route('/customers', methods=['POST'])
+@login_required
+@admin_required_api
 def create_customer():
-    """Yeni müşteri ekle"""
+    """Yeni müşteri ekle - Sadece admin"""
     data = request.get_json()
     
     try:
@@ -113,8 +136,10 @@ def get_customer(customer_id):
     return jsonify(customer.to_dict())
 
 @api_bp.route('/customers/<int:customer_id>', methods=['PUT'])
+@login_required
+@admin_required_api
 def update_customer(customer_id):
-    """Müşteri bilgilerini güncelle"""
+    """Müşteri bilgilerini güncelle - Sadece admin"""
     customer = Customer.query.get_or_404(customer_id)
     data = request.get_json()
     
@@ -129,8 +154,10 @@ def update_customer(customer_id):
         return jsonify({'error': str(e)}), 400
 
 @api_bp.route('/customers/<int:customer_id>', methods=['DELETE'])
+@login_required
+@admin_required_api
 def delete_customer(customer_id):
-    """Müşteri sil"""
+    """Müşteri sil - Sadece admin"""
     customer = Customer.query.get_or_404(customer_id)
     db.session.delete(customer)
     db.session.commit()
@@ -150,8 +177,10 @@ def get_customer_transactions(customer_id):
     return jsonify([t.to_dict() for t in transactions])
 
 @api_bp.route('/customers/<int:customer_id>/transactions', methods=['POST'])
+@login_required
+@admin_required_api
 def create_customer_transaction(customer_id):
-    """Müşteri borç/ödeme işlemi ekle"""
+    """Müşteri borç/ödeme işlemi ekle - Sadece admin"""
     customer = Customer.query.get_or_404(customer_id)
     data = request.get_json()
     
@@ -172,8 +201,10 @@ def create_customer_transaction(customer_id):
         return jsonify({'error': str(e)}), 400
 
 @api_bp.route('/customer-transactions/<int:transaction_id>', methods=['PUT'])
+@login_required
+@admin_required_api
 def update_customer_transaction(transaction_id):
-    """Müşteri işlemini güncelle"""
+    """Müşteri işlemini güncelle - Sadece admin"""
     transaction = CustomerTransaction.query.get_or_404(transaction_id)
     data = request.get_json()
     
@@ -189,8 +220,10 @@ def update_customer_transaction(transaction_id):
         return jsonify({'error': str(e)}), 400
 
 @api_bp.route('/customer-transactions/<int:transaction_id>', methods=['DELETE'])
+@login_required
+@admin_required_api
 def delete_customer_transaction(transaction_id):
-    """Müşteri işlemini sil"""
+    """Müşteri işlemini sil - Sadece admin"""
     transaction = CustomerTransaction.query.get_or_404(transaction_id)
     db.session.delete(transaction)
     db.session.commit()
@@ -204,8 +237,10 @@ def get_products():
     return jsonify([p.to_dict() for p in products])
 
 @api_bp.route('/products', methods=['POST'])
+@login_required
+@admin_required_api
 def create_product():
-    """Yeni ürün ekle"""
+    """Yeni ürün ekle - Sadece admin"""
     data = request.get_json()
     
     try:
@@ -229,8 +264,10 @@ def get_product(product_id):
     return jsonify(product.to_dict())
 
 @api_bp.route('/products/<int:product_id>', methods=['PUT'])
+@login_required
+@admin_required_api
 def update_product(product_id):
-    """Ürün bilgilerini güncelle"""
+    """Ürün bilgilerini güncelle - Sadece admin"""
     product = Product.query.get_or_404(product_id)
     data = request.get_json()
     
@@ -245,8 +282,10 @@ def update_product(product_id):
         return jsonify({'error': str(e)}), 400
 
 @api_bp.route('/products/<int:product_id>', methods=['DELETE'])
+@login_required
+@admin_required_api
 def delete_product(product_id):
-    """Ürün sil"""
+    """Ürün sil - Sadece admin"""
     product = Product.query.get_or_404(product_id)
     db.session.delete(product)
     db.session.commit()
@@ -260,8 +299,10 @@ def get_receipts():
     return jsonify([r.to_dict() for r in receipts])
 
 @api_bp.route('/receipts', methods=['POST'])
+@login_required
+@admin_required_api
 def create_receipt():
-    """Yeni fiş oluştur"""
+    """Yeni fiş oluştur - Sadece admin"""
     data = request.get_json()
     
     try:
@@ -329,8 +370,10 @@ def get_receipt(receipt_id):
     return jsonify(receipt.to_dict())
 
 @api_bp.route('/receipts/<int:receipt_id>', methods=['DELETE'])
+@login_required
+@admin_required_api
 def delete_receipt(receipt_id):
-    """Fiş sil"""
+    """Fiş sil - Sadece admin"""
     receipt = Receipt.query.get_or_404(receipt_id)
     db.session.delete(receipt)
     db.session.commit()

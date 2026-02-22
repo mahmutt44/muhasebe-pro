@@ -250,8 +250,40 @@ function editTransaction(id) {
 }
 
 function deleteTransaction(id) {
-    if (!confirm('{{ t.confirm_delete_transaction }}')) return;
+    // Modal oluştur
+    const modalHtml = `
+        <div class="modal fade show" id="deleteModal" style="display: block; background: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                    <div class="modal-header" style="border-bottom: 1px solid var(--border-color);">
+                        <h6 class="modal-title text-light">{{ t.delete_transaction if t.delete_transaction else 'İşlemi Sil' }}</h6>
+                        <button type="button" class="btn-close btn-close-white" onclick="closeDeleteModal()"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="text-warning small mb-3">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            {{ t.confirm_delete_transaction if t.confirm_delete_transaction else 'Bu işlemi silmek istediğinizden emin misiniz?' }}
+                        </p>
+                    </div>
+                    <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="closeDeleteModal()">{{ t.cancel if t.cancel else 'İptal' }}</button>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete(${id})">{{ t.delete if t.delete else 'Sil' }}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
     
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+function closeDeleteModal() {
+    const modal = document.getElementById('deleteModal');
+    if (modal) modal.remove();
+}
+
+function confirmDelete(id) {
+    closeDeleteModal();
     apiCall(`/api/transactions/${id}`, { method: 'DELETE' })
         .then(() => {
             showNotification('{{ t.transaction_deleted }}', 'success');

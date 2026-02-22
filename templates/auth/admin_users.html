@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ t.admin_panel if t.admin_panel else 'Admin Paneli' }} - {{ t.app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-3">
+                <i class="bi bi-shield-lock me-2" style="color: #667eea;"></i>
+                {{ t.admin_panel if t.admin_panel else 'Kullanıcı Yönetimi' }}
+            </h4>
+        </div>
+        <span class="badge" style="background: var(--primary-gradient);">
+            <i class="bi bi-people me-1"></i>{{ users|length }} {{ t.users if t.users else 'Kullanıcı' }}
+        </span>
+    </div>
+
+    <!-- Add New User Card -->
+    <div class="card mb-4" style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px;">
+        <div class="card-header" style="background: rgba(102, 126, 234, 0.1); border-bottom: 1px solid var(--border-color);">
+            <h6 class="mb-0 fw-semibold text-light">
+                <i class="bi bi-person-plus me-2"></i>{{ t.add_new_user if t.add_new_user else 'Yeni Kullanıcı Ekle' }}
+            </h6>
+        </div>
+        <div class="card-body p-4">
+            <form method="POST" action="{{ url_for('auth.admin_add_user') }}">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label text-light small">{{ t.username if t.username else 'Kullanıcı Adı' }}</label>
+                        <input type="text" name="username" class="form-control" required style="background: var(--card-bg); border-color: var(--border-color); color: white;" placeholder="kullanici_adi">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label text-light small">{{ t.email if t.email else 'E-posta' }}</label>
+                        <input type="email" name="email" class="form-control" required style="background: var(--card-bg); border-color: var(--border-color); color: white;" placeholder="ornek@mail.com">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label text-light small">{{ t.password if t.password else 'Şifre' }}</label>
+                        <input type="password" name="password" class="form-control" required style="background: var(--card-bg); border-color: var(--border-color); color: white;" placeholder="******" minlength="6">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label text-light small">{{ t.role if t.role else 'Rol' }}</label>
+                        <select name="role" class="form-select" style="background: var(--card-bg); border-color: var(--border-color); color: white; cursor: pointer;">
+                            <option value="admin" style="color: black;">{{ t.admin if t.admin else 'Admin' }}</option>
+                            <option value="observer" style="color: black;">{{ t.observer if t.observer else 'Gözlemci' }}</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label text-light small">&nbsp;</label>
+                        <button type="submit" class="btn w-100" style="background: var(--success-gradient); border: none; color: white;">
+                            <i class="bi bi-plus-lg me-1"></i>{{ t.add if t.add else 'Ekle' }}
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Users List -->
+    <div class="card" style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px;">
+        <div class="card-header" style="background: rgba(17, 153, 142, 0.1); border-bottom: 1px solid var(--border-color);">
+            <h6 class="mb-0 fw-semibold text-light">
+                <i class="bi bi-people me-2"></i>{{ t.users_list if t.users_list else 'Kullanıcı Listesi' }}
+            </h6>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover mb-0">
+                    <thead style="background: rgba(255,255,255,0.05);">
+                        <tr>
+                            <th class="text-light">{{ t.username if t.username else 'Kullanıcı Adı' }}</th>
+                            <th class="text-light">{{ t.email if t.email else 'E-posta' }}</th>
+                            <th class="text-center">{{ t.role if t.role else 'Rol' }}</th>
+                            <th class="text-center">{{ t.status if t.status else 'Durum' }}</th>
+                            <th class="text-center">{{ t.last_login if t.last_login else 'Son Giriş' }}</th>
+                            <th class="text-center">{{ t.actions if t.actions else 'İşlemler' }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td class="text-light">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 36px; height: 36px; background: {% if user.is_admin %}var(--success-gradient){% else %}var(--info-gradient){% endif %};">
+                                        <i class="bi bi-person text-white small"></i>
+                                    </div>
+                                    <div>
+                                        <span class="fw-semibold">{{ user.username }}</span>
+                                        {% if user.id == current_user.id %}
+                                        <span class="badge ms-2" style="background: var(--warning-gradient); font-size: 0.6rem;">{{ t.you if t.you else 'Siz' }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-light">{{ user.email }}</td>
+                            <td class="text-center">
+                                <form method="POST" action="{{ url_for('auth.admin_change_role', user_id=user.id) }}" class="d-inline">
+                                    <select name="new_role" class="form-select form-select-sm d-inline-block w-auto" style="background: rgba(255,255,255,0.05); border-color: var(--border-color); color: white; font-size: 0.8rem;" onchange="this.form.submit()" {% if user.id == current_user.id %}disabled{% endif %}>
+                                        <option value="admin" {% if user.is_admin %}selected{% endif %}>{{ t.admin if t.admin else 'Admin' }}</option>
+                                        <option value="observer" {% if user.is_observer %}selected{% endif %}>{{ t.observer if t.observer else 'Gözlemci' }}</option>
+                                    </select>
+                                </form>
+                            </td>
+                            <td class="text-center">
+                                <form method="POST" action="{{ url_for('auth.admin_toggle_user', user_id=user.id) }}" class="d-inline">
+                                    <button type="submit" class="btn btn-sm {% if user.is_active %}btn-success{% else %}btn-secondary{% endif %}" {% if user.id == current_user.id %}disabled{% endif %}>
+                                        <i class="bi {% if user.is_active %}bi-check-circle{% else %}bi-x-circle{% endif %}"></i>
+                                        {{ t.active if t.active else 'Aktif' if user.is_active else t.inactive if t.inactive else 'Pasif' }}
+                                    </button>
+                                </form>
+                            </td>
+                            <td class="text-center text-secondary">
+                                {% if user.last_login %}
+                                    {{ user.last_login|turkey_time('%d.%m.%Y %H:%M') }}
+                                {% else %}
+                                    <span class="fst-italic">{{ t.never if t.never else 'Hiç giriş yapmadı' }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm">
+                                    <!-- Reset Password Button -->
+                                    <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#resetPasswordModal{{ user.id }}">
+                                        <i class="bi bi-key"></i>
+                                    </button>
+                                    <!-- Delete User Button -->
+                                    {% if user.id != current_user.id %}
+                                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteUserModal{{ user.id }}">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reset Password Modals - Outside Table -->
+    {% for user in users %}
+    <!-- Reset Password Modal -->
+    <div class="modal fade" id="resetPasswordModal{{ user.id }}" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                <div class="modal-header" style="border-bottom: 1px solid var(--border-color);">
+                    <h6 class="modal-title text-light">{{ t.reset_password if t.reset_password else 'Şifre Sıfırla' }}</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST" action="{{ url_for('auth.admin_reset_password', user_id=user.id) }}">
+                    <div class="modal-body">
+                        <p class="text-secondary small mb-3">{{ user.username }} {{ t.user_password_reset if t.user_password_reset else 'kullanıcısının şifresini sıfırlıyorsunuz' }}</p>
+                        <div class="mb-3">
+                            <label class="form-label text-light small">{{ t.new_password if t.new_password else 'Yeni Şifre' }}</label>
+                            <input type="password" name="new_password" class="form-control" required minlength="6" style="background: rgba(255,255,255,0.05); border-color: var(--border-color); color: white;">
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">{{ t.cancel if t.cancel else 'İptal' }}</button>
+                        <button type="submit" class="btn btn-warning btn-sm">{{ t.reset if t.reset else 'Sıfırla' }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Delete User Modal -->
+    {% if user.id != current_user.id %}
+    <div class="modal fade" id="deleteUserModal{{ user.id }}" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                <div class="modal-header" style="border-bottom: 1px solid var(--border-color);">
+                    <h6 class="modal-title text-light">{{ t.delete_user if t.delete_user else 'Kullanıcı Sil' }}</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST" action="{{ url_for('auth.admin_delete_user', user_id=user.id) }}">
+                    <div class="modal-body">
+                        <p class="text-warning small mb-3">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            {{ (t.confirm_delete_user if t.confirm_delete_user else '{username} kullanıcısını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.').format(username=user.username) }}
+                        </p>
+                    </div>
+                    <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">{{ t.cancel if t.cancel else 'İptal' }}</button>
+                        <button type="submit" class="btn btn-danger btn-sm">{{ t.delete if t.delete else 'Sil' }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+
+</div>
+
+<style>
+    .form-control:focus, .form-select:focus {
+        background: rgba(255, 255, 255, 0.08) !important;
+        border-color: #667eea !important;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2) !important;
+        color: white;
+    }
+    
+    .table-dark {
+        --bs-table-bg: transparent;
+        --bs-table-color: white;
+        --bs-table-border-color: var(--border-color);
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: rgba(255, 255, 255, 0.05);
+    }
+    
+    .btn-group-sm > .btn, .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+</style>
+{% endblock %}

@@ -1,10 +1,17 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session
-from models import db, Transaction, Customer, CustomerTransaction, Product, Receipt, ReceiptItem
+from flask_login import LoginManager, current_user
+from models import db, Transaction, Customer, CustomerTransaction, Product, Receipt, ReceiptItem, User
 from config import config, get_database_url, is_production, is_demo
 from translations import get_all_translations, get_translation
 from datetime import datetime, date, timedelta, timezone
 from decimal import Decimal
 import os
+
+# Flask-Login başlatma
+login_manager = LoginManager()
+login_manager.login_view = 'auth.login'
+login_manager.login_message = 'Bu sayfayı görüntülemek için giriş yapmalısınız.'
+login_manager.login_message_category = 'warning'
 
 # Türkiye saat dilimi (UTC+3)
 TURKEY_TZ = timezone(timedelta(hours=3))
@@ -39,6 +46,13 @@ def create_app(config_name=None):
     
     # Veritabanı başlatma
     db.init_app(app)
+    
+    # Flask-Login başlatma
+    login_manager.init_app(app)
+    
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(int(user_id))
     
     # Jinja2 filter - Türkiye saati (dil desteği ile)
     @app.template_filter('turkey_time')
@@ -105,9 +119,11 @@ def create_app(config_name=None):
     # Route'ları kaydetme
     from routes.main import main_bp
     from routes.api import api_bp
+    from auth import auth
     
     app.register_blueprint(main_bp)
     app.register_blueprint(api_bp, url_prefix='/api')
+    app.register_blueprint(auth, url_prefix='/auth')
     
     # Demo verisi ekleme (sadece demo ortamında)
     if is_demo():
@@ -177,9 +193,9 @@ def create_demo_data():
     
     # Demo fişler
     receipts = [
-        Receipt(customer_id=1, receipt_no='F001', total_amount=Decimal('150.00'), notes='Kahve ve çay'),
-        Receipt(customer_id=2, receipt_no='F002', total_amount=Decimal('500.00'), notes='Toptan satış'),
-        Receipt(customer_id=3, receipt_no='F003', total_amount=Decimal('75.00'), notes='Günlük')
+        Receipt(customer_id=1, receipt_no='F001', total_amount=Decimal('150.00'), grand_total=Decimal('150.00'), notes='Kahve ve çay'),
+        Receipt(customer_id=2, receipt_no='F002', total_amount=Decimal('500.00'), grand_total=Decimal('500.00'), notes='Toptan satış'),
+        Receipt(customer_id=3, receipt_no='F003', total_amount=Decimal('75.00'), grand_total=Decimal('75.00'), notes='Günlük')
     ]
     
     for receipt in receipts:
@@ -202,6 +218,28 @@ def create_demo_data():
     
     for item in receipt_items:
         db.session.add(item)
+    
+    db.session.commit()
+    
+    # Default admin kullanıcı
+    admin_user = User(
+        username='admin',
+        email='admin@example.com',
+        role='admin',
+        is_active=True
+    )
+    admin_user.set_password('admin123')
+    db.session.add(admin_user)
+    
+    # Demo gözlemci kullanıcı
+    observer_user = User(
+        username='gozlemci',
+        email='gozlemci@example.com',
+        role='observer',
+        is_active=True
+    )
+    observer_user.set_password('gozlemci123')
+    db.session.add(observer_user)
     
     db.session.commit()
 

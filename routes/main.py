@@ -1,12 +1,35 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from flask_login import login_required, current_user
 from models import db, Transaction, Customer, CustomerTransaction, Product, Receipt, ReceiptItem
 from datetime import datetime, date
 from decimal import Decimal
 from config import is_production, is_demo
+from functools import wraps
+from translations import get_translation
 
 main_bp = Blueprint('main', __name__)
 
+
+def admin_required(f):
+    """Sadece admin kullanıcıları için decorator"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or not current_user.is_admin:
+            flash(get_translation('admin_required', session.get('lang', 'tr')), 'danger')
+            return redirect(url_for('main.index'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+def observer_read_only():
+    """Gözlemci kullanıcıları için uyarı"""
+    if current_user.is_authenticated and current_user.is_observer:
+        flash('Gözlemci rolü ile sadece görüntüleme yapabilirsiniz.', 'warning')
+        return True
+    return False
+
 @main_bp.route('/')
+@login_required
 def index():
     """Ana sayfa - Kasa durumu"""
     # Gelir/Gider toplamları
@@ -34,6 +57,7 @@ def index():
                          today_date=today)
 
 @main_bp.route('/transactions')
+@login_required
 def transactions():
     """Gelir/Gider işlemleri sayfası"""
     page = request.args.get('page', 1, type=int)
@@ -50,6 +74,7 @@ def transactions():
                          total_expense=total_expense)
 
 @main_bp.route('/customers')
+@login_required
 def customers():
     """Müşteri defteri sayfası"""
     customers = Customer.query.order_by(Customer.name).all()
@@ -60,6 +85,7 @@ def customers():
     return render_template('customers.html', customers=customers, total_debt=total_debt)
 
 @main_bp.route('/customer/<int:customer_id>')
+@login_required
 def customer_detail(customer_id):
     """Müşteri detay sayfası"""
     customer = Customer.query.get_or_404(customer_id)
@@ -69,14 +95,17 @@ def customer_detail(customer_id):
     return render_template('customer_detail.html', customer=customer, transactions=transactions, receipts=receipts)
 
 @main_bp.route('/products')
+@login_required
 def products():
     """Ürün yönetimi sayfası"""
     products = Product.query.order_by(Product.name).all()
     return render_template('products.html', products=products)
 
 @main_bp.route('/receipt')
+@login_required
+@admin_required
 def receipt():
-    """Fiş kesme sayfası"""
+    """Fiş kesme sayfası - sadece admin"""
     customers = Customer.query.order_by(Customer.name).all()
     products = Product.query.order_by(Product.name).all()
     
@@ -98,6 +127,7 @@ def receipt():
                          today_date=date.today())
 
 @main_bp.route('/receipt/<int:receipt_id>')
+@login_required
 def receipt_detail(receipt_id):
     """Fiş detay sayfası"""
     receipt = Receipt.query.get_or_404(receipt_id)

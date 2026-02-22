@@ -19,22 +19,27 @@
             --danger-gradient: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
             --warning-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
             --info-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            --dark-bg: #0d1117;
-            --card-bg: #161b22;
-            --border-color: #30363d;
+            --dark-bg: #1a1a2e;
+            --darker-bg: #16213e;
+            --card-bg: rgba(30, 30, 46, 0.95);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.6);
+            --text-muted: rgba(255, 255, 255, 0.4);
         }
         
         body {
             font-family: 'Inter', sans-serif;
-            background: var(--dark-bg);
+            background: linear-gradient(135deg, var(--dark-bg) 0%, var(--darker-bg) 100%);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            color: var(--text-primary);
         }
         
         /* Navbar Styles */
         .navbar {
-            background: rgba(22, 27, 34, 0.95) !important;
+            background: rgba(30, 30, 46, 0.95) !important;
             backdrop-filter: blur(10px);
             border-bottom: 1px solid var(--border-color);
             padding: 0.75rem 1rem;
@@ -47,6 +52,142 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+        }
+        
+        .nav-link {
+            color: var(--text-secondary) !important;
+            transition: color 0.3s ease;
+        }
+        
+        .nav-link:hover, .nav-link.active {
+            color: var(--text-primary) !important;
+        }
+        
+        /* Card Styles */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .card-header {
+            background: rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .card-body {
+            color: var(--text-primary);
+        }
+        
+        .text-secondary {
+            color: var(--text-secondary) !important;
+        }
+        
+        /* Table Styles */
+        .table {
+            color: var(--text-primary);
+        }
+        
+        .table-dark {
+            --bs-table-bg: transparent;
+            --bs-table-color: var(--text-primary);
+            --bs-table-border-color: var(--border-color);
+        }
+        
+        .table-hover tbody tr:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        
+        /* Form Styles */
+        .form-control, .form-select {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            color: var(--text-primary);
+        }
+        
+        .form-control::placeholder {
+            color: var(--text-muted);
+        }
+        
+        .form-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        /* Button Styles */
+        .btn-primary {
+            background: var(--primary-gradient);
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+        }
+        
+        .btn-success {
+            background: var(--success-gradient);
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+        
+        .btn-danger {
+            background: var(--danger-gradient);
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+        
+        /* Dropdown Styles */
+        .dropdown-menu {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .dropdown-item {
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+        }
+        
+        .dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+        
+        /* Modal Styles */
+        .modal-content {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .modal-header, .modal-footer {
+            border-color: var(--border-color);
+        }
+        
+        /* Badge Styles */
+        .badge {
+            border-radius: 8px;
+            font-weight: 600;
         }
         
         .navbar-brand i {
@@ -751,10 +892,137 @@
                 min-height: 50px;
             }
         }
+        
+        /* Navbar Dropdown Hover Fix */
+        .navbar .dropdown-menu {
+            margin-top: 0;
+            position: absolute;
+            right: 0;
+            left: auto;
+            top: 100%;
+            z-index: 1000;
+            min-width: 200px;
+        }
+        
+        .navbar .dropdown:hover .dropdown-menu {
+            display: block;
+            animation: none;
+        }
+        
+        .navbar .dropdown-menu {
+            transition: none;
+            animation: none;
+        }
+        
+        /* Dropdown toggle hover area fix */
+        .navbar .dropdown-toggle::after {
+            margin-left: 0.5em;
+        }
+        
+        /* Ensure dropdown doesn't flicker or move screen */
+        .navbar .dropdown {
+            position: relative;
+        }
+        
+        /* Fix for dropdown positioning in LTR */
+        [dir="ltr"] .navbar .dropdown-menu {
+            right: 0;
+            left: auto;
+        }
+        
+        /* Fix for dropdown positioning in RTL */
+        [dir="rtl"] .navbar .dropdown-menu {
+            left: 0;
+            right: auto;
+        }
+        /* Sidebar Styles */
+        .sidebar {
+            width: 240px;
+            min-width: 240px;
+            max-width: 240px;
+            min-height: calc(100vh - 70px);
+            background: var(--card-bg);
+            border-right: 1px solid var(--border-color);
+            position: fixed !important;
+            top: 70px;
+            left: 0;
+            right: auto;
+            overflow-y: auto;
+            padding-top: 20px;
+            z-index: 999 !important;
+            flex-shrink: 0;
+        }
+        
+        /* RTL - Sidebar sağda sabit kalsın */
+        [dir="rtl"] .sidebar {
+            left: auto;
+            right: 0;
+            border-right: none;
+            border-left: 1px solid var(--border-color);
+            padding-top: 20px;
+            width: 260px;
+            min-width: 260px;
+            max-width: 260px;
+            z-index: 999 !important;
+            position: fixed !important;
+            flex-shrink: 0;
+        }
+        
+        .sidebar-content {
+            padding: 0 0.5rem;
+        }
+        
+        .sidebar .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            color: rgba(255, 255, 255, 0.8);
+            border-radius: 8px;
+            margin-bottom: 0.25rem;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar .nav-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .sidebar .nav-link.active {
+            background: var(--primary-gradient);
+            color: white;
+        }
+        
+        .sidebar .nav-link i {
+            font-size: 1.25rem;
+            margin-right: 0.75rem;
+            width: 24px;
+            text-align: center;
+        }
+        
+        .main-content {
+            margin-left: 240px;
+            padding: 1rem;
+        }
+        
+        /* RTL - Main content sağda kalsın */
+        [dir="rtl"] .main-content {
+            margin-left: 0;
+            margin-right: 260px;
+        }
+        
+        @media (max-width: 991px) {
+            .sidebar {
+                display: none;
+            }
+            .main-content {
+                margin-left: 0;
+                margin-right: 0;
+            }
+        }
     </style>
 </head>
 <body data-bs-theme="dark" class="d-flex flex-column h-100">
-    <!-- Navbar -->
+    <!-- Navbar - Sadece dil ve kullanıcı -->
     <nav class="navbar navbar-expand-lg sticky-top">
         <div class="container-fluid">
             <a class="navbar-brand d-flex align-items-center" href="{{ url_for('main.index') }}">
@@ -768,59 +1036,91 @@
             
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'main.index' %}active{% endif %}" href="{{ url_for('main.index') }}">
-                            <i class="bi bi-speedometer2 me-1"></i> {{ t.dashboard }}
+                    <!-- Kullanıcı Menüsü -->
+                    {% if current_user.is_authenticated %}
+                    <li class="nav-item dropdown ms-lg-3">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; background: {% if current_user.is_admin %}var(--success-gradient){% else %}var(--info-gradient){% endif %};">
+                                <i class="bi bi-person text-white"></i>
+                            </div>
+                            <span class="d-none d-lg-inline">{{ current_user.username }}</span>
+                            {% if current_user.is_observer %}
+                            <span class="badge ms-1" style="background: var(--info-gradient); font-size: 0.6rem;">{{ t.observer if t.observer else 'Gözlemci' }}</span>
+                            {% endif %}
                         </a>
+                        <ul class="dropdown-menu dropdown-menu-end" style="background: var(--card-bg); border-color: var(--border-color);">
+                            <li><span class="dropdown-item-text text-secondary small">{{ current_user.email }}</span></li>
+                            <li><hr class="dropdown-divider" style="border-color: var(--border-color);"></li>
+                            {% if current_user.is_admin %}
+                            <li>
+                                <a class="dropdown-item text-light" href="{{ url_for('auth.admin_users') }}">
+                                    <i class="bi bi-shield-lock me-2 text-success"></i>{{ t.admin_panel if t.admin_panel else 'Admin Paneli' }}
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider" style="border-color: var(--border-color);"></li>
+                            {% endif %}
+                            <li>
+                                <a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}">
+                                    <i class="bi bi-box-arrow-right me-2"></i>{{ t.logout if t.logout else 'Çıkış Yap' }}
+                                </a>
+                            </li>
+                        </ul>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'main.transactions' %}active{% endif %}" href="{{ url_for('main.transactions') }}">
-                            <i class="bi bi-arrow-left-right me-1"></i> {{ t.transactions }}
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'main.customers' %}active{% endif %}" href="{{ url_for('main.customers') }}">
-                            <i class="bi bi-people me-1"></i> {{ t.customers }}
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'main.products' %}active{% endif %}" href="{{ url_for('main.products') }}">
-                            <i class="bi bi-box-seam me-1"></i> {{ t.products }}
-                        </a>
-                    </li>
-                    <li class="nav-item ms-lg-2">
-                        <a class="nav-link btn btn-success text-white px-3 {% if request.endpoint == 'main.receipt' %}active{% endif %}" href="{{ url_for('main.receipt') }}">
-                            <i class="bi bi-receipt me-1"></i> {{ t.add_receipt }}
-                        </a>
-                    </li>
-                    <!-- Dil Seçici -->
-                    <li class="nav-item ms-lg-3 d-flex align-items-center">
-                        <div class="lang-selector">
-                            <a href="{{ url_for('set_language', lang='tr') }}" class="lang-btn {{ 'active' if current_lang == 'tr' else '' }}">TR</a>
-                            <a href="{{ url_for('set_language', lang='ar') }}" class="lang-btn {{ 'active' if current_lang == 'ar' else '' }}">ع</a>
-                        </div>
-                    </li>
+                    {% endif %}
                 </ul>
             </div>
         </div>
     </nav>
     
-    <!-- Main Content -->
-    <main class="flex-grow-1">
-        <div class="container-fluid">
-            {% block content %}{% endblock %}
-        </div>
-    </main>
-    
-    <!-- Footer -->
-    <footer class="text-center text-secondary py-3">
-        <div class="container">
-            <small>
-                <i class="bi bi-shield-check me-1"></i>
-                {{ t.app_name }} &copy; 2024
-            </small>
-        </div>
-    </footer>
+    <!-- Sidebar ve Main Content Container -->
+    <div class="d-flex flex-grow-1">
+        <!-- Sidebar - Sol Menü -->
+        <nav class="sidebar d-none d-lg-block">
+            <div class="sidebar-content">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'main.index' %}active{% endif %}" href="{{ url_for('main.index') }}">
+                            <i class="bi bi-speedometer2"></i>
+                            <span>{{ t.dashboard }}</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'main.transactions' %}active{% endif %}" href="{{ url_for('main.transactions') }}">
+                            <i class="bi bi-arrow-left-right"></i>
+                            <span>{{ t.transactions }}</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'main.customers' or request.endpoint == 'main.customer_detail' %}active{% endif %}" href="{{ url_for('main.customers') }}">
+                            <i class="bi bi-people"></i>
+                            <span>{{ t.customers }}</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'main.products' %}active{% endif %}" href="{{ url_for('main.products') }}">
+                            <i class="bi bi-box-seam"></i>
+                            <span>{{ t.products }}</span>
+                        </a>
+                    </li>
+                    {% if current_user.is_authenticated and current_user.is_admin %}
+                    <li class="nav-item mt-3">
+                        <a class="nav-link btn btn-success text-white mx-3 {% if request.endpoint == 'main.receipt' %}active{% endif %}" href="{{ url_for('main.receipt') }}" style="justify-content: center; white-space: nowrap;">
+                            <i class="bi bi-receipt me-2"></i>
+                            <span>{{ t.add_receipt }}</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </nav>
+        
+        <!-- Main Content -->
+        <main class="flex-grow-1 main-content">
+            <div class="container-fluid">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
     
     <!-- Mobile Bottom Navigation -->
     <nav class="mobile-nav">
@@ -832,10 +1132,12 @@
             <i class="bi bi-arrow-left-right"></i>
             <span>{{ t.transactions }}</span>
         </a>
+        {% if current_user.is_authenticated and current_user.is_admin %}
         <a href="{{ url_for('main.receipt') }}" class="mobile-nav-item {% if request.endpoint == 'main.receipt' %}active{% endif %}" style="color: #38ef7d;">
             <i class="bi bi-plus-circle-fill" style="font-size: 1.75rem;"></i>
             <span>{{ t.receipts }}</span>
         </a>
+        {% endif %}
         <a href="{{ url_for('main.customers') }}" class="mobile-nav-item {% if request.endpoint == 'main.customers' or request.endpoint == 'main.customer_detail' %}active{% endif %}">
             <i class="bi bi-people-fill"></i>
             <span>{{ t.customers }}</span>
@@ -867,7 +1169,7 @@
         const response = await fetch(url, { ...defaultOptions, ...options });
         
         if (!response.ok) {
-            const error = await response.json().catch(() => ({ error: 'Bir hata oluştu' }));
+            const error = await response.json().catch(() => ({ error: '{{ t.error_occurred if t.error_occurred else "Bir hata oluştu" }}' }));
             throw new Error(error.error || `HTTP error! status: ${response.status}`);
         }
         

@@ -1,0 +1,276 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ t.login if t.login else 'Giriş Yap' }} - {{ t.app_name }}{% endblock %}
+
+{% block navbar %}{% endblock %}
+
+{% block content %}
+<div class="login-page" dir="{% if current_lang == 'ar' %}rtl{% else %}ltr{% endif %}">
+    <div class="login-container">
+        <!-- Login Card -->
+        <div class="login-card">
+            <!-- Logo Section -->
+            <div class="logo-section">
+                <div class="logo-icon">
+                    <i class="bi bi-cash-stack"></i>
+                </div>
+                <h1 class="app-name">{{ t.app_name }}</h1>
+                <p class="app-tagline">{{ t.login if t.login else 'Giriş Yap' }}</p>
+            </div>
+            
+            <!-- Login Form -->
+            <form method="POST" action="{{ url_for('auth.login') }}" class="login-form">
+                <div class="form-group">
+                    <div class="input-wrapper">
+                        <i class="bi bi-person input-icon"></i>
+                        <input type="text" name="username" class="form-input" placeholder="{{ t.username if t.username else 'Kullanıcı Adı' }}" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <div class="input-wrapper">
+                        <i class="bi bi-lock input-icon"></i>
+                        <input type="password" name="password" class="form-input" placeholder="{{ t.password if t.password else 'Şifre' }}" required>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn-login">
+                    {{ t.login if t.login else 'Giriş Yap' }}
+                </button>
+            </form>
+        </div>
+        
+        <!-- Language Footer -->
+        <div class="language-footer">
+            <div class="language-buttons">
+                <a href="{{ url_for('set_language', lang='tr') }}" class="lang-btn {% if current_lang == 'tr' %}active{% endif %}">Türkçe</a>
+                <a href="{{ url_for('set_language', lang='ar') }}" class="lang-btn {% if current_lang == 'ar' %}active{% endif %}">العربية</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Instagram Tarzı Minimalist Login - Koyu Tema */
+    html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+    }
+    
+    .login-page {
+        min-height: 100vh;
+        min-height: 100dvh;
+        width: 100%;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 9999;
+    }
+    
+    .login-container {
+        width: 100%;
+        max-width: 400px;
+    }
+    
+    .login-card {
+        background: rgba(30, 30, 46, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 40px 35px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .logo-section {
+        text-align: center;
+        margin-bottom: 35px;
+    }
+    
+    .logo-icon {
+        width: 70px;
+        height: 70px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    }
+    
+    .logo-icon i {
+        font-size: 32px;
+        color: white;
+    }
+    
+    .app-name {
+        font-size: 28px;
+        font-weight: 700;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 8px;
+    }
+    
+    .app-tagline {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.6);
+        font-weight: 400;
+    }
+    
+    .login-form {
+        margin-bottom: 20px;
+    }
+    
+    .form-group {
+        margin-bottom: 15px;
+    }
+    
+    .input-wrapper {
+        position: relative;
+    }
+    
+    .form-input {
+        width: 100%;
+        padding: 15px 20px;
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        font-size: 15px;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.05);
+        color: white;
+    }
+    
+    .form-input::placeholder {
+        color: rgba(255, 255, 255, 0.4);
+    }
+    
+    .form-input:focus {
+        outline: none;
+        border-color: #667eea;
+        background: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    }
+    
+    .input-icon {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 18px;
+    }
+    
+    /* LTR - Icon sağda */
+    [dir="ltr"] .input-icon {
+        right: 16px;
+    }
+    
+    [dir="ltr"] .form-input {
+        padding-right: 50px;
+    }
+    
+    /* RTL - Icon solda */
+    [dir="rtl"] .input-icon {
+        left: 16px;
+    }
+    
+    [dir="rtl"] .form-input {
+        padding-left: 50px;
+        text-align: right;
+    }
+    
+    .btn-login {
+        width: 100%;
+        padding: 16px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 10px;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-login:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+    }
+    
+    .btn-login:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .forgot-password {
+        text-align: center;
+    }
+    
+    .forgot-password a {
+        color: #667eea;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+        transition: color 0.3s ease;
+    }
+    
+    .forgot-password a:hover {
+        color: #764ba2;
+        text-decoration: underline;
+    }
+    
+    /* Language Footer */
+    .language-footer {
+        margin-top: 25px;
+        text-align: center;
+    }
+    
+    .language-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+    }
+    
+    .lang-btn {
+        padding: 12px 24px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        color: white;
+        border-radius: 25px;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .lang-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.4);
+        transform: translateY(-2px);
+    }
+    
+    .lang-btn.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-color: transparent;
+        color: white;
+    }
+    
+    /* Navbar gizle */
+    .navbar, nav, .mobile-nav {
+        display: none !important;
+    }
+</style>
+{% endblock %}
