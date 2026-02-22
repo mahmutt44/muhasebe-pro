@@ -187,6 +187,11 @@ TRANSLATIONS = {
         'never': 'Hiç giriş yapmadı',
         'you': 'Siz',
         'users_list': 'Kullanıcı Listesi',
+        'fill_required_fields': 'Lütfen zorunlu alanları doldurun.',
+        'request_submitted': 'Hesap talebiniz başarıyla alındı.',
+        'request_approved': 'Hesap talebi onaylandı.',
+        'request_rejected': 'Hesap talebi reddedildi.',
+        'login_credentials': 'Giriş bilgileri',
     },
     
     'ar': {
@@ -375,6 +380,11 @@ TRANSLATIONS = {
         'never': 'لم يسبق له الدخول',
         'you': 'أنت',
         'users_list': 'قائمة المستخدمين',
+        'fill_required_fields': 'يرجى تعبئة الحقول المطلوبة.',
+        'request_submitted': 'تم استلام طلب الحساب بنجاح.',
+        'request_approved': 'تمت الموافقة على طلب الحساب.',
+        'request_rejected': 'تم رفض طلب الحساب.',
+        'login_credentials': 'بيانات تسجيل الدخول',
     }
 }
 

@@ -17,11 +17,83 @@ def get_turkey_date():
     """Türkiye tarihini döndürür"""
     return datetime.now(TURKEY_TZ).date()
 
+class Company(db.Model):
+    """Şirketler"""
+    __tablename__ = 'companies'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    business_type = db.Column(db.String(50))  # kafe, market, restoran, genel
+    authorized_person = db.Column(db.String(100), nullable=False)
+    phone = db.Column(db.String(20))
+    email = db.Column(db.String(100), nullable=False)
+    city = db.Column(db.String(50))
+    notes = db.Column(db.Text)
+    status = db.Column(db.String(20), default='pending')  # pending, approved, rejected
+    rejection_reason = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=get_turkey_time)
+    updated_at = db.Column(db.DateTime, default=get_turkey_time, onupdate=get_turkey_time)
+    
+    # İlişkiler
+    users = db.relationship('User', backref='company', lazy=True)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'business_type': self.business_type,
+            'authorized_person': self.authorized_person,
+            'phone': self.phone,
+            'email': self.email,
+            'city': self.city,
+            'notes': self.notes,
+            'status': self.status,
+            'rejection_reason': self.rejection_reason or '',
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+
+
+class CompanyRequest(db.Model):
+    """Şirket talepleri"""
+    __tablename__ = 'company_requests'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    company_name = db.Column(db.String(100), nullable=False)
+    business_type = db.Column(db.String(50), nullable=False)
+    authorized_person = db.Column(db.String(100), nullable=False)
+    phone = db.Column(db.String(20), nullable=False)
+    email = db.Column(db.String(100), nullable=False)
+    city = db.Column(db.String(50))
+    notes = db.Column(db.Text)
+    status = db.Column(db.String(20), default='pending')  # pending, approved, rejected
+    rejection_reason = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=get_turkey_time)
+    updated_at = db.Column(db.DateTime, default=get_turkey_time, onupdate=get_turkey_time)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'company_name': self.company_name,
+            'business_type': self.business_type,
+            'authorized_person': self.authorized_person,
+            'phone': self.phone,
+            'email': self.email,
+            'city': self.city,
+            'notes': self.notes,
+            'status': self.status,
+            'rejection_reason': self.rejection_reason or '',
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+
+
 class User(db.Model, UserMixin):
     """Kullanıcılar (admin ve gözlemci rolleri)"""
     __tablename__ = 'users'
     
     id = db.Column(db.Integer, primary_key=True)
+    company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=True)  # SaaS için
     username = db.Column(db.String(50), unique=True, nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
@@ -64,6 +136,7 @@ class Transaction(db.Model):
     __tablename__ = 'transactions'
     
     id = db.Column(db.Integer, primary_key=True)
+    company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)  # SaaS için
     type = db.Column(db.String(10), nullable=False)  # 'income' veya 'expense'
     amount = db.Column(db.Numeric(15, 2), nullable=False)
     description = db.Column(db.Text)
@@ -85,6 +158,7 @@ class Customer(db.Model):
     __tablename__ = 'customers'
     
     id = db.Column(db.Integer, primary_key=True)
+    company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)  # SaaS için
     name = db.Column(db.String(100), nullable=False)
     phone = db.Column(db.String(20))
     notes = db.Column(db.Text)
@@ -157,6 +231,7 @@ class Product(db.Model):
     __tablename__ = 'products'
     
     id = db.Column(db.Integer, primary_key=True)
+    company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)  # SaaS için
     name = db.Column(db.String(100), nullable=False)
     unit = db.Column(db.String(20), nullable=False)  # adet, kg, gram, paket vb.
     unit_price = db.Column(db.Numeric(15, 2), nullable=False)
@@ -189,6 +264,7 @@ class Receipt(db.Model):
     __tablename__ = 'receipts'
     
     id = db.Column(db.Integer, primary_key=True)
+    company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)  # SaaS için
     customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=False)
     receipt_no = db.Column(db.String(20), unique=True, nullable=False)
     total_amount = db.Column(db.Numeric(15, 2), nullable=False)

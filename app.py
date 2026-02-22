@@ -1,11 +1,12 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session, current_app
 from flask_login import LoginManager, current_user
-from models import db, Transaction, Customer, CustomerTransaction, Product, Receipt, ReceiptItem, User
+from models import db, Transaction, Customer, CustomerTransaction, Product, Receipt, ReceiptItem, User, Company
 from config import config, get_database_url, is_production, is_demo
 from translations import get_all_translations, get_translation
 from datetime import datetime, date, timedelta, timezone
 from decimal import Decimal
 import os
+from sqlalchemy import inspect, text
 
 # Flask-Login başlatma
 login_manager = LoginManager()
@@ -124,6 +125,10 @@ def create_app(config_name=None):
     app.register_blueprint(main_bp)
     app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(auth, url_prefix='/auth')
+
+    # SaaS şema bootstrap (eski DB'ler için güvenli)
+    with app.app_context():
+        ensure_saas_schema()
     
     # Demo verisi ekleme (sadece demo ortamında)
     if is_demo():
@@ -134,35 +139,68 @@ def create_app(config_name=None):
     # Production için admin kullanıcısı oluştur
     elif is_production():
         with app.app_context():
-            # Migration kontrolü
-            try:
-                # company_id sütunu var mı kontrol et
-                from sqlalchemy import inspect
-                inspector = inspect(db.engine)
-                columns = [column['name'] for column in inspector.get_columns('users')]
-                
-                if 'company_id' not in columns:
-                    print("Migration needed: company_id column missing")
-                    # Migration'ı burada çalıştır
-                    from migrate_saas import migrate_database
-                    migrate_database()
-                else:
-                    print("Migration already completed")
-                    
-                if User.query.count() == 0:
-                    create_production_admin()
-            except Exception as e:
-                print(f"Migration error: {e}")
-                # Hata durumunda eski mantıkla devam et
-                if User.query.count() == 0:
-                    create_production_admin()
+            if User.query.count() == 0:
+                create_production_admin()
     
     return app
+
+
+def ensure_saas_schema():
+    """Eski veritabanlarını company_id alanlarıyla uyumlu hale getirir."""
+    inspector = inspect(db.engine)
+
+    table_columns = {
+        table: {c['name'] for c in inspector.get_columns(table)}
+        for table in inspector.get_table_names()
+    }
+
+    alter_statements = []
+
+    if 'users' in table_columns and 'company_id' not in table_columns['users']:
+        alter_statements.append("ALTER TABLE users ADD COLUMN company_id INTEGER")
+
+    if 'customers' in table_columns and 'company_id' not in table_columns['customers']:
+        alter_statements.append("ALTER TABLE customers ADD COLUMN company_id INTEGER DEFAULT 1")
+
+    if 'transactions' in table_columns and 'company_id' not in table_columns['transactions']:
+        alter_statements.append("ALTER TABLE transactions ADD COLUMN company_id INTEGER DEFAULT 1")
+
+    if 'products' in table_columns and 'company_id' not in table_columns['products']:
+        alter_statements.append("ALTER TABLE products ADD COLUMN company_id INTEGER DEFAULT 1")
+
+    if 'receipts' in table_columns and 'company_id' not in table_columns['receipts']:
+        alter_statements.append("ALTER TABLE receipts ADD COLUMN company_id INTEGER DEFAULT 1")
+
+    with db.engine.begin() as conn:
+        for stmt in alter_statements:
+            conn.execute(text(stmt))
+
+    # Varsayılan şirket
+    default_company = Company.query.get(1)
+    if default_company is None:
+        default_company = Company(
+            id=1,
+            name='Varsayılan İşletme',
+            business_type='genel',
+            authorized_person='Sistem',
+            email='system@local',
+            status='approved'
+        )
+        db.session.add(default_company)
+        db.session.commit()
+
+    # Eksik company_id verilerini varsayılan şirkete ata
+    with db.engine.begin() as conn:
+        conn.execute(text("UPDATE customers SET company_id = 1 WHERE company_id IS NULL"))
+        conn.execute(text("UPDATE transactions SET company_id = 1 WHERE company_id IS NULL"))
+        conn.execute(text("UPDATE products SET company_id = 1 WHERE company_id IS NULL"))
+        conn.execute(text("UPDATE receipts SET company_id = 1 WHERE company_id IS NULL"))
 
 def create_production_admin():
     """Production ortamı için admin kullanıcısı oluşturur"""
     # Production admin kullanıcısı
     admin_user = User(
+        company_id=1,
         username='admin',
         email='admin@railway.com',
         role='admin',
@@ -173,6 +211,7 @@ def create_production_admin():
     
     # Production gözlemci kullanıcısı
     observer_user = User(
+        company_id=1,
         username='gozlemci',
         email='gozlemci@railway.com',
         role='observer',
@@ -182,17 +221,30 @@ def create_production_admin():
     db.session.add(observer_user)
     
     db.session.commit()
-    app.logger.info('Production admin kullanıcısı oluşturuldu!')
+    current_app.logger.info('Production admin kullanıcısı oluşturuldu!')
 
 def create_demo_data():
     """Demo ortamı için sahte veriler oluşturur"""
+    company = Company.query.get(1)
+    if company is None:
+        company = Company(
+            id=1,
+            name='Demo İşletme',
+            business_type='genel',
+            authorized_person='Demo Admin',
+            email='demo@local',
+            status='approved'
+        )
+        db.session.add(company)
+        db.session.commit()
+
     # Demo ürünler
     products = [
-        Product(name='Çay', unit='adet', unit_price=Decimal('5.00')),
-        Product(name='Kahve', unit='fincan', unit_price=Decimal('15.00')),
-        Product(name='Sandviç', unit='adet', unit_price=Decimal('25.00')),
-        Product(name='Su', unit='pet', unit_price=Decimal('3.00')),
-        Product(name='Meyve Suyu', unit='litre', unit_price=Decimal('20.00'))
+        Product(company_id=company.id, name='Çay', unit='adet', unit_price=Decimal('5.00')),
+        Product(company_id=company.id, name='Kahve', unit='fincan', unit_price=Decimal('15.00')),
+        Product(company_id=company.id, name='Sandviç', unit='adet', unit_price=Decimal('25.00')),
+        Product(company_id=company.id, name='Su', unit='pet', unit_price=Decimal('3.00')),
+        Product(company_id=company.id, name='Meyve Suyu', unit='litre', unit_price=Decimal('20.00'))
     ]
     
     for product in products:
@@ -200,11 +252,11 @@ def create_demo_data():
     
     # Demo müşteriler
     customers = [
-        Customer(name='Ahmet Yılmaz', phone='0532 111 22 33', notes='Düzenli müşteri'),
-        Customer(name='Ayşe Demir', phone='0543 444 55 66', notes='Toptancı'),
-        Customer(name='Mehmet Kaya', phone='0555 777 88 99', notes='Komşu'),
-        Customer(name='Fatma Öztürk', phone='0538 222 33 44', notes='Öğrenci'),
-        Customer(name='Ali Vural', phone='0546 666 77 88', notes='İş yeri')
+        Customer(company_id=company.id, name='Ahmet Yılmaz', phone='0532 111 22 33', notes='Düzenli müşteri'),
+        Customer(company_id=company.id, name='Ayşe Demir', phone='0543 444 55 66', notes='Toptancı'),
+        Customer(company_id=company.id, name='Mehmet Kaya', phone='0555 777 88 99', notes='Komşu'),
+        Customer(company_id=company.id, name='Fatma Öztürk', phone='0538 222 33 44', notes='Öğrenci'),
+        Customer(company_id=company.id, name='Ali Vural', phone='0546 666 77 88', notes='İş yeri')
     ]
     
     for customer in customers:
@@ -228,13 +280,13 @@ def create_demo_data():
     
     # Demo gelir/gider işlemleri
     transactions = [
-        Transaction(type='income', amount=Decimal('2500.00'), description='Günlük ciro'),
-        Transaction(type='expense', amount=Decimal('500.00'), description='Kiraya ödeme'),
-        Transaction(type='expense', amount=Decimal('200.00'), description='Elektrik faturası'),
-        Transaction(type='expense', amount=Decimal('150.00'), description='Su faturası'),
-        Transaction(type='expense', amount=Decimal('300.00'), description='Malzeme alışverişi'),
-        Transaction(type='income', amount=Decimal('1800.00'), description='Günlük ciro'),
-        Transaction(type='expense', amount=Decimal('100.00'), description='İnternet faturası')
+        Transaction(company_id=company.id, type='income', amount=Decimal('2500.00'), description='Günlük ciro'),
+        Transaction(company_id=company.id, type='expense', amount=Decimal('500.00'), description='Kiraya ödeme'),
+        Transaction(company_id=company.id, type='expense', amount=Decimal('200.00'), description='Elektrik faturası'),
+        Transaction(company_id=company.id, type='expense', amount=Decimal('150.00'), description='Su faturası'),
+        Transaction(company_id=company.id, type='expense', amount=Decimal('300.00'), description='Malzeme alışverişi'),
+        Transaction(company_id=company.id, type='income', amount=Decimal('1800.00'), description='Günlük ciro'),
+        Transaction(company_id=company.id, type='expense', amount=Decimal('100.00'), description='İnternet faturası')
     ]
     
     for transaction in transactions:
@@ -244,9 +296,9 @@ def create_demo_data():
     
     # Demo fişler
     receipts = [
-        Receipt(customer_id=1, receipt_no='F001', total_amount=Decimal('150.00'), grand_total=Decimal('150.00'), notes='Kahve ve çay'),
-        Receipt(customer_id=2, receipt_no='F002', total_amount=Decimal('500.00'), grand_total=Decimal('500.00'), notes='Toptan satış'),
-        Receipt(customer_id=3, receipt_no='F003', total_amount=Decimal('75.00'), grand_total=Decimal('75.00'), notes='Günlük')
+        Receipt(company_id=company.id, customer_id=1, receipt_no='F001', total_amount=Decimal('150.00'), grand_total=Decimal('150.00'), notes='Kahve ve çay'),
+        Receipt(company_id=company.id, customer_id=2, receipt_no='F002', total_amount=Decimal('500.00'), grand_total=Decimal('500.00'), notes='Toptan satış'),
+        Receipt(company_id=company.id, customer_id=3, receipt_no='F003', total_amount=Decimal('75.00'), grand_total=Decimal('75.00'), notes='Günlük')
     ]
     
     for receipt in receipts:
@@ -274,6 +326,7 @@ def create_demo_data():
     
     # Default admin kullanıcı
     admin_user = User(
+        company_id=company.id,
         username='admin',
         email='admin@example.com',
         role='admin',
@@ -284,6 +337,7 @@ def create_demo_data():
     
     # Demo gözlemci kullanıcı
     observer_user = User(
+        company_id=company.id,
         username='gozlemci',
         email='gozlemci@example.com',
         role='observer',

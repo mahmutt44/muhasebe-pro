@@ -10,6 +10,34 @@ from translations import get_translation
 api_bp = Blueprint('api', __name__)
 
 
+def get_current_company_id():
+    return current_user.company_id or 1
+
+
+def scoped_transactions_query():
+    if current_user.company_id is None:
+        return Transaction.query
+    return Transaction.query.filter_by(company_id=current_user.company_id)
+
+
+def scoped_customers_query():
+    if current_user.company_id is None:
+        return Customer.query
+    return Customer.query.filter_by(company_id=current_user.company_id)
+
+
+def scoped_products_query():
+    if current_user.company_id is None:
+        return Product.query
+    return Product.query.filter_by(company_id=current_user.company_id)
+
+
+def scoped_receipts_query():
+    if current_user.company_id is None:
+        return Receipt.query
+    return Receipt.query.filter_by(company_id=current_user.company_id)
+
+
 def admin_required_api(f):
     """API için sadece admin kullanıcıları decorator'ü"""
     @wraps(f)
@@ -25,7 +53,7 @@ def admin_required_api(f):
 @login_required
 def get_transactions():
     """Tüm gelir/gider işlemlerini getir"""
-    transactions = Transaction.query.order_by(Transaction.date.desc(), Transaction.created_at.desc()).all()
+    transactions = scoped_transactions_query().order_by(Transaction.date.desc(), Transaction.created_at.desc()).all()
     return jsonify([t.to_dict() for t in transactions])
 
 @api_bp.route('/transactions', methods=['POST'])
@@ -37,6 +65,7 @@ def create_transaction():
     
     try:
         transaction = Transaction(
+            company_id=get_current_company_id(),
             type=data['type'],
             amount=Decimal(str(data['amount'])),
             description=data.get('description', ''),
@@ -51,9 +80,10 @@ def create_transaction():
         return jsonify({'error': str(e)}), 400
 
 @api_bp.route('/transactions/<int:transaction_id>', methods=['GET'])
+@login_required
 def get_transaction(transaction_id):
     """Tekil gelir/gider işlemi getir"""
-    transaction = Transaction.query.get_or_404(transaction_id)
+    transaction = scoped_transactions_query().filter_by(id=transaction_id).first_or_404()
     return jsonify(transaction.to_dict())
 
 @api_bp.route('/transactions/<int:transaction_id>', methods=['DELETE'])
@@ -61,7 +91,7 @@ def get_transaction(transaction_id):
 @admin_required_api
 def delete_transaction(transaction_id):
     """Gelir/gider işlemi sil - Sadece admin"""
-    transaction = Transaction.query.get_or_404(transaction_id)
+    transaction = scoped_transactions_query().filter_by(id=transaction_id).first_or_404()
     db.session.delete(transaction)
     db.session.commit()
     return jsonify({'message': 'İşlem silindi'})
@@ -71,7 +101,7 @@ def delete_transaction(transaction_id):
 @admin_required_api
 def update_transaction(transaction_id):
     """Gelir/gider işlemini güncelle - Sadece admin"""
-    transaction = Transaction.query.get_or_404(transaction_id)
+    transaction = scoped_transactions_query().filter_by(id=transaction_id).first_or_404()
     
     data = request.get_json()
     print(f"DEBUG: Gelen veri: {data}")
@@ -96,10 +126,11 @@ def update_transaction(transaction_id):
 
 # Müşteri API'leri
 @api_bp.route('/customers', methods=['GET'])
+@login_required
 def get_customers():
     """Tüm müşterileri getir"""
     try:
-        customers = Customer.query.order_by(Customer.name).all()
+        customers = scoped_customers_query().order_by(Customer.name).all()
         result = [c.to_dict() for c in customers]
         print(f"DEBUG: Müşteri sayısı: {len(customers)}")
         print(f"DEBUG: İlk müşteri: {result[0] if result else 'Yok'}")
@@ -117,6 +148,7 @@ def create_customer():
     
     try:
         customer = Customer(
+            company_id=get_current_company_id(),
             name=data['name'],
             phone=data.get('phone', ''),
             notes=data.get('notes', '')
@@ -130,9 +162,10 @@ def create_customer():
         return jsonify({'error': str(e)}), 400
 
 @api_bp.route('/customers/<int:customer_id>', methods=['GET'])
+@login_required
 def get_customer(customer_id):
     """Tekil müşteri getir"""
-    customer = Customer.query.get_or_404(customer_id)
+    customer = scoped_customers_query().filter_by(id=customer_id).first_or_404()
     return jsonify(customer.to_dict())
 
 @api_bp.route('/customers/<int:customer_id>', methods=['PUT'])
@@ -140,7 +173,7 @@ def get_customer(customer_id):
 @admin_required_api
 def update_customer(customer_id):
     """Müşteri bilgilerini güncelle - Sadece admin"""
-    customer = Customer.query.get_or_404(customer_id)
+    customer = scoped_customers_query().filter_by(id=customer_id).first_or_404()
     data = request.get_json()
     
     try:
@@ -158,21 +191,24 @@ def update_customer(customer_id):
 @admin_required_api
 def delete_customer(customer_id):
     """Müşteri sil - Sadece admin"""
-    customer = Customer.query.get_or_404(customer_id)
+    customer = scoped_customers_query().filter_by(id=customer_id).first_or_404()
     db.session.delete(customer)
     db.session.commit()
     return jsonify({'message': 'Müşteri silindi'})
 
 @api_bp.route('/customers/<int:customer_id>/balance')
+@login_required
 def get_customer_balance(customer_id):
     """Müşteri bakiyesini getir"""
-    customer = Customer.query.get_or_404(customer_id)
+    customer = scoped_customers_query().filter_by(id=customer_id).first_or_404()
     return jsonify({'balance': float(customer.get_balance())})
 
 # Müşteri İşlem API'leri
 @api_bp.route('/customers/<int:customer_id>/transactions', methods=['GET'])
+@login_required
 def get_customer_transactions(customer_id):
     """Müşteri işlemlerini getir"""
+    customer = scoped_customers_query().filter_by(id=customer_id).first_or_404()
     transactions = CustomerTransaction.query.filter_by(customer_id=customer_id).order_by(CustomerTransaction.date.desc()).all()
     return jsonify([t.to_dict() for t in transactions])
 
@@ -181,7 +217,7 @@ def get_customer_transactions(customer_id):
 @admin_required_api
 def create_customer_transaction(customer_id):
     """Müşteri borç/ödeme işlemi ekle - Sadece admin"""
-    customer = Customer.query.get_or_404(customer_id)
+    customer = scoped_customers_query().filter_by(id=customer_id).first_or_404()
     data = request.get_json()
     
     try:
@@ -205,7 +241,11 @@ def create_customer_transaction(customer_id):
 @admin_required_api
 def update_customer_transaction(transaction_id):
     """Müşteri işlemini güncelle - Sadece admin"""
-    transaction = CustomerTransaction.query.get_or_404(transaction_id)
+    transaction = CustomerTransaction.query.join(Customer).filter(
+        CustomerTransaction.id == transaction_id,
+        Customer.id == CustomerTransaction.customer_id,
+        Customer.company_id == get_current_company_id()
+    ).first_or_404()
     data = request.get_json()
     
     try:
@@ -224,16 +264,21 @@ def update_customer_transaction(transaction_id):
 @admin_required_api
 def delete_customer_transaction(transaction_id):
     """Müşteri işlemini sil - Sadece admin"""
-    transaction = CustomerTransaction.query.get_or_404(transaction_id)
+    transaction = CustomerTransaction.query.join(Customer).filter(
+        CustomerTransaction.id == transaction_id,
+        Customer.id == CustomerTransaction.customer_id,
+        Customer.company_id == get_current_company_id()
+    ).first_or_404()
     db.session.delete(transaction)
     db.session.commit()
     return jsonify({'message': 'İşlem silindi'})
 
 # Ürün API'leri
 @api_bp.route('/products', methods=['GET'])
+@login_required
 def get_products():
     """Tüm ürünleri getir"""
-    products = Product.query.order_by(Product.name).all()
+    products = scoped_products_query().order_by(Product.name).all()
     return jsonify([p.to_dict() for p in products])
 
 @api_bp.route('/products', methods=['POST'])
@@ -245,6 +290,7 @@ def create_product():
     
     try:
         product = Product(
+            company_id=get_current_company_id(),
             name=data['name'],
             unit=data['unit'],
             unit_price=Decimal(str(data['unit_price']))
@@ -258,9 +304,10 @@ def create_product():
         return jsonify({'error': str(e)}), 400
 
 @api_bp.route('/products/<int:product_id>', methods=['GET'])
+@login_required
 def get_product(product_id):
     """Tekil ürün getir"""
-    product = Product.query.get_or_404(product_id)
+    product = scoped_products_query().filter_by(id=product_id).first_or_404()
     return jsonify(product.to_dict())
 
 @api_bp.route('/products/<int:product_id>', methods=['PUT'])
@@ -268,7 +315,7 @@ def get_product(product_id):
 @admin_required_api
 def update_product(product_id):
     """Ürün bilgilerini güncelle - Sadece admin"""
-    product = Product.query.get_or_404(product_id)
+    product = scoped_products_query().filter_by(id=product_id).first_or_404()
     data = request.get_json()
     
     try:
@@ -286,16 +333,17 @@ def update_product(product_id):
 @admin_required_api
 def delete_product(product_id):
     """Ürün sil - Sadece admin"""
-    product = Product.query.get_or_404(product_id)
+    product = scoped_products_query().filter_by(id=product_id).first_or_404()
     db.session.delete(product)
     db.session.commit()
     return jsonify({'message': 'Ürün silindi'})
 
 # Fiş API'leri
 @api_bp.route('/receipts', methods=['GET'])
+@login_required
 def get_receipts():
     """Tüm fişleri getir"""
-    receipts = Receipt.query.order_by(Receipt.date.desc(), Receipt.created_at.desc()).all()
+    receipts = scoped_receipts_query().order_by(Receipt.date.desc(), Receipt.created_at.desc()).all()
     return jsonify([r.to_dict() for r in receipts])
 
 @api_bp.route('/receipts', methods=['POST'])
@@ -307,7 +355,7 @@ def create_receipt():
     
     try:
         # Fiş numarası oluştur
-        last_receipt = Receipt.query.order_by(Receipt.id.desc()).first()
+        last_receipt = scoped_receipts_query().order_by(Receipt.id.desc()).first()
         if last_receipt:
             receipt_no = f"F{int(last_receipt.receipt_no[1:]) + 1:03d}"
         else:
@@ -321,6 +369,7 @@ def create_receipt():
         
         # Fişi oluştur
         receipt = Receipt(
+            company_id=get_current_company_id(),
             customer_id=data['customer_id'],
             receipt_no=receipt_no,
             total_amount=total_amount,
@@ -346,7 +395,7 @@ def create_receipt():
             db.session.add(item)
         
         # Müşteri borcunu güncelle (KDV dahil toplam)
-        customer = Customer.query.get(data['customer_id'])
+        customer = scoped_customers_query().filter_by(id=data['customer_id']).first_or_404()
         debt_transaction = CustomerTransaction(
             customer_id=data['customer_id'],
             type='debt',
@@ -364,9 +413,10 @@ def create_receipt():
         return jsonify({'error': str(e)}), 400
 
 @api_bp.route('/receipts/<int:receipt_id>')
+@login_required
 def get_receipt(receipt_id):
     """Fiş detaylarını getir"""
-    receipt = Receipt.query.get_or_404(receipt_id)
+    receipt = scoped_receipts_query().filter_by(id=receipt_id).first_or_404()
     return jsonify(receipt.to_dict())
 
 @api_bp.route('/receipts/<int:receipt_id>', methods=['DELETE'])
@@ -374,27 +424,43 @@ def get_receipt(receipt_id):
 @admin_required_api
 def delete_receipt(receipt_id):
     """Fiş sil - Sadece admin"""
-    receipt = Receipt.query.get_or_404(receipt_id)
+    receipt = scoped_receipts_query().filter_by(id=receipt_id).first_or_404()
     db.session.delete(receipt)
     db.session.commit()
     return jsonify({'message': 'Fiş silindi'})
 
 # İstatistik API'leri
 @api_bp.route('/stats/dashboard')
+@login_required
 def get_dashboard_stats():
     """Dashboard istatistikleri"""
+    company_id = get_current_company_id()
     # Gelir/Gider
-    total_income = db.session.query(db.func.sum(Transaction.amount)).filter(Transaction.type == 'income').scalar() or 0
-    total_expense = db.session.query(db.func.sum(Transaction.amount)).filter(Transaction.type == 'expense').scalar() or 0
+    total_income = db.session.query(db.func.sum(Transaction.amount)).filter(
+        Transaction.company_id == company_id,
+        Transaction.type == 'income'
+    ).scalar() or 0
+    total_expense = db.session.query(db.func.sum(Transaction.amount)).filter(
+        Transaction.company_id == company_id,
+        Transaction.type == 'expense'
+    ).scalar() or 0
     cash_balance = total_income - total_expense
     
     # Müşteri borçları
-    total_customer_debt = sum(customer.get_balance() for customer in Customer.query.all())
+    total_customer_debt = sum(customer.get_balance() for customer in scoped_customers_query().all())
     
     # Bugünkü işlemler
     today = date.today()
-    today_income = db.session.query(db.func.sum(Transaction.amount)).filter(Transaction.type == 'income', Transaction.date == today).scalar() or 0
-    today_expense = db.session.query(db.func.sum(Transaction.amount)).filter(Transaction.type == 'expense', Transaction.date == today).scalar() or 0
+    today_income = db.session.query(db.func.sum(Transaction.amount)).filter(
+        Transaction.company_id == company_id,
+        Transaction.type == 'income',
+        Transaction.date == today
+    ).scalar() or 0
+    today_expense = db.session.query(db.func.sum(Transaction.amount)).filter(
+        Transaction.company_id == company_id,
+        Transaction.type == 'expense',
+        Transaction.date == today
+    ).scalar() or 0
     
     return jsonify({
         'cash_balance': float(cash_balance),

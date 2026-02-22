@@ -10,6 +10,34 @@ from translations import get_translation
 main_bp = Blueprint('main', __name__)
 
 
+def get_current_company_id():
+    return current_user.company_id or 1
+
+
+def scoped_transactions_query():
+    if current_user.company_id is None:
+        return Transaction.query
+    return Transaction.query.filter_by(company_id=current_user.company_id)
+
+
+def scoped_customers_query():
+    if current_user.company_id is None:
+        return Customer.query
+    return Customer.query.filter_by(company_id=current_user.company_id)
+
+
+def scoped_products_query():
+    if current_user.company_id is None:
+        return Product.query
+    return Product.query.filter_by(company_id=current_user.company_id)
+
+
+def scoped_receipts_query():
+    if current_user.company_id is None:
+        return Receipt.query
+    return Receipt.query.filter_by(company_id=current_user.company_id)
+
+
 def admin_required(f):
     """Sadece admin kullanıcıları için decorator"""
     @wraps(f)
@@ -32,20 +60,30 @@ def observer_read_only():
 @login_required
 def index():
     """Ana sayfa - Kasa durumu"""
+    company_id = get_current_company_id()
+
     # Gelir/Gider toplamları
-    total_income = db.session.query(db.func.sum(Transaction.amount)).filter(Transaction.type == 'income').scalar() or 0
-    total_expense = db.session.query(db.func.sum(Transaction.amount)).filter(Transaction.type == 'expense').scalar() or 0
+    total_income = db.session.query(db.func.sum(Transaction.amount)).filter(
+        Transaction.company_id == company_id,
+        Transaction.type == 'income'
+    ).scalar() or 0
+    total_expense = db.session.query(db.func.sum(Transaction.amount)).filter(
+        Transaction.company_id == company_id,
+        Transaction.type == 'expense'
+    ).scalar() or 0
     cash_balance = total_income - total_expense
     
     # Müşteri borç toplamı
-    total_customer_debt = sum(customer.get_balance() for customer in Customer.query.all())
+    total_customer_debt = sum(customer.get_balance() for customer in scoped_customers_query().all())
     
     # Bugünkü işlemler
     today = date.today()
-    today_transactions = Transaction.query.filter(Transaction.date == today).order_by(Transaction.created_at.desc()).limit(5).all()
+    today_transactions = scoped_transactions_query().filter(
+        Transaction.date == today
+    ).order_by(Transaction.created_at.desc()).limit(5).all()
     
     # Son fişler
-    recent_receipts = Receipt.query.order_by(Receipt.created_at.desc()).limit(5).all()
+    recent_receipts = scoped_receipts_query().order_by(Receipt.created_at.desc()).limit(5).all()
     
     return render_template('index.html', 
                          cash_balance=cash_balance,
@@ -60,13 +98,20 @@ def index():
 @login_required
 def transactions():
     """Gelir/Gider işlemleri sayfası"""
+    company_id = get_current_company_id()
     page = request.args.get('page', 1, type=int)
-    transactions = Transaction.query.order_by(Transaction.date.desc(), Transaction.created_at.desc()).paginate(
+    transactions = scoped_transactions_query().order_by(Transaction.date.desc(), Transaction.created_at.desc()).paginate(
         page=page, per_page=20, error_out=False)
     
     # Gelir/Gider toplamları
-    total_income = db.session.query(db.func.sum(Transaction.amount)).filter(Transaction.type == 'income').scalar() or 0
-    total_expense = db.session.query(db.func.sum(Transaction.amount)).filter(Transaction.type == 'expense').scalar() or 0
+    total_income = db.session.query(db.func.sum(Transaction.amount)).filter(
+        Transaction.company_id == company_id,
+        Transaction.type == 'income'
+    ).scalar() or 0
+    total_expense = db.session.query(db.func.sum(Transaction.amount)).filter(
+        Transaction.company_id == company_id,
+        Transaction.type == 'expense'
+    ).scalar() or 0
     
     return render_template('transactions.html', 
                          transactions=transactions,
@@ -77,7 +122,7 @@ def transactions():
 @login_required
 def customers():
     """Müşteri defteri sayfası"""
-    customers = Customer.query.order_by(Customer.name).all()
+    customers = scoped_customers_query().order_by(Customer.name).all()
     
     # Toplam borç hesapla
     total_debt = sum(customer.get_balance() for customer in customers if customer.get_balance() > 0)
@@ -88,9 +133,9 @@ def customers():
 @login_required
 def customer_detail(customer_id):
     """Müşteri detay sayfası"""
-    customer = Customer.query.get_or_404(customer_id)
+    customer = scoped_customers_query().filter_by(id=customer_id).first_or_404()
     transactions = CustomerTransaction.query.filter_by(customer_id=customer_id).order_by(CustomerTransaction.date.desc()).all()
-    receipts = Receipt.query.filter_by(customer_id=customer_id).order_by(Receipt.date.desc()).all()
+    receipts = scoped_receipts_query().filter_by(customer_id=customer_id).order_by(Receipt.date.desc()).all()
     
     return render_template('customer_detail.html', customer=customer, transactions=transactions, receipts=receipts)
 
@@ -98,7 +143,7 @@ def customer_detail(customer_id):
 @login_required
 def products():
     """Ürün yönetimi sayfası"""
-    products = Product.query.order_by(Product.name).all()
+    products = scoped_products_query().order_by(Product.name).all()
     return render_template('products.html', products=products)
 
 @main_bp.route('/receipt')
@@ -106,11 +151,11 @@ def products():
 @admin_required
 def receipt():
     """Fiş kesme sayfası - sadece admin"""
-    customers = Customer.query.order_by(Customer.name).all()
-    products = Product.query.order_by(Product.name).all()
+    customers = scoped_customers_query().order_by(Customer.name).all()
+    products = scoped_products_query().order_by(Product.name).all()
     
     # Fiş numarası oluştur
-    last_receipt = Receipt.query.order_by(Receipt.id.desc()).first()
+    last_receipt = scoped_receipts_query().order_by(Receipt.id.desc()).first()
     if last_receipt:
         receipt_no = f"F{int(last_receipt.receipt_no[1:]) + 1:03d}"
     else:
@@ -130,5 +175,5 @@ def receipt():
 @login_required
 def receipt_detail(receipt_id):
     """Fiş detay sayfası"""
-    receipt = Receipt.query.get_or_404(receipt_id)
+    receipt = scoped_receipts_query().filter_by(id=receipt_id).first_or_404()
     return render_template('receipt_detail.html', receipt=receipt)

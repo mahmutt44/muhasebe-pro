@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}İşletme Hesabı Talep Et - {{ t.app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-3">
+                <i class="bi bi-building me-2" style="color: #667eea;"></i>
+                İşletme Hesabı Talep Et
+            </h4>
+            <p class="text-secondary mb-0">Yeni bir işletme hesabı oluşturmak için talep gönderin</p>
+        </div>
+    </div>
+
+    <!-- Request Form Card -->
+    <div class="card" style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px;">
+        <div class="card-header" style="background: rgba(102, 126, 234, 0.1); border-bottom: 1px solid var(--border-color);">
+            <h6 class="mb-0 fw-semibold text-light">
+                <i class="bi bi-envelope-plus me-2"></i>İşletme Bilgileri
+            </h6>
+        </div>
+        <div class="card-body p-4">
+            <form method="POST" action="{{ url_for('auth.request_account') }}">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label text-light small">İşletme Adı *</label>
+                        <input type="text" name="company_name" class="form-control" required style="background: var(--card-bg); border-color: var(--border-color); color: white;" placeholder="Şirket Adı">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-light small">İşletme Türü *</label>
+                        <select name="business_type" class="form-select" required style="background: var(--card-bg); border-color: var(--border-color); color: white;">
+                            <option value="">Seçiniz...</option>
+                            <option value="kafe">Kafe</option>
+                            <option value="market">Market</option>
+                            <option value="restoran">Restoran</option>
+                            <option value="genel">Genel</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-light small">Yetkili Adı *</label>
+                        <input type="text" name="authorized_person" class="form-control" required style="background: var(--card-bg); border-color: var(--border-color); color: white;" placeholder="Yetkili Kişi">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-light small">Telefon *</label>
+                        <input type="tel" name="phone" class="form-control" required style="background: var(--card-bg); border-color: var(--border-color); color: white;" placeholder="0555 555 55 55">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-light small">E-posta *</label>
+                        <input type="email" name="email" class="form-control" required style="background: var(--card-bg); border-color: var(--border-color); color: white;" placeholder="ornek@sirket.com">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-light small">Şehir</label>
+                        <input type="text" name="city" class="form-control" style="background: var(--card-bg); border-color: var(--border-color); color: white;" placeholder="İstanbul">
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label text-light small">Kısa Not</label>
+                        <textarea name="notes" class="form-control" rows="3" style="background: var(--card-bg); border-color: var(--border-color); color: white;" placeholder="İşletme hakkında kısa bilgi..."></textarea>
+                    </div>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-12 text-center">
+                        <button type="submit" class="btn btn-lg px-5" style="background: var(--primary-gradient); border: none; color: white;">
+                            <i class="bi bi-send me-2"></i>Talep Gönder
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
