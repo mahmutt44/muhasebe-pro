@@ -35,7 +35,7 @@ class Company(db.Model):
     updated_at = db.Column(db.DateTime, default=get_turkey_time, onupdate=get_turkey_time)
     
     # İlişkiler
-    users = db.relationship('User', backref='company', lazy=True)
+    users = db.relationship('User', backref='company', lazy=True, cascade='all, delete-orphan')
     
     def to_dict(self):
         return {

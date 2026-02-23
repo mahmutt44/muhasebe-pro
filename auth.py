@@ -92,7 +92,8 @@ def request_account():
             return render_template('auth/request_account.html')
 
         # E-posta sistemde kullanıcı olarak varsa yeni talep alma
-        if User.query.filter_by(email=email).first():
+        existing_user = User.query.filter_by(email=email).first()
+        if existing_user:
             flash('Bu e-posta adresi zaten kullanılıyor.', 'danger')
             return render_template('auth/request_account.html')
 
@@ -135,7 +136,6 @@ def platform_admin_dashboard():
     # İstatistikler
     total_companies = Company.query.count()
     total_users = User.query.filter(User.company_id.isnot(None)).count()
-    platform_admins = User.query.filter_by(role='platform_admin').count()
     pending_requests = CompanyRequest.query.filter_by(status='pending').count()
     
     # Son işletmeler
@@ -144,7 +144,6 @@ def platform_admin_dashboard():
     return render_template('auth/platform_admin_dashboard.html',
                          total_companies=total_companies,
                          total_users=total_users,
-                         platform_admins=platform_admins,
                          pending_requests=pending_requests,
                          recent_companies=recent_companies)
 
@@ -355,15 +354,21 @@ def reject_request(request_id):
 @login_required
 @platform_admin_required
 def delete_request(request_id):
-    """Hesap talebini tamamen sil"""
+    """Hesap talebini tamamen sil (onaylanmışsa kullanıcıyı da sil)"""
     company_request = CompanyRequest.query.get_or_404(request_id)
     
     company_name = company_request.company_name
     
+    # Eğer talep onaylanmışsa, oluşturulan kullanıcıyı da sil
+    if company_request.approved_username:
+        user = User.query.filter_by(username=company_request.approved_username).first()
+        if user:
+            db.session.delete(user)
+    
     db.session.delete(company_request)
     db.session.commit()
     
-    flash(f'{company_name} talebi silindi.', 'success')
+    flash(f'{company_name} talebi ve ilişkili kullanıcı silindi.', 'success')
     return redirect(url_for('auth.admin_company_requests'))
 
 

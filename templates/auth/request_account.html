@@ -29,37 +29,37 @@
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label text-light small">{{ t.company_name if t.company_name else 'İşletme Adı' }} *</label>
-                        <input type="text" name="company_name" class="form-control" required style="background: var(--card-bg); border-color: var(--border-color); color: white;" placeholder="{{ t.company_name if t.company_name else 'İşletme Adı' }}">
+                        <input type="text" name="company_name" class="form-control" required style="background: var(--card-bg); border-color: var(--border-color); color: white;" placeholder="{{ t.company_name if t.company_name else 'İşletme Adı' }}" value="{{ request.form.get('company_name', '') }}">
                     </div>
                     <div class="col-md-6">
                         <label class="form-label text-light small">{{ t.business_type if t.business_type else 'İşletme Türü' }} *</label>
                         <select name="business_type" class="form-select" required style="background: var(--card-bg); border-color: var(--border-color); color: white;">
-                            <option value="">{{ t.select_option if t.select_option else 'Seçiniz...' }}</option>
-                            <option value="kafe">{{ t.cafe if t.cafe else 'Kafe' }}</option>
-                            <option value="market">{{ t.market if t.market else 'Market' }}</option>
-                            <option value="restoran">{{ t.restaurant if t.restaurant else 'Restoran' }}</option>
-                            <option value="genel">{{ t.general if t.general else 'Genel' }}</option>
+                            <option value="" {% if not request.form.get('business_type') %}selected{% endif %}>{{ t.select_option if t.select_option else 'Seçiniz...' }}</option>
+                            <option value="kafe" {% if request.form.get('business_type') == 'kafe' %}selected{% endif %}>{{ t.cafe if t.cafe else 'Kafe' }}</option>
+                            <option value="market" {% if request.form.get('business_type') == 'market' %}selected{% endif %}>{{ t.market if t.market else 'Market' }}</option>
+                            <option value="restoran" {% if request.form.get('business_type') == 'restoran' %}selected{% endif %}>{{ t.restaurant if t.restaurant else 'Restoran' }}</option>
+                            <option value="genel" {% if request.form.get('business_type') == 'genel' %}selected{% endif %}>{{ t.general if t.general else 'Genel' }}</option>
                         </select>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label text-light small">{{ t.authorized_person if t.authorized_person else 'Yetkili Adı' }} *</label>
-                        <input type="text" name="authorized_person" class="form-control" required style="background: var(--card-bg); border-color: var(--border-color); color: white;" placeholder="{{ t.authorized_person if t.authorized_person else 'Yetkili Adı' }}">
+                        <input type="text" name="authorized_person" class="form-control" required style="background: var(--card-bg); border-color: var(--border-color); color: white;" placeholder="{{ t.authorized_person if t.authorized_person else 'Yetkili Adı' }}" value="{{ request.form.get('authorized_person', '') }}">
                     </div>
                     <div class="col-md-6">
                         <label class="form-label text-light small">{{ t.phone if t.phone else 'Telefon' }} *</label>
-                        <input type="tel" name="phone" class="form-control" required style="background: var(--card-bg); border-color: var(--border-color); color: white;" placeholder="0555 555 55 55">
+                        <input type="tel" name="phone" class="form-control" required style="background: var(--card-bg); border-color: var(--border-color); color: white;" placeholder="0555 555 55 55" value="{{ request.form.get('phone', '') }}">
                     </div>
                     <div class="col-md-6">
                         <label class="form-label text-light small">{{ t.email if t.email else 'E-posta' }} *</label>
-                        <input type="email" name="email" class="form-control" required style="background: var(--card-bg); border-color: var(--border-color); color: white;" placeholder="ornek@sirket.com">
+                        <input type="email" name="email" class="form-control" required style="background: var(--card-bg); border-color: var(--border-color); color: white;" placeholder="ornek@sirket.com" value="{{ request.form.get('email', '') }}">
                     </div>
                     <div class="col-md-6">
                         <label class="form-label text-light small">{{ t.city if t.city else 'Şehir' }}</label>
-                        <input type="text" name="city" class="form-control" style="background: var(--card-bg); border-color: var(--border-color); color: white;" placeholder="İstanbul">
+                        <input type="text" name="city" class="form-control" style="background: var(--card-bg); border-color: var(--border-color); color: white;" placeholder="İstanbul" value="{{ request.form.get('city', '') }}">
                     </div>
                     <div class="col-md-12">
                         <label class="form-label text-light small">{{ t.short_note if t.short_note else 'Kısa Not' }}</label>
-                        <textarea name="notes" class="form-control" rows="3" style="background: var(--card-bg); border-color: var(--border-color); color: white;" placeholder="{{ t.short_note_placeholder if t.short_note_placeholder else 'İşletme hakkında kısa bilgi...' }}"></textarea>
+                        <textarea name="notes" class="form-control" rows="3" style="background: var(--card-bg); border-color: var(--border-color); color: white;" placeholder="{{ t.short_note_placeholder if t.short_note_placeholder else 'İşletme hakkında kısa bilgi...' }}">{{ request.form.get('notes', '') }}</textarea>
                     </div>
                 </div>
                 <div class="row mt-4">
