@@ -34,6 +34,7 @@
         </div>
         <div class="card-body p-4">
             <form method="POST" action="{{ url_for('auth.admin_add_user') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="row g-3">
                     <div class="col-md-3">
                         <label class="form-label text-light small">{{ t.username if t.username else 'Kullanıcı Adı' }}</label>
@@ -109,6 +110,7 @@
                             <td class="text-center">
                                 {% if not current_user.is_observer %}
                                 <form method="POST" action="{{ url_for('auth.admin_change_role', user_id=user.id) }}" class="d-inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <select name="new_role" class="form-select form-select-sm d-inline-block w-auto" style="background: rgba(30,30,30,0.9); border-color: var(--border-color); color: #ffffff; font-size: 0.8rem;" onchange="this.form.submit()" {% if user.id == current_user.id %}disabled{% endif %}>
                                         <option value="admin" {% if user.role == 'admin' %}selected{% endif %} style="color: #ffffff; background: rgba(30,30,30,0.9);">{{ t.admin if t.admin else 'Admin' }}</option>
                                         <option value="observer" {% if user.is_observer %}selected{% endif %} style="color: #ffffff; background: rgba(30,30,30,0.9);">{{ t.observer if t.observer else 'Gözlemci' }}</option>
@@ -124,6 +126,7 @@
                             <td class="text-center">
                                 {% if not current_user.is_observer %}
                                 <form method="POST" action="{{ url_for('auth.admin_toggle_user', user_id=user.id) }}" class="d-inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit" class="btn btn-sm {% if user.is_active %}btn-success{% else %}btn-secondary{% endif %}" {% if user.id == current_user.id %}disabled{% endif %}>
                                         <i class="bi {% if user.is_active %}bi-check-circle{% else %}bi-x-circle{% endif %}"></i>
                                         {{ t.active if t.active else 'Aktif' if user.is_active else t.inactive if t.inactive else 'Pasif' }}
@@ -180,6 +183,7 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <form method="POST" action="{{ url_for('auth.admin_reset_password', user_id=user.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="modal-body">
                         <p class="text-secondary small mb-3">{{ user.username }} {{ t.user_password_reset if t.user_password_reset else 'kullanıcısının şifresini sıfırlıyorsunuz' }}</p>
                         <div class="mb-3">
@@ -206,6 +210,7 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <form method="POST" action="{{ url_for('auth.admin_delete_user', user_id=user.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="modal-body">
                         <p class="text-warning small mb-3">
                             <i class="bi bi-exclamation-triangle me-2"></i>

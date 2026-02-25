@@ -25,7 +25,8 @@
             </h6>
         </div>
         <div class="card-body p-4">
-            <form method="POST" action="{{ url_for('auth.request_account') }}">
+            <form method="POST" action="{{ url_for('auth.request_account') }}" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label text-light small">{{ t.company_name if t.company_name else 'İşletme Adı' }} *</label>

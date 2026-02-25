@@ -20,6 +20,7 @@
             
             <!-- Login Form -->
             <form method="POST" action="{{ url_for('auth.login') }}" class="login-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="form-group">
                     <div class="input-wrapper">
                         <i class="bi bi-person input-icon"></i>

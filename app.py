@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session, current_app
 from flask_login import LoginManager, current_user
 from flask_migrate import Migrate
+from flask_wtf.csrf import CSRFProtect
 from models import db, Transaction, Customer, CustomerTransaction, Product, Receipt, ReceiptItem, User, Company
 from config import config, get_database_url, is_production, is_demo, is_development
 from translations import get_all_translations, get_translation
@@ -18,6 +19,9 @@ login_manager.login_message_category = 'warning'
 
 # Flask-Migrate başlatma
 migrate = Migrate()
+
+# Flask-WTF CSRF başlatma
+csrf = CSRFProtect()
 
 # Türkiye saat dilimi (UTC+3)
 TURKEY_TZ = timezone(timedelta(hours=3))
@@ -57,6 +61,12 @@ def create_app(config_name=None):
     # Veritabanı başlatma
     db.init_app(app)
     migrate.init_app(app, db)
+    
+    # Flask-WTF CSRF başlatma
+    csrf.init_app(app)
+    
+    # API endpointlerini CSRF korumasından muaf tut
+    csrf.exempt(api_bp)
     
     # Flask-Login başlatma
     login_manager.init_app(app)
