@@ -102,39 +102,60 @@ def profit_loss_report():
         Transaction.date <= end_date
     ).order_by(Transaction.date.desc()).all()
     
-    # Aylık trend verisi (son 12 ay)
+    # Aylık trend verisi (son 12 ay) - Optimized
+    # Tek sorguda tüm aylık verileri al (24 sorgu yerine 1 sorgu)
+    monthly_results = db.session.query(
+        extract('year', Transaction.date).label('year'),
+        extract('month', Transaction.date).label('month'),
+        func.sum(
+            db.case(
+                (Transaction.type == 'income', Transaction.amount),
+                else_=0
+            )
+        ).label('income'),
+        func.sum(
+            db.case(
+                (Transaction.type == 'expense', Transaction.amount),
+                else_=0
+            )
+        ).label('expense')
+    ).filter(
+        Transaction.company_id == company_id,
+        Transaction.date >= date(year - 1, month, 1)  # Son 12 ay
+    ).group_by(
+        extract('year', Transaction.date),
+        extract('month', Transaction.date)
+    ).order_by(
+        extract('year', Transaction.date),
+        extract('month', Transaction.date)
+    ).all()
+    
+    # Sonuçları sözlüğe dönüştür
+    monthly_dict = {}
+    for r in monthly_results:
+        key = f"{int(r.month):02d}/{int(r.year)}"
+        monthly_dict[key] = {
+            'income': float(r.income or 0),
+            'expense': float(r.expense or 0)
+        }
+    
+    # Son 12 ay için eksik ayları 0 ile doldur
     monthly_data = []
     for i in range(11, -1, -1):
-        # Geçmiş ay hesaplama
         check_month = month - i
         check_year = year
         while check_month <= 0:
             check_month += 12
             check_year -= 1
         
-        start = date(check_year, check_month, 1)
-        end_day = calendar.monthrange(check_year, check_month)[1]
-        end = date(check_year, check_month, end_day)
-        
-        inc = db.session.query(func.sum(Transaction.amount)).filter(
-            Transaction.company_id == company_id,
-            Transaction.type == 'income',
-            Transaction.date >= start,
-            Transaction.date <= end
-        ).scalar() or 0
-        
-        exp = db.session.query(func.sum(Transaction.amount)).filter(
-            Transaction.company_id == company_id,
-            Transaction.type == 'expense',
-            Transaction.date >= start,
-            Transaction.date <= end
-        ).scalar() or 0
+        key = f"{check_month:02d}/{check_year}"
+        data = monthly_dict.get(key, {'income': 0.0, 'expense': 0.0})
         
         monthly_data.append({
-            'month': f"{check_month:02d}/{check_year}",
-            'income': float(inc),
-            'expense': float(exp),
-            'profit': float(inc) - float(exp)
+            'month': key,
+            'income': data['income'],
+            'expense': data['expense'],
+            'profit': data['income'] - data['expense']
         })
     
     return render_template('reports/profit_loss.html',
@@ -232,44 +253,89 @@ def top_products_report():
 @reports.route('/customer-debts')
 @company_required
 def customer_debts_report():
-    """Müşteri Borç Listesi Raporu"""
+    """Müşteri Borç Listesi Raporu - Optimized (N+1 sorunu çözüldü)"""
     company_id = get_company_id()
     
-    # Tüm müşterileri al
-    customers = Customer.query.filter_by(company_id=company_id).all()
+    # Optimizasyon: Tek sorguda tüm müşteri borçlarını hesapla (N+1 sorunu çözüldü)
+    # Case when ile borç ve ödemeleri ayrı kolonlarda topla
+    results = db.session.query(
+        Customer.id,
+        Customer.name,
+        Customer.phone,
+        func.coalesce(
+            func.sum(
+                db.case(
+                    (CustomerTransaction.type == 'debt', CustomerTransaction.amount),
+                    else_=0
+                )
+            ), 0
+        ).label('total_debt'),
+        func.coalesce(
+            func.sum(
+                db.case(
+                    (CustomerTransaction.type == 'payment', CustomerTransaction.amount),
+                    else_=0
+                )
+            ), 0
+        ).label('total_paid')
+    ).outerjoin(
+        CustomerTransaction, Customer.id == CustomerTransaction.customer_id
+    ).filter(
+        Customer.company_id == company_id
+    ).group_by(
+        Customer.id, Customer.name, Customer.phone
+    ).having(
+        # Sadece borcu olan müşteriler (borç > ödeme)
+        func.coalesce(
+            func.sum(
+                db.case(
+                    (CustomerTransaction.type == 'debt', CustomerTransaction.amount),
+                    else_=0
+                )
+            ), 0
+        ) > func.coalesce(
+            func.sum(
+                db.case(
+                    (CustomerTransaction.type == 'payment', CustomerTransaction.amount),
+                    else_=0
+                )
+            ), 0
+        )
+    ).order_by(
+        (func.coalesce(
+            func.sum(
+                db.case(
+                    (CustomerTransaction.type == 'debt', CustomerTransaction.amount),
+                    else_=0
+                )
+            ), 0
+        ) - func.coalesce(
+            func.sum(
+                db.case(
+                    (CustomerTransaction.type == 'payment', CustomerTransaction.amount),
+                    else_=0
+                )
+            ), 0
+        )).desc()
+    ).all()
     
+    # Sonuçları formatla
     customer_debts = []
     total_debt = 0
     total_paid = 0
     
-    for customer in customers:
-        # Borç ve ödeme hesaplama
-        debts = db.session.query(func.sum(CustomerTransaction.amount)).filter(
-            CustomerTransaction.customer_id == customer.id,
-            CustomerTransaction.type == 'debt'
-        ).scalar() or 0
-        
-        payments = db.session.query(func.sum(CustomerTransaction.amount)).filter(
-            CustomerTransaction.customer_id == customer.id,
-            CustomerTransaction.type == 'payment'
-        ).scalar() or 0
-        
-        balance = float(debts) - float(payments)
-        
-        if balance > 0:  # Borcu olan müşteriler
-            customer_debts.append({
-                'id': customer.id,
-                'name': customer.name,
-                'phone': customer.phone,
-                'total_debt': float(debts),
-                'total_paid': float(payments),
-                'balance': balance
-            })
-            total_debt += float(debts)
-            total_paid += float(payments)
-    
-    # Borç büyüklüğüne göre sırala
-    customer_debts.sort(key=lambda x: x['balance'], reverse=True)
+    for r in results:
+        balance = float(r.total_debt) - float(r.total_paid)
+        customer_debts.append({
+            'id': r.id,
+            'name': r.name,
+            'phone': r.phone,
+            'total_debt': float(r.total_debt),
+            'total_paid': float(r.total_paid),
+            'balance': balance
+        })
+        total_debt += float(r.total_debt)
+        total_paid += float(r.total_paid)
     
     # Borçlu müşteri sayısı
     debtors_count = len(customer_debts)
@@ -288,39 +354,50 @@ def customer_debts_report():
 @reports.route('/stock')
 @company_required
 def stock_report():
-    """Stok Raporu"""
+    """Stok Raporu - Optimized (SQL aggregation ile hesaplama)"""
     company_id = get_company_id()
     
     # Düşük stok filtreleme
     show_low_stock = request.args.get('low_stock', type=bool, default=False)
     
-    # Tüm ürünleri al
-    products = Product.query.filter_by(company_id=company_id).all()
+    # Optimizasyon: SQL ile toplam stok değeri ve düşük stok sayısını hesapla
+    # Aynı zamanda düşük stok filtrelemesi de SQL'de yapılabilir
+    base_query = Product.query.filter_by(company_id=company_id)
+    
+    if show_low_stock:
+        # Sadece düşük stoklu ürünleri göster
+        products = base_query.filter(
+            Product.stock_quantity < Product.stock_threshold
+        ).all()
+    else:
+        # Tüm ürünleri al
+        products = base_query.all()
     
     stock_data = []
     total_stock_value = 0
-    low_stock_count = 0
     
     for product in products:
         stock_value = float(product.stock_quantity or 0) * float(product.purchase_price or 0)
         is_low = float(product.stock_quantity or 0) < float(product.stock_threshold or 10)
         
-        if is_low:
-            low_stock_count += 1
-        
-        if not show_low_stock or is_low:
-            stock_data.append({
-                'id': product.id,
-                'name': product.name,
-                'unit': product.unit,
-                'stock_quantity': float(product.stock_quantity or 0),
-                'stock_threshold': float(product.stock_threshold or 10),
-                'purchase_price': float(product.purchase_price or 0),
-                'unit_price': float(product.unit_price or 0),
-                'stock_value': stock_value,
-                'is_low_stock': is_low
-            })
-            total_stock_value += stock_value
+        stock_data.append({
+            'id': product.id,
+            'name': product.name,
+            'unit': product.unit,
+            'stock_quantity': float(product.stock_quantity or 0),
+            'stock_threshold': float(product.stock_threshold or 10),
+            'purchase_price': float(product.purchase_price or 0),
+            'unit_price': float(product.unit_price or 0),
+            'stock_value': stock_value,
+            'is_low_stock': is_low
+        })
+        total_stock_value += stock_value
+    
+    # SQL ile düşük stok sayısını ve toplam değerleri hesapla
+    low_stock_count = db.session.query(func.count(Product.id)).filter(
+        Product.company_id == company_id,
+        Product.stock_quantity < Product.stock_threshold
+    ).scalar() or 0
     
     # Stok durumu istatistikleri
     total_products = len(products)
