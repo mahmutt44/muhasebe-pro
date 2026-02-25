@@ -5,6 +5,7 @@ from flask_wtf.csrf import CSRFProtect
 from models import db, Transaction, Customer, CustomerTransaction, Product, Receipt, ReceiptItem, User, Company
 from config import config, get_database_url, is_production, is_demo, is_development
 from translations import get_all_translations, get_translation
+from logging_config import setup_logging, add_sensitive_filter
 from datetime import datetime, date, timedelta, timezone
 from decimal import Decimal
 import os
@@ -64,6 +65,12 @@ def create_app(config_name=None):
     
     # Flask-WTF CSRF başlatma
     csrf.init_app(app)
+    
+    # Logging yapılandırması
+    setup_logging(app)
+    
+    # Hassas veri filtresi ekle
+    add_sensitive_filter(app.logger)
     
     # API endpointlerini CSRF korumasından muaf tut
     csrf.exempt(api_bp)
@@ -362,4 +369,6 @@ def create_demo_data():
 
 if __name__ == '__main__':
     app = create_app()
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    # Debug modu sadece development ortamında
+    debug_mode = is_development()
+    app.run(host='0.0.0.0', port=5000, debug=debug_mode)

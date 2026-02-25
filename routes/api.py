@@ -118,8 +118,6 @@ def update_transaction(transaction_id):
     transaction = scoped_transactions_query().filter_by(id=transaction_id).first_or_404()
     
     data = request.get_json()
-    print(f"DEBUG: Gelen veri: {data}")
-    print(f"DEBUG: Eski işlem: {transaction.to_dict()}")
     
     try:
         transaction.type = data['type']
@@ -127,15 +125,10 @@ def update_transaction(transaction_id):
         transaction.description = data['description']
         transaction.date = datetime.strptime(data['date'], '%Y-%m-%d').date()
         
-        print(f"DEBUG: Yeni işlem: {transaction.to_dict()}")
-        
         db.session.commit()
-        
-        print(f"DEBUG: Veritabanına kaydedildi")
         
         return jsonify(transaction.to_dict())
     except (ValueError, KeyError) as e:
-        print(f"DEBUG: Hata: {e}")
         return jsonify({'error': str(e)}), 400
 
 # Müşteri API'leri
@@ -146,11 +139,8 @@ def get_customers():
     try:
         customers = scoped_customers_query().order_by(Customer.name).all()
         result = [c.to_dict() for c in customers]
-        print(f"DEBUG: Müşteri sayısı: {len(customers)}")
-        print(f"DEBUG: İlk müşteri: {result[0] if result else 'Yok'}")
         return jsonify(result)
     except Exception as e:
-        print(f"DEBUG: Müşteri API hatası: {e}")
         return jsonify({'error': str(e)}), 500
 
 @api_bp.route('/customers', methods=['POST'])
