@@ -24,7 +24,8 @@
         </div>
     </div>
 
-    <!-- Add New User Card -->
+    <!-- Add New User Card - Sadece admin için -->
+    {% if not current_user.is_observer %}
     <div class="card mb-4" style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px;">
         <div class="card-header" style="background: rgba(102, 126, 234, 0.1); border-bottom: 1px solid var(--border-color);">
             <h6 class="mb-0 fw-semibold text-light">
@@ -66,6 +67,7 @@
             </form>
         </div>
     </div>
+    {% endif %}
 
     <!-- Users List -->
     <div class="card" style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px;">
@@ -105,6 +107,7 @@
                             </td>
                             <td class="text-light">{{ user.email }}</td>
                             <td class="text-center">
+                                {% if not current_user.is_observer %}
                                 <form method="POST" action="{{ url_for('auth.admin_change_role', user_id=user.id) }}" class="d-inline">
                                     <select name="new_role" class="form-select form-select-sm d-inline-block w-auto" style="background: rgba(30,30,30,0.9); border-color: var(--border-color); color: #ffffff; font-size: 0.8rem;" onchange="this.form.submit()" {% if user.id == current_user.id %}disabled{% endif %}>
                                         <option value="admin" {% if user.role == 'admin' %}selected{% endif %} style="color: #ffffff; background: rgba(30,30,30,0.9);">{{ t.admin if t.admin else 'Admin' }}</option>
@@ -114,14 +117,23 @@
                                         {% endif %}
                                     </select>
                                 </form>
+                                {% else %}
+                                <span class="badge {% if user.is_admin %}bg-success{% else %}bg-info{% endif %}">{{ user.role }}</span>
+                                {% endif %}
                             </td>
                             <td class="text-center">
+                                {% if not current_user.is_observer %}
                                 <form method="POST" action="{{ url_for('auth.admin_toggle_user', user_id=user.id) }}" class="d-inline">
                                     <button type="submit" class="btn btn-sm {% if user.is_active %}btn-success{% else %}btn-secondary{% endif %}" {% if user.id == current_user.id %}disabled{% endif %}>
                                         <i class="bi {% if user.is_active %}bi-check-circle{% else %}bi-x-circle{% endif %}"></i>
                                         {{ t.active if t.active else 'Aktif' if user.is_active else t.inactive if t.inactive else 'Pasif' }}
                                     </button>
                                 </form>
+                                {% else %}
+                                <span class="badge {% if user.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {{ t.active if t.active else 'Aktif' if user.is_active else t.inactive if t.inactive else 'Pasif' }}
+                                </span>
+                                {% endif %}
                             </td>
                             <td class="text-center text-secondary">
                                 {% if user.last_login %}
@@ -131,6 +143,7 @@
                                 {% endif %}
                             </td>
                             <td class="text-center">
+                                {% if not current_user.is_observer %}
                                 <div class="btn-group btn-group-sm">
                                     <!-- Reset Password Button -->
                                     <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#resetPasswordModal{{ user.id }}">
@@ -143,6 +156,9 @@
                                     </button>
                                     {% endif %}
                                 </div>
+                                {% else %}
+                                <span class="text-secondary">-</span>
+                                {% endif %}
                             </td>
                         </tr>
                         {% endfor %}
@@ -152,7 +168,8 @@
         </div>
     </div>
 
-    <!-- Reset Password Modals - Outside Table -->
+    <!-- Reset Password Modals - Outside Table - Sadece admin için -->
+    {% if not current_user.is_observer %}
     {% for user in users %}
     <!-- Reset Password Modal -->
     <div class="modal fade" id="resetPasswordModal{{ user.id }}" tabindex="-1">
@@ -205,6 +222,7 @@
     </div>
     {% endif %}
     {% endfor %}
+    {% endif %}
 
 </div>
 

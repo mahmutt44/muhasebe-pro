@@ -68,7 +68,28 @@ def company_required(f):
         if current_user.is_platform_admin:
             flash('Bu sayfa şirket yöneticileri içindir.', 'warning')
             return redirect(url_for('auth.platform_admin_dashboard'))
+        
+        # Observer kullanıcılar admin sayfalarına erişemez
+        if current_user.is_observer:
+            flash('Bu işlem için admin yetkisi gereklidir.', 'danger')
+            return redirect(url_for('main.index'))
             
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+def company_read_only(f):
+    """Şirket kullanıcıları için sadece okuma yetkisi - Observer için"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated:
+            return redirect(url_for('auth.login'))
+        
+        # Platform admin bu decorator ile erişemez
+        if current_user.is_platform_admin:
+            flash('Bu sayfa şirket kullanıcıları içindir.', 'warning')
+            return redirect(url_for('auth.platform_admin_dashboard'))
+        
         return f(*args, **kwargs)
     return decorated_function
 
@@ -421,9 +442,9 @@ def logout():
 
 @auth.route('/admin/users')
 @login_required
-@company_required
+@company_read_only
 def admin_users():
-    """Şirket kullanıcı yönetimi paneli - sadece şirket adminleri"""
+    """Şirket kullanıcı yönetimi paneli - admin ve observer görüntüleyebilir"""
     users = scoped_company_users_query().all()
     return render_template('auth/admin_users.html', users=users)
 
@@ -432,7 +453,11 @@ def admin_users():
 @login_required
 @company_required
 def admin_add_user():
-    """Yeni kullanıcı ekle"""
+    """Yeni kullanıcı ekle - Sadece admin"""
+    # Observer kullanıcılar yeni kullanıcı ekleyemez
+    if current_user.is_observer:
+        flash('Bu işlem için admin yetkisi gereklidir.', 'danger')
+        return redirect(url_for('auth.admin_users'))
     username = request.form.get('username', '').strip()
     email = request.form.get('email', '').strip()
     password = request.form.get('password', '')
@@ -487,7 +512,12 @@ def admin_add_user():
 @login_required
 @company_required
 def admin_toggle_user(user_id):
-    """Kullanıcı durumunu değiştir (aktif/pasif)"""
+    """Kullanıcı durumunu değiştir (aktif/pasif) - Sadece admin"""
+    # Observer kullanıcılar bu işlemi yapamaz
+    if current_user.is_observer:
+        flash('Bu işlem için admin yetkisi gereklidir.', 'danger')
+        return redirect(url_for('auth.admin_users'))
+    
     user = scoped_company_users_query().filter_by(id=user_id).first_or_404()
     
     # Kendi hesabını pasif yapamaz
@@ -507,7 +537,12 @@ def admin_toggle_user(user_id):
 @login_required
 @company_required
 def admin_reset_password(user_id):
-    """Kullanıcı şifresini sıfırla"""
+    """Kullanıcı şifresini sıfırla - Sadece admin"""
+    # Observer kullanıcılar şifre sıfırlayamaz
+    if current_user.is_observer:
+        flash('Bu işlem için admin yetkisi gereklidir.', 'danger')
+        return redirect(url_for('auth.admin_users'))
+    
     user = scoped_company_users_query().filter_by(id=user_id).first_or_404()
     new_password = request.form.get('new_password', '')
     
@@ -526,7 +561,12 @@ def admin_reset_password(user_id):
 @login_required
 @company_required
 def admin_delete_user(user_id):
-    """Kullanıcı sil"""
+    """Kullanıcı sil - Sadece admin"""
+    # Observer kullanıcılar kullanıcı silemez
+    if current_user.is_observer:
+        flash('Bu işlem için admin yetkisi gereklidir.', 'danger')
+        return redirect(url_for('auth.admin_users'))
+    
     user = scoped_company_users_query().filter_by(id=user_id).first_or_404()
     
     # Kendini silemez
@@ -545,7 +585,12 @@ def admin_delete_user(user_id):
 @login_required
 @company_required
 def admin_change_role(user_id):
-    """Kullanıcı rolünü değiştir"""
+    """Kullanıcı rolünü değiştir - Sadece admin"""
+    # Observer kullanıcılar rol değiştiremez
+    if current_user.is_observer:
+        flash('Bu işlem için admin yetkisi gereklidir.', 'danger')
+        return redirect(url_for('auth.admin_users'))
+    
     user = scoped_company_users_query().filter_by(id=user_id).first_or_404()
     new_role = request.form.get('new_role', 'admin')
     
