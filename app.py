@@ -1,11 +1,13 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session, current_app
 from flask_login import LoginManager, current_user
+from flask_migrate import Migrate
 from models import db, Transaction, Customer, CustomerTransaction, Product, Receipt, ReceiptItem, User, Company
-from config import config, get_database_url, is_production, is_demo
+from config import config, get_database_url, is_production, is_demo, is_development
 from translations import get_all_translations, get_translation
 from datetime import datetime, date, timedelta, timezone
 from decimal import Decimal
 import os
+import sys
 from sqlalchemy import inspect, text
 
 # Flask-Login başlatma
@@ -13,6 +15,9 @@ login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
 login_manager.login_message = 'Bu sayfayı görüntülemek için giriş yapmalısınız.'
 login_manager.login_message_category = 'warning'
+
+# Flask-Migrate başlatma
+migrate = Migrate()
 
 # Türkiye saat dilimi (UTC+3)
 TURKEY_TZ = timezone(timedelta(hours=3))
@@ -51,6 +56,7 @@ def create_app(config_name=None):
     
     # Veritabanı başlatma
     db.init_app(app)
+    migrate.init_app(app, db)
     
     # Flask-Login başlatma
     login_manager.init_app(app)
@@ -108,20 +114,27 @@ def create_app(config_name=None):
             session['lang'] = lang
         return redirect(request.referrer or url_for('main.index'))
     
-    # Tabloları oluşturma (hata varsa fallback)
-    try:
-        with app.app_context():
-            # Yeni kolonlar için tabloları yeniden oluştur
-            db.drop_all()
-            db.create_all()
-            app.logger.info('Database tables recreated successfully')
-    except Exception as e:
-        app.logger.error(f'Database connection failed: {e}')
-        # SQLite fallback
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///muhasebe_fallback.db'
-        with app.app_context():
-            db.create_all()
-        app.logger.info('Fallback to SQLite database')
+    # Production ortamında veritabanı bağlantısını kontrol et
+    if is_production():
+        try:
+            with app.app_context():
+                # Sadece bağlantı testi - tablo oluşturma yok!
+                db.session.execute(text('SELECT 1'))
+                app.logger.info('Production database connection successful')
+        except Exception as e:
+            app.logger.error(f'CRITICAL: Production database connection failed: {e}')
+            sys.exit(1)  # Uygulamayı durdur
+    
+    # Development ortamında sadece tablo oluştur (migration yoksa)
+    elif is_development():
+        try:
+            with app.app_context():
+                db.create_all()
+                app.logger.info('Development database initialized')
+        except Exception as e:
+            app.logger.error(f'Development database initialization failed: {e}')
+            # Development'ta bile fallback yok - kullanıcı bilgilendirilsin
+            raise
     
     # Route'ları kaydetme
     from routes.main import main_bp

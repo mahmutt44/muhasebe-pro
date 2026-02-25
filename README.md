@@ -34,12 +34,58 @@ source venv/bin/activate  # Linux/Mac
 pip install -r requirements.txt
 ```
 
-### 4. Uygulamayı Başlatın
+### 4. Veritabanı Migration'ları Çalıştırın
+
+**Geliştirme ortamında:**
+```bash
+# İlk migration oluştur (models.py değişikliklerinden)
+flask db migrate -m "initial migration"
+
+# Migration'ları uygula
+flask db upgrade
+```
+
+**Production ortamında:**
+```bash
+# Uygulamayı başlatmadan önce migration'ları çalıştır
+flask db upgrade
+```
+
+### 5. Uygulamayı Başlatın
 ```bash
 python app.py
 ```
 
 Tarayıcıda açın: `http://localhost:5000`
+
+## 🗄️ Veritabanı Yönetimi
+
+### Güvenlik Önlemleri
+
+✅ **Production'da veri kaybı yok:**
+- Uygulama başlarken hiçbir durumda veritabanı DROP edilmez
+- Sadece migration sistemi kullanılır
+- Bağlantı hatası varsa uygulama başlamaz (veri koruma için)
+
+### Migration Komutları
+
+| Komut | Açıklama |
+|-------|----------|
+| `flask db init` | Migration sistemi başlat |
+| `flask db migrate` | Model değişikliklerinden migration oluştur |
+| `flask db upgrade` | Migration'ları uygula |
+| `flask db downgrade` | Son migration'ı geri al |
+| `flask db current` | Mevcut versiyonu göster |
+| `flask db history` | Tüm geçmişi göster |
+
+### Ortam Değişkenleri
+
+```bash
+# .env dosyasında
+ENV=development  # veya production
+DATABASE_URL=postgresql+pg8000://user:pass@host/dbname
+FLASK_SECRET_KEY=your-secret-key
+```
 
 ## 📱 Telefonda Kullanım
 

@@ -76,3 +76,8 @@ def is_production():
 def is_demo():
     """Demo ortamında mı çalıştığını kontrol eder"""
     return os.environ.get('ENV') == 'demo'
+
+def is_development():
+    """Development ortamında mı çalıştığını kontrol eder"""
+    env = os.environ.get('ENV', 'default')
+    return env in ['development', 'default', 'dev']
