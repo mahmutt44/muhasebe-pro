@@ -8,10 +8,49 @@ import secrets
 import string
 import re
 from sqlalchemy.exc import IntegrityError
+from urllib.parse import urlparse, urljoin
 
 auth = Blueprint('auth', __name__)
 
 TURKEY_TZ = timezone(timedelta(hours=3))
+
+
+def is_safe_url(target):
+    """
+    Next parametresinin güvenli olup olmadığını kontrol eder.
+    Sadece uygulama içindeki URL'lere izin verir, harici domainleri engeller.
+    """
+    ref_url = urlparse(request.host_url)
+    test_url = urlparse(urljoin(request.host_url, target))
+    
+    # URL scheme ve netloc kontrolü
+    # Scheme http veya https olmalı
+    if test_url.scheme not in ('http', 'https'):
+        return False
+    
+    # Netloc (domain) kontrolü - sadece aynı domain'e izin ver
+    if ref_url.netloc != test_url.netloc:
+        return False
+    
+    # JavaScript protokolü kontrolü (javascript: alert(1) gibi)
+    if test_url.scheme.startswith('javascript'):
+        return False
+    
+    # Data URI kontrolü
+    if test_url.scheme.startswith('data'):
+        return False
+    
+    return True
+
+
+def get_safe_redirect(target, default='main.index'):
+    """
+    Güvenli redirect URL'i döndürür.
+    Eğer hedef güvenli değilse varsayılan sayfaya yönlendirir.
+    """
+    if target and is_safe_url(target):
+        return target
+    return url_for(default)
 
 
 def admin_required(f):
@@ -421,8 +460,9 @@ def login():
             if user.is_platform_admin:
                 return redirect(url_for('auth.platform_admin_dashboard'))
             
+            # Güvenli redirect - open redirect açığını önle
             next_page = request.args.get('next')
-            return redirect(next_page or url_for('main.index'))
+            return redirect(get_safe_redirect(next_page, 'main.index'))
         else:
             flash('Kullanıcı adı veya şifre hatalı.', 'danger')
     
