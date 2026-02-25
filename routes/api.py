@@ -97,9 +97,28 @@ def admin_required_api(f):
 @api_bp.route('/transactions', methods=['GET'])
 @login_required
 def get_transactions():
-    """Tüm gelir/gider işlemlerini getir"""
-    transactions = scoped_transactions_query().order_by(Transaction.date.desc(), Transaction.created_at.desc()).all()
-    return jsonify([t.to_dict() for t in transactions])
+    """Tüm gelir/gider işlemlerini getir - Paginated"""
+    # Pagination parametreleri
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 20, type=int)
+    
+    # Limit kontrolü (max 100)
+    per_page = min(per_page, 100)
+    
+    pagination = scoped_transactions_query().order_by(
+        Transaction.date.desc(), Transaction.created_at.desc()
+    ).paginate(page=page, per_page=per_page, error_out=False)
+    
+    result = {
+        'items': [t.to_dict() for t in pagination.items],
+        'total': pagination.total,
+        'pages': pagination.pages,
+        'current_page': page,
+        'per_page': per_page,
+        'has_next': pagination.has_next,
+        'has_prev': pagination.has_prev
+    }
+    return jsonify(result)
 
 @api_bp.route('/transactions', methods=['POST'])
 @login_required
@@ -171,10 +190,28 @@ def update_transaction(transaction_id):
 @api_bp.route('/customers', methods=['GET'])
 @login_required
 def get_customers():
-    """Tüm müşterileri getir"""
+    """Tüm müşterileri getir - Paginated"""
     try:
-        customers = scoped_customers_query().order_by(Customer.name).all()
-        result = [c.to_dict() for c in customers]
+        # Pagination parametreleri
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 20, type=int)
+        
+        # Limit kontrolü (max 100)
+        per_page = min(per_page, 100)
+        
+        pagination = scoped_customers_query().order_by(Customer.name).paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+        
+        result = {
+            'items': [c.to_dict() for c in pagination.items],
+            'total': pagination.total,
+            'pages': pagination.pages,
+            'current_page': page,
+            'per_page': per_page,
+            'has_next': pagination.has_next,
+            'has_prev': pagination.has_prev
+        }
         return jsonify(result)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -252,10 +289,32 @@ def get_customer_balance(customer_id):
 @api_bp.route('/customers/<int:customer_id>/transactions', methods=['GET'])
 @login_required
 def get_customer_transactions(customer_id):
-    """Müşteri işlemlerini getir"""
+    """Müşteri işlemlerini getir - Paginated"""
     customer = scoped_customers_query().filter_by(id=customer_id).first_or_404()
-    transactions = CustomerTransaction.query.filter_by(customer_id=customer_id).order_by(CustomerTransaction.date.desc()).all()
-    return jsonify([t.to_dict() for t in transactions])
+    
+    # Pagination parametreleri
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 20, type=int)
+    
+    # Limit kontrolü (max 100)
+    per_page = min(per_page, 100)
+    
+    pagination = CustomerTransaction.query.filter_by(
+        customer_id=customer_id
+    ).order_by(CustomerTransaction.date.desc()).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+    
+    result = {
+        'items': [t.to_dict() for t in pagination.items],
+        'total': pagination.total,
+        'pages': pagination.pages,
+        'current_page': page,
+        'per_page': per_page,
+        'has_next': pagination.has_next,
+        'has_prev': pagination.has_prev
+    }
+    return jsonify(result)
 
 @api_bp.route('/customers/<int:customer_id>/transactions', methods=['POST'])
 @login_required
@@ -322,10 +381,28 @@ def delete_customer_transaction(transaction_id):
 @api_bp.route('/suppliers', methods=['GET'])
 @login_required
 def get_suppliers():
-    """Tüm tedarikçileri getir"""
+    """Tüm tedarikçileri getir - Paginated"""
     try:
-        suppliers = scoped_suppliers_query().order_by(Supplier.name).all()
-        result = [s.to_dict() for s in suppliers]
+        # Pagination parametreleri
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 20, type=int)
+        
+        # Limit kontrolü (max 100)
+        per_page = min(per_page, 100)
+        
+        pagination = scoped_suppliers_query().order_by(Supplier.name).paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+        
+        result = {
+            'items': [s.to_dict() for s in pagination.items],
+            'total': pagination.total,
+            'pages': pagination.pages,
+            'current_page': page,
+            'per_page': per_page,
+            'has_next': pagination.has_next,
+            'has_prev': pagination.has_prev
+        }
         return jsonify(result)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -399,10 +476,32 @@ def delete_supplier(supplier_id):
 @api_bp.route('/suppliers/<int:supplier_id>/transactions', methods=['GET'])
 @login_required
 def get_supplier_transactions(supplier_id):
-    """Tedarikçinin tüm işlemlerini getir"""
+    """Tedarikçinin tüm işlemlerini getir - Paginated"""
     supplier = scoped_suppliers_query().filter_by(id=supplier_id).first_or_404()
-    transactions = SupplierTransaction.query.filter_by(supplier_id=supplier_id).order_by(SupplierTransaction.date.desc()).all()
-    return jsonify([t.to_dict() for t in transactions])
+    
+    # Pagination parametreleri
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 20, type=int)
+    
+    # Limit kontrolü (max 100)
+    per_page = min(per_page, 100)
+    
+    pagination = SupplierTransaction.query.filter_by(
+        supplier_id=supplier_id
+    ).order_by(SupplierTransaction.date.desc()).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+    
+    result = {
+        'items': [t.to_dict() for t in pagination.items],
+        'total': pagination.total,
+        'pages': pagination.pages,
+        'current_page': page,
+        'per_page': per_page,
+        'has_next': pagination.has_next,
+        'has_prev': pagination.has_prev
+    }
+    return jsonify(result)
 
 @api_bp.route('/suppliers/<int:supplier_id>/transactions', methods=['POST'])
 @login_required
@@ -446,9 +545,28 @@ def delete_supplier_transaction(transaction_id):
 @api_bp.route('/products', methods=['GET'])
 @login_required
 def get_products():
-    """Tüm ürünleri getir"""
-    products = scoped_products_query().order_by(Product.name).all()
-    return jsonify([p.to_dict() for p in products])
+    """Tüm ürünleri getir - Paginated"""
+    # Pagination parametreleri
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 20, type=int)
+    
+    # Limit kontrolü (max 100)
+    per_page = min(per_page, 100)
+    
+    pagination = scoped_products_query().order_by(Product.name).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+    
+    result = {
+        'items': [p.to_dict() for p in pagination.items],
+        'total': pagination.total,
+        'pages': pagination.pages,
+        'current_page': page,
+        'per_page': per_page,
+        'has_next': pagination.has_next,
+        'has_prev': pagination.has_prev
+    }
+    return jsonify(result)
 
 @api_bp.route('/products', methods=['POST'])
 @login_required
