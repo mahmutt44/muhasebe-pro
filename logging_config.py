@@ -25,9 +25,27 @@ def setup_logging(app):
     env = os.environ.get('ENV', 'development')
     
     # Create logs directory if it doesn't exist
-    logs_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'logs')
-    if not os.path.exists(logs_dir):
-        os.makedirs(logs_dir)
+    # Güvenlik: Logs klasörünü uygulama root'unda oluştur
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    logs_dir = os.path.join(base_dir, 'logs')
+    
+    try:
+        if not os.path.exists(logs_dir):
+            os.makedirs(logs_dir, mode=0o755, exist_ok=True)
+            app.logger.info(f'Logs directory created: {logs_dir}')
+        
+        # Klasör yazılabilir mi kontrol et
+        if not os.access(logs_dir, os.W_OK):
+            raise PermissionError(f'Logs directory not writable: {logs_dir}')
+            
+    except OSError as e:
+        # Hata durumunda console logging kullan
+        app.logger.warning(f'Could not create logs directory: {e}. Using console logging only.')
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(logging.INFO if env == 'production' else logging.DEBUG)
+        console_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+        app.logger.addHandler(console_handler)
+        return app
     
     # Base logging configuration
     log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
