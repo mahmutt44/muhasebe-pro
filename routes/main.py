@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from flask_login import login_required, current_user
-from models import db, Transaction, Customer, CustomerTransaction, Product, Receipt, ReceiptItem
+from models import db, Transaction, Customer, CustomerTransaction, Product, Receipt, ReceiptItem, Supplier, SupplierTransaction
 from datetime import datetime, date
 from decimal import Decimal
 from config import is_production, is_demo
@@ -30,6 +30,13 @@ def scoped_customers_query():
     if current_user.is_platform_admin:
         return Customer.query
     return Customer.query.filter_by(company_id=current_user.company_id)
+
+
+def scoped_suppliers_query():
+    """Platform admin tüm tedarikçileri görebilir."""
+    if current_user.is_platform_admin:
+        return Supplier.query
+    return Supplier.query.filter_by(company_id=current_user.company_id)
 
 
 def scoped_products_query():
@@ -146,6 +153,26 @@ def customer_detail(customer_id):
     receipts = scoped_receipts_query().filter_by(customer_id=customer_id).order_by(Receipt.date.desc()).all()
     
     return render_template('customer_detail.html', customer=customer, transactions=transactions, receipts=receipts)
+
+@main_bp.route('/suppliers')
+@login_required
+def suppliers():
+    """Tedarikçi defteri sayfası"""
+    suppliers = scoped_suppliers_query().order_by(Supplier.name).all()
+    
+    # Toplam borç hesapla
+    total_debt = sum(supplier.get_balance() for supplier in suppliers if supplier.get_balance() > 0)
+    
+    return render_template('suppliers.html', suppliers=suppliers, total_debt=total_debt)
+
+@main_bp.route('/supplier/<int:supplier_id>')
+@login_required
+def supplier_detail(supplier_id):
+    """Tedarikçi detay sayfası"""
+    supplier = scoped_suppliers_query().filter_by(id=supplier_id).first_or_404()
+    transactions = SupplierTransaction.query.filter_by(supplier_id=supplier_id).order_by(SupplierTransaction.date.desc()).all()
+    
+    return render_template('supplier_detail.html', supplier=supplier, transactions=transactions)
 
 @main_bp.route('/products')
 @login_required

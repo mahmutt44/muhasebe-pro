@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t.profit_loss_report if t.profit_loss_report else 'Kar/Zarar Raporu' }} - {{ t.app_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header with Filter -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                        <div>
+                            <h4 class="mb-0 text-light">
+                                <i class="bi bi-cash-coin me-2 text-success"></i>
+                                {{ t.profit_loss_report if t.profit_loss_report else 'Kar/Zarar Raporu' }}
+                            </h4>
+                            <small class="text-secondary">{{ month_name }} {{ year }}</small>
+                        </div>
+                        
+                        <!-- Month/Year Filter -->
+                        <form method="GET" class="d-flex gap-2">
+                            <select name="month" class="form-select" style="width: auto; background: var(--card-bg); color: white; border-color: var(--border-color);">
+                                {% for m in range(1, 13) %}
+                                <option value="{{ m }}" {% if m == month %}selected{% endif %}>
+                                    {% if m == 1 %}Ocak{% elif m == 2 %}Şubat{% elif m == 3 %}Mart{% elif m == 4 %}Nisan{% elif m == 5 %}Mayıs{% elif m == 6 %}Haziran{% elif m == 7 %}Temmuz{% elif m == 8 %}Ağustos{% elif m == 9 %}Eylül{% elif m == 10 %}Ekim{% elif m == 11 %}Kasım{% else %}Aralık{% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <select name="year" class="form-select" style="width: auto; background: var(--card-bg); color: white; border-color: var(--border-color);">
+                                {% for y in range(2024, 2027) %}
+                                <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-filter"></i> {{ t.filter if t.filter else 'Filtrele' }}
+                            </button>
+                        </form>
+                        
+                        <!-- Export Buttons -->
+                        <div class="btn-group">
+                            <a href="{{ url_for('reports.export_report', report_type='profit_loss', format='excel') }}?year={{ year }}&month={{ month }}" class="btn btn-outline-success btn-sm">
+                                <i class="bi bi-file-earmark-excel"></i> Excel
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card h-100 border-success" style="background: var(--card-bg); border-width: 2px;">
+                <div class="card-body text-center">
+                    <i class="bi bi-arrow-up-circle fs-1 text-success mb-2"></i>
+                    <h6 class="text-secondary mb-1">{{ t.total_income if t.total_income else 'Toplam Gelir' }}</h6>
+                    <h3 class="text-success mb-0">₺{{ "{:,.2f}".format(income_total) }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 border-danger" style="background: var(--card-bg); border-width: 2px;">
+                <div class="card-body text-center">
+                    <i class="bi bi-arrow-down-circle fs-1 text-danger mb-2"></i>
+                    <h6 class="text-secondary mb-1">{{ t.total_expense if t.total_expense else 'Toplam Gider' }}</h6>
+                    <h3 class="text-danger mb-0">₺{{ "{:,.2f}".format(expense_total) }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 {% if net_profit >= 0 %}border-info{% else %}border-warning{% endif %}" style="background: var(--card-bg); border-width: 2px;">
+                <div class="card-body text-center">
+                    <i class="bi bi-cash-stack fs-1 {% if net_profit >= 0 %}text-info{% else %}text-warning{% endif %} mb-2"></i>
+                    <h6 class="text-secondary mb-1">{{ t.net_profit if t.net_profit else 'Net Kar' }}</h6>
+                    <h3 class="{% if net_profit >= 0 %}text-info{% else %}text-warning{% endif %} mb-0">
+                        ₺{{ "{:,.2f}".format(net_profit) }}
+                    </h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                <div class="card-header" style="background: rgba(255,255,255,0.05);">
+                    <h6 class="mb-0 text-light">{{ t.monthly_trend if t.monthly_trend else 'Aylık Trend (Son 12 Ay)' }}</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="profitLossChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transactions Tables -->
+    <div class="row">
+        <!-- Income Transactions -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                <div class="card-header bg-success bg-opacity-25">
+                    <h6 class="mb-0 text-light">
+                        <i class="bi bi-arrow-up-circle me-2"></i>{{ t.income_transactions if t.income_transactions else 'Gelir İşlemleri' }}
+                    </h6>
+                </div>
+                <div class="card-body p-0" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-dark table-hover mb-0">
+                        <thead class="sticky-top" style="background: var(--card-bg);">
+                            <tr>
+                                <th>{{ t.date if t.date else 'Tarih' }}</th>
+                                <th>{{ t.description if t.description else 'Açıklama' }}</th>
+                                <th class="text-end">{{ t.amount if t.amount else 'Tutar' }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for t in income_transactions %}
+                            <tr>
+                                <td class="text-nowrap">{{ t.date|turkey_time('%d.%m.%Y') }}</td>
+                                <td>{{ t.description or '-' }}</td>
+                                <td class="text-end text-success">+₺{{ "{:,.2f}".format(t.amount|float) }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="3" class="text-center text-secondary py-4">{{ t.no_income_transactions if t.no_income_transactions else 'Gelir işlemi bulunmuyor' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expense Transactions -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                <div class="card-header bg-danger bg-opacity-25">
+                    <h6 class="mb-0 text-light">
+                        <i class="bi bi-arrow-down-circle me-2"></i>{{ t.expense_transactions if t.expense_transactions else 'Gider İşlemleri' }}
+                    </h6>
+                </div>
+                <div class="card-body p-0" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-dark table-hover mb-0">
+                        <thead class="sticky-top" style="background: var(--card-bg);">
+                            <tr>
+                                <th>{{ t.date if t.date else 'Tarih' }}</th>
+                                <th>{{ t.description if t.description else 'Açıklama' }}</th>
+                                <th class="text-end">{{ t.amount if t.amount else 'Tutar' }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for t in expense_transactions %}
+                            <tr>
+                                <td class="text-nowrap">{{ t.date|turkey_time('%d.%m.%Y') }}</td>
+                                <td>{{ t.description or '-' }}</td>
+                                <td class="text-end text-danger">-₺{{ "{:,.2f}".format(t.amount|float) }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="3" class="text-center text-secondary py-4">{{ t.no_expense_transactions if t.no_expense_transactions else 'Gider işlemi bulunmuyor' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Monthly Trend Chart
+const ctx = document.getElementById('profitLossChart').getContext('2d');
+const monthlyData = {{ monthly_data|tojson }};
+
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: monthlyData.map(d => d.month),
+        datasets: [
+            {
+                label: 'Gelir',
+                data: monthlyData.map(d => d.income),
+                backgroundColor: 'rgba(25, 135, 84, 0.8)',
+                borderColor: '#198754',
+                borderWidth: 1
+            },
+            {
+                label: 'Gider',
+                data: monthlyData.map(d => d.expense),
+                backgroundColor: 'rgba(220, 53, 69, 0.8)',
+                borderColor: '#dc3545',
+                borderWidth: 1
+            },
+            {
+                label: 'Net Kar',
+                data: monthlyData.map(d => d.profit),
+                type: 'line',
+                backgroundColor: 'rgba(13, 202, 240, 0.2)',
+                borderColor: '#0dcaf0',
+                borderWidth: 2,
+                fill: true
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                labels: { color: '#fff' }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    color: '#fff',
+                    callback: function(value) {
+                        return '₺' + value.toLocaleString('tr-TR');
+                    }
+                },
+                grid: { color: 'rgba(255,255,255,0.1)' }
+            },
+            x: {
+                ticks: { color: '#fff' },
+                grid: { color: 'rgba(255,255,255,0.1)' }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

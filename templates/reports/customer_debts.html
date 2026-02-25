@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t.customer_debts_report if t.customer_debts_report else 'Müşteri Borçları' }} - {{ t.app_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div>
+                        <h4 class="mb-0 text-light">
+                            <i class="bi bi-people me-2 text-info"></i>
+                            {{ t.customer_debts_report if t.customer_debts_report else 'Müşteri Borçları' }}
+                        </h4>
+                        <small class="text-secondary">{{ t.customer_debts_subtitle if t.customer_debts_subtitle else 'Borçlu müşteriler ve bakiye durumu' }}</small>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('reports.export_report', report_type='customer_debts', format='excel') }}" class="btn btn-outline-success">
+                            <i class="bi bi-file-earmark-excel"></i> Excel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card h-100" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                <div class="card-body text-center">
+                    <i class="bi bi-people fs-1 text-info mb-2"></i>
+                    <h6 class="text-secondary mb-1">{{ t.total_debtors if t.total_debtors else 'Borçlu Müşteri' }}</h6>
+                    <h3 class="text-light mb-0">{{ debtors_count }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                <div class="card-body text-center">
+                    <i class="bi bi-arrow-up-circle fs-1 text-danger mb-2"></i>
+                    <h6 class="text-secondary mb-1">{{ t.total_debt if t.total_debt else 'Toplam Borç' }}</h6>
+                    <h3 class="text-danger mb-0">₺{{ "{:,.2f}".format(total_debt) }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                <div class="card-body text-center">
+                    <i class="bi bi-arrow-down-circle fs-1 text-success mb-2"></i>
+                    <h6 class="text-secondary mb-1">{{ t.total_paid if t.total_paid else 'Toplam Ödeme' }}</h6>
+                    <h3 class="text-success mb-0">₺{{ "{:,.2f}".format(total_paid) }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                <div class="card-body text-center">
+                    <i class="bi bi-cash-stack fs-1 text-warning mb-2"></i>
+                    <h6 class="text-secondary mb-1">{{ t.remaining_debt if t.remaining_debt else 'Kalan Borç' }}</h6>
+                    <h3 class="text-warning mb-0">₺{{ "{:,.2f}".format(net_debt) }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card h-100" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                <div class="card-header" style="background: rgba(255,255,255,0.05);">
+                    <h6 class="mb-0 text-light">{{ t.debt_distribution if t.debt_distribution else 'Borç Dağılımı' }}</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="debtChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card h-100" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                <div class="card-header" style="background: rgba(255,255,255,0.05);">
+                    <h6 class="mb-0 text-light">{{ t.debt_vs_payment if t.debt_vs_payment else 'Borç vs Ödeme' }}</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="debtPaymentChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customers Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                <div class="card-header" style="background: rgba(255,255,255,0.05);">
+                    <h6 class="mb-0 text-light">{{ t.debtor_customers if t.debtor_customers else 'Borçlu Müşteriler Listesi' }}</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>{{ t.customer_name if t.customer_name else 'Müşteri Adı' }}</th>
+                                    <th>{{ t.phone if t.phone else 'Telefon' }}</th>
+                                    <th class="text-end">{{ t.total_debt if t.total_debt else 'Toplam Borç' }}</th>
+                                    <th class="text-end">{{ t.paid if t.paid else 'Ödenen' }}</th>
+                                    <th class="text-end">{{ t.remaining if t.remaining else 'Kalan' }}</th>
+                                    <th class="text-center">{{ t.status if t.status else 'Durum' }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for customer in customer_debts %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td>
+                                        <strong class="text-light">{{ customer.name }}</strong>
+                                    </td>
+                                    <td>{{ customer.phone or '-' }}</td>
+                                    <td class="text-end text-danger">₺{{ "{:,.2f}".format(customer.total_debt) }}</td>
+                                    <td class="text-end text-success">₺{{ "{:,.2f}".format(customer.total_paid) }}</td>
+                                    <td class="text-end text-warning fw-bold">₺{{ "{:,.2f}".format(customer.balance) }}</td>
+                                    <td class="text-center">
+                                        {% if customer.balance > 1000 %}
+                                        <span class="badge bg-danger">{{ t.high_risk if t.high_risk else 'Yüksek Risk' }}</span>
+                                        {% elif customer.balance > 500 %}
+                                        <span class="badge bg-warning">{{ t.medium_risk if t.medium_risk else 'Orta Risk' }}</span>
+                                        {% else %}
+                                        <span class="badge bg-info">{{ t.low_risk if t.low_risk else 'Düşük Risk' }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="7" class="text-center text-secondary py-5">
+                                        <i class="bi bi-check-circle fs-1 text-success d-block mb-2"></i>
+                                        {{ t.no_debt_customers if t.no_debt_customers else 'Tüm müşterilerin borcu ödenmiş' }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Customer Debts Chart
+const debtCtx = document.getElementById('debtChart').getContext('2d');
+const customerData = {{ customer_debts|tojson }};
+
+const topCustomers = customerData.slice(0, 10);
+
+new Chart(debtCtx, {
+    type: 'bar',
+    data: {
+        labels: topCustomers.map(c => c.name.substring(0, 15) + (c.name.length > 15 ? '...' : '')),
+        datasets: [{
+            label: 'Kalan Borç (₺)',
+            data: topCustomers.map(c => c.balance),
+            backgroundColor: topCustomers.map((c, i) => {
+                if (c.balance > 1000) return 'rgba(220, 53, 69, 0.8)';
+                if (c.balance > 500) return 'rgba(255, 193, 7, 0.8)';
+                return 'rgba(13, 202, 240, 0.8)';
+            }),
+            borderColor: topCustomers.map((c, i) => {
+                if (c.balance > 1000) return '#dc3545';
+                if (c.balance > 500) return '#ffc107';
+                return '#0dcaf0';
+            }),
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { display: false }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    color: '#fff',
+                    callback: function(value) {
+                        return '₺' + value.toLocaleString('tr-TR');
+                    }
+                },
+                grid: { color: 'rgba(255,255,255,0.1)' }
+            },
+            x: {
+                ticks: { color: '#fff' },
+                grid: { color: 'rgba(255,255,255,0.1)' }
+            }
+        }
+    }
+});
+
+// Debt vs Payment Chart
+const debtPaymentCtx = document.getElementById('debtPaymentChart').getContext('2d');
+
+new Chart(debtPaymentCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Toplam Borç', 'Toplam Ödeme'],
+        datasets: [{
+            data: [{{ total_debt }}, {{ total_paid }}],
+            backgroundColor: [
+                'rgba(220, 53, 69, 0.8)',
+                'rgba(25, 135, 84, 0.8)'
+            ],
+            borderColor: [
+                '#dc3545',
+                '#198754'
+            ],
+            borderWidth: 2
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: { color: '#fff' }
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        return context.label + ': ₺' + context.parsed.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    }
+                }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

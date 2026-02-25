@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request, session
 from flask_login import login_required, current_user
-from models import db, Transaction, Customer, CustomerTransaction, Product, Receipt, ReceiptItem
+from models import db, Transaction, Customer, CustomerTransaction, Product, Receipt, ReceiptItem, Supplier, SupplierTransaction
 from datetime import datetime, date
 from decimal import Decimal
 from sqlalchemy.exc import IntegrityError
@@ -29,6 +29,13 @@ def scoped_customers_query():
     if current_user.is_platform_admin:
         return Customer.query
     return Customer.query.filter_by(company_id=current_user.company_id)
+
+
+def scoped_suppliers_query():
+    """Platform admin tüm tedarikçileri görebilir."""
+    if current_user.is_platform_admin:
+        return Supplier.query
+    return Supplier.query.filter_by(company_id=current_user.company_id)
 
 
 def scoped_products_query():
@@ -275,6 +282,130 @@ def delete_customer_transaction(transaction_id):
         CustomerTransaction.id == transaction_id,
         Customer.id == CustomerTransaction.customer_id,
         Customer.company_id == get_current_company_id()
+    ).first_or_404()
+    db.session.delete(transaction)
+    db.session.commit()
+    return jsonify({'message': 'İşlem silindi'})
+
+# Tedarikçi API'leri
+@api_bp.route('/suppliers', methods=['GET'])
+@login_required
+def get_suppliers():
+    """Tüm tedarikçileri getir"""
+    try:
+        suppliers = scoped_suppliers_query().order_by(Supplier.name).all()
+        result = [s.to_dict() for s in suppliers]
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@api_bp.route('/suppliers', methods=['POST'])
+@login_required
+@admin_required_api
+def create_supplier():
+    """Yeni tedarikçi ekle - Sadece admin"""
+    data = request.get_json()
+    
+    try:
+        supplier = Supplier(
+            company_id=get_current_company_id(),
+            name=data['name'],
+            contact_person=data.get('contact_person', ''),
+            phone=data.get('phone', ''),
+            email=data.get('email', ''),
+            address=data.get('address', ''),
+            tax_number=data.get('tax_number', ''),
+            notes=data.get('notes', '')
+        )
+        
+        db.session.add(supplier)
+        db.session.commit()
+        
+        return jsonify(supplier.to_dict()), 201
+    except KeyError as e:
+        return jsonify({'error': str(e)}), 400
+
+@api_bp.route('/suppliers/<int:supplier_id>', methods=['GET'])
+@login_required
+def get_supplier(supplier_id):
+    """Tekil tedarikçi getir"""
+    supplier = scoped_suppliers_query().filter_by(id=supplier_id).first_or_404()
+    return jsonify(supplier.to_dict())
+
+@api_bp.route('/suppliers/<int:supplier_id>', methods=['PUT'])
+@login_required
+@admin_required_api
+def update_supplier(supplier_id):
+    """Tedarikçi bilgilerini güncelle - Sadece admin"""
+    supplier = scoped_suppliers_query().filter_by(id=supplier_id).first_or_404()
+    data = request.get_json()
+    
+    try:
+        supplier.name = data.get('name', supplier.name)
+        supplier.contact_person = data.get('contact_person', supplier.contact_person)
+        supplier.phone = data.get('phone', supplier.phone)
+        supplier.email = data.get('email', supplier.email)
+        supplier.address = data.get('address', supplier.address)
+        supplier.tax_number = data.get('tax_number', supplier.tax_number)
+        supplier.notes = data.get('notes', supplier.notes)
+        supplier.is_active = data.get('is_active', supplier.is_active)
+        
+        db.session.commit()
+        return jsonify(supplier.to_dict())
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+@api_bp.route('/suppliers/<int:supplier_id>', methods=['DELETE'])
+@login_required
+@admin_required_api
+def delete_supplier(supplier_id):
+    """Tedarikçi sil - Sadece admin"""
+    supplier = scoped_suppliers_query().filter_by(id=supplier_id).first_or_404()
+    db.session.delete(supplier)
+    db.session.commit()
+    return jsonify({'message': 'Tedarikçi silindi'})
+
+@api_bp.route('/suppliers/<int:supplier_id>/transactions', methods=['GET'])
+@login_required
+def get_supplier_transactions(supplier_id):
+    """Tedarikçinin tüm işlemlerini getir"""
+    supplier = scoped_suppliers_query().filter_by(id=supplier_id).first_or_404()
+    transactions = SupplierTransaction.query.filter_by(supplier_id=supplier_id).order_by(SupplierTransaction.date.desc()).all()
+    return jsonify([t.to_dict() for t in transactions])
+
+@api_bp.route('/suppliers/<int:supplier_id>/transactions', methods=['POST'])
+@login_required
+@admin_required_api
+def create_supplier_transaction(supplier_id):
+    """Tedarikçiye yeni işlem ekle - Sadece admin"""
+    supplier = scoped_suppliers_query().filter_by(id=supplier_id).first_or_404()
+    data = request.get_json()
+    
+    try:
+        transaction = SupplierTransaction(
+            supplier_id=supplier_id,
+            type=data['type'],  # 'debt' veya 'payment'
+            amount=Decimal(str(data['amount'])),
+            description=data.get('description', ''),
+            date=datetime.strptime(data['date'], '%Y-%m-%d').date() if data.get('date') else date.today()
+        )
+        
+        db.session.add(transaction)
+        db.session.commit()
+        
+        return jsonify(transaction.to_dict()), 201
+    except (ValueError, KeyError) as e:
+        return jsonify({'error': str(e)}), 400
+
+@api_bp.route('/supplier-transactions/<int:transaction_id>', methods=['DELETE'])
+@login_required
+@admin_required_api
+def delete_supplier_transaction(transaction_id):
+    """Tedarikçi işlemini sil - Sadece admin"""
+    transaction = SupplierTransaction.query.join(Supplier).filter(
+        SupplierTransaction.id == transaction_id,
+        Supplier.id == SupplierTransaction.supplier_id,
+        Supplier.company_id == get_current_company_id()
     ).first_or_404()
     db.session.delete(transaction)
     db.session.commit()

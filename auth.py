@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session
 from flask_login import login_user, logout_user, login_required, current_user
-from models import db, User, Company, CompanyRequest
+from models import db, User, Company, CompanyRequest, Customer, Transaction, Product, Receipt
 from datetime import datetime, timezone, timedelta
 from functools import wraps
 from translations import get_translation

@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t.stock_report if t.stock_report else 'Stok Raporu' }} - {{ t.app_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div>
+                        <h4 class="mb-0 text-light">
+                            <i class="bi bi-box-seam me-2 text-danger"></i>
+                            {{ t.stock_report if t.stock_report else 'Stok Raporu' }}
+                        </h4>
+                        <small class="text-secondary">{{ t.stock_report_subtitle if t.stock_report_subtitle else 'Mevcut stok ve düşük stok uyarıları' }}</small>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <form method="GET" class="d-flex gap-2">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="lowStockSwitch" name="low_stock" value="true" {% if show_low_stock %}checked{% endif %} onchange="this.form.submit()">
+                                <label class="form-check-label text-light" for="lowStockSwitch">{{ t.show_low_stock_only if t.show_low_stock_only else 'Sadece Düşük Stok' }}</label>
+                            </div>
+                        </form>
+                        <a href="{{ url_for('reports.export_report', report_type='stock', format='excel') }}" class="btn btn-outline-success">
+                            <i class="bi bi-file-earmark-excel"></i> Excel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card h-100" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                <div class="card-body text-center">
+                    <i class="bi bi-boxes fs-1 text-primary mb-2"></i>
+                    <h6 class="text-secondary mb-1">{{ t.total_products if t.total_products else 'Toplam Ürün' }}</h6>
+                    <h3 class="text-light mb-0">{{ total_products }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                <div class="card-body text-center">
+                    <i class="bi bi-exclamation-triangle fs-1 text-warning mb-2"></i>
+                    <h6 class="text-secondary mb-1">{{ t.low_stock_products if t.low_stock_products else 'Düşük Stok Ürünü' }}</h6>
+                    <h3 class="{% if low_stock_count > 0 %}text-warning{% else %}text-success{% endif %} mb-0">{{ low_stock_count }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                <div class="card-body text-center">
+                    <i class="bi bi-currency-dollar fs-1 text-success mb-2"></i>
+                    <h6 class="text-secondary mb-1">{{ t.total_stock_value if t.total_stock_value else 'Toplam Stok Değeri' }}</h6>
+                    <h3 class="text-success mb-0">₺{{ "{:,.2f}".format(total_stock_value) }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Low Stock Alerts -->
+    {% if low_stock_count > 0 and not show_low_stock %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-warning" style="background: rgba(255, 193, 7, 0.1); border: 1px solid rgba(255, 193, 7, 0.5);">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-exclamation-triangle-fill text-warning fs-3 me-3"></i>
+                        <div>
+                            <h6 class="text-warning mb-1">{{ t.low_stock_alert if t.low_stock_alert else 'Düşük Stok Uyarısı!' }}</h6>
+                            <p class="text-light mb-0">{{ low_stock_count }} {{ t.products_need_restock if t.products_need_restock else 'ürün stok takviyesi gerektiriyor.' }}</p>
+                        </div>
+                        <a href="{{ url_for('reports.stock_report', low_stock=true) }}" class="btn btn-warning ms-auto">
+                            {{ t.view_low_stock if t.view_low_stock else 'Düşük Stokları Gör' }}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Stock Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                <div class="card-header d-flex justify-content-between align-items-center" style="background: rgba(255,255,255,0.05);">
+                    <h6 class="mb-0 text-light">{{ t.stock_details if t.stock_details else 'Stok Detayları' }}</h6>
+                    <span class="badge bg-secondary">{{ stock_data|length }} {{ t.products if t.products else 'ürün' }}</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover mb-0">
+                            <thead class="sticky-top" style="background: var(--card-bg);">
+                                <tr>
+                                    <th>#</th>
+                                    <th>{{ t.product_name if t.product_name else 'Ürün Adı' }}</th>
+                                    <th class="text-center">{{ t.unit if t.unit else 'Birim' }}</th>
+                                    <th class="text-end">{{ t.current_stock if t.current_stock else 'Mevcut Stok' }}</th>
+                                    <th class="text-end">{{ t.threshold if t.threshold else 'Eşik Değer' }}</th>
+                                    <th class="text-end">{{ t.purchase_price if t.purchase_price else 'Alış Fiyatı' }}</th>
+                                    <th class="text-end">{{ t.stock_value if t.stock_value else 'Stok Değeri' }}</th>
+                                    <th class="text-center">{{ t.status if t.status else 'Durum' }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for product in stock_data %}
+                                <tr style="{% if product.is_low_stock %}background: rgba(255, 193, 7, 0.1);{% endif %}">
+                                    <td>{{ loop.index }}</td>
+                                    <td>
+                                        <strong class="{% if product.is_low_stock %}text-warning{% else %}text-light{% endif %}">{{ product.name }}</strong>
+                                    </td>
+                                    <td class="text-center"><span class="badge bg-dark">{{ product.unit }}</span></td>
+                                    <td class="text-end {% if product.is_low_stock %}text-warning fw-bold{% else %}text-light{% endif %}">
+                                        {{ "{:,.0f}".format(product.stock_quantity) }}
+                                    </td>
+                                    <td class="text-end text-secondary">{{ "{:,.0f}".format(product.stock_threshold) }}</td>
+                                    <td class="text-end text-light">₺{{ "{:,.2f}".format(product.purchase_price) }}</td>
+                                    <td class="text-end text-success">₺{{ "{:,.2f}".format(product.stock_value) }}</td>
+                                    <td class="text-center">
+                                        {% if product.is_low_stock %}
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="bi bi-exclamation-triangle"></i> {{ t.low if t.low else 'Düşük' }}
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-success">{{ t.normal if t.normal else 'Normal' }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="8" class="text-center text-secondary py-5">
+                                        <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                        {% if show_low_stock %}
+                                        {{ t.no_low_stock_products if t.no_low_stock_products else 'Düşük stokta ürün bulunmuyor' }}
+                                        {% else %}
+                                        {{ t.no_products if t.no_products else 'Henüz ürün eklenmemiş' }}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

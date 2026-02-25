@@ -21,6 +21,10 @@ def to_turkey_time(dt):
     """UTC datetime'ı Türkiye saatine dönüştürür"""
     if dt is None:
         return None
+    # Eğer date objesi ise (datetime.date), direkt döndür
+    if hasattr(dt, 'tzinfo') is False:
+        # datetime.date objesi - tzinfo yok
+        return dt
     # Eğer naive datetime ise UTC olarak kabul et
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=timezone.utc)
@@ -107,8 +111,10 @@ def create_app(config_name=None):
     # Tabloları oluşturma (hata varsa fallback)
     try:
         with app.app_context():
+            # Yeni kolonlar için tabloları yeniden oluştur
+            db.drop_all()
             db.create_all()
-            app.logger.info('Database tables created successfully')
+            app.logger.info('Database tables recreated successfully')
     except Exception as e:
         app.logger.error(f'Database connection failed: {e}')
         # SQLite fallback
@@ -121,10 +127,12 @@ def create_app(config_name=None):
     from routes.main import main_bp
     from routes.api import api_bp
     from auth import auth
+    from reports import reports
     
     app.register_blueprint(main_bp)
     app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(auth, url_prefix='/auth')
+    app.register_blueprint(reports)
 
     # Context processor to inject global variables into all templates
     @app.context_processor

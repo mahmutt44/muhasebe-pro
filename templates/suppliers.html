@@ -1,0 +1,424 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t.suppliers if t.suppliers else 'Tedarikçiler' }} - {{ t.app_name }}{% endblock %}
+
+{% block content %}
+<!-- Başlık -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">
+            <span style="background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                {{ t.suppliers if t.suppliers else 'Tedarikçiler' }}
+            </span>
+        </h2>
+        <p class="text-secondary mb-0">{{ t.suppliers_subtitle if t.suppliers_subtitle else 'Tedarikçi yönetimi ve borç takibi' }}</p>
+    </div>
+    <button onclick="showAddModal()" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-1"></i>{{ t.new_supplier if t.new_supplier else 'Yeni Tedarikçi' }}
+    </button>
+</div>
+
+<!-- İstatistik Kartları -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-3 col-md-6">
+        <div class="card" style="border-left: 4px solid #667eea;">
+            <div class="card-body text-center py-3">
+                <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 40px; height: 40px; background: var(--primary-gradient);">
+                    <i class="bi bi-building text-white"></i>
+                </div>
+                <h4 class="fw-bold mb-0" style="color: #667eea;">{{ suppliers|length }}</h4>
+                <small class="text-secondary">{{ t.total_suppliers if t.total_suppliers else 'Toplam Tedarikçi' }}</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="card" style="border-left: 4px solid #f45c43;">
+            <div class="card-body text-center py-3">
+                <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 40px; height: 40px; background: var(--danger-gradient);">
+                    <i class="bi bi-exclamation-circle text-white"></i>
+                </div>
+                <h4 class="fw-bold mb-0 text-danger">{{ suppliers|selectattr('balance', 'gt', 0)|list|length }}</h4>
+                <small class="text-secondary">{{ t.debtor_suppliers if t.debtor_suppliers else 'Borçlu Tedarikçi' }}</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="card" style="border-left: 4px solid #f5576c;">
+            <div class="card-body text-center py-3">
+                <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 40px; height: 40px; background: var(--warning-gradient);">
+                    <i class="bi bi-cash text-white"></i>
+                </div>
+                <h4 class="fw-bold mb-0 text-warning">₺{{ "%.2f"|format(total_debt) }}</h4>
+                <small class="text-secondary">{{ t.total_debt if t.total_debt else 'Toplam Borç' }}</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="card" style="border-left: 4px solid #38ef7d;">
+            <div class="card-body text-center py-3">
+                <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 40px; height: 40px; background: var(--success-gradient);">
+                    <i class="bi bi-check-circle text-white"></i>
+                </div>
+                <h4 class="fw-bold mb-0 text-success">{{ suppliers|selectattr('balance', 'le', 0)|list|length }}</h4>
+                <small class="text-secondary">{{ t.clear_suppliers if t.clear_suppliers else 'Borcu Olmayan' }}</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tedarikçi Listesi -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center">
+            <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; background: var(--primary-gradient);">
+                <i class="bi bi-list-ul text-white"></i>
+            </div>
+            <h6 class="mb-0 fw-semibold">{{ t.suppliers if t.suppliers else 'Tedarikçiler' }}</h6>
+        </div>
+        <div class="input-group input-group-sm" style="width: 220px;">
+            <span class="input-group-text bg-transparent border-secondary">
+                <i class="bi bi-search text-secondary"></i>
+            </span>
+            <input type="text" id="searchInput" class="form-control border-secondary" placeholder="{{ t.search_supplier if t.search_supplier else 'Tedarikçi ara...' }}">
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>{{ t.supplier_name if t.supplier_name else 'Firma Adı' }}</th>
+                        <th class="hide-mobile">{{ t.contact_person if t.contact_person else 'Yetkili' }}</th>
+                        <th class="hide-mobile">{{ t.phone }}</th>
+                        <th class="text-end">{{ t.balance }}</th>
+                        <th class="text-center">{{ t.actions }}</th>
+                    </tr>
+                </thead>
+                <tbody id="suppliersList">
+                    {% for supplier in suppliers %}
+                    <tr class="supplier-row {% if not supplier.is_active %}opacity-50{% endif %}">
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center me-2 d-none d-sm-flex" style="width: 36px; height: 36px; background: var(--primary-gradient);">
+                                    <i class="bi bi-building text-white"></i>
+                                </div>
+                                <div>
+                                    <span class="fw-semibold supplier-name">{{ supplier.name }}</span>
+                                    {% if not supplier.is_active %}
+                                    <span class="badge bg-secondary ms-1">{{ t.passive if t.passive else 'Pasif' }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td class="hide-mobile">
+                            {% if supplier.contact_person %}
+                            <span class="text-secondary">{{ supplier.contact_person }}</span>
+                            {% else %}
+                            <span class="text-secondary">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="hide-mobile">
+                            {% if supplier.phone %}
+                            <i class="bi bi-telephone text-secondary me-1"></i>{{ supplier.phone }}
+                            {% else %}
+                            <span class="text-secondary">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if supplier.balance > 0 %}
+                            <span class="fw-bold text-danger">₺{{ "%.2f"|format(supplier.balance) }}</span>
+                            {% elif supplier.balance < 0 %}
+                            <span class="fw-bold text-success">₺{{ "%.2f"|format(supplier.balance|abs) }}</span>
+                            {% else %}
+                            <span class="text-secondary">₺0.00</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('main.supplier_detail', supplier_id=supplier.id) }}" class="btn btn-outline-light" title="Detay">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <button onclick="editSupplier({{ supplier.id }})" class="btn btn-outline-warning d-none d-sm-inline-block" title="Düzenle">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button onclick="showTransactionModal({{ supplier.id }}, '{{ supplier.name }}')" class="btn btn-outline-success" title="İşlem">
+                                    <i class="bi bi-plus"></i>
+                                </button>
+                                <button onclick="deleteSupplier({{ supplier.id }})" class="btn btn-outline-danger d-none d-sm-inline-block" title="Sil">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5">
+                            <i class="bi bi-building fs-1 text-secondary d-block mb-2"></i>
+                            <span class="text-secondary">{{ t.no_suppliers if t.no_suppliers else 'Henüz tedarikçi kaydı bulunmuyor.' }}</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Tedarikçi Modal -->
+<div class="modal fade" id="supplierModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" id="supplierModalTitle">{{ t.new_supplier if t.new_supplier else 'Yeni Tedarikçi' }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="supplierForm">
+                <div class="modal-body">
+                    <input type="hidden" name="id" id="supplierId">
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">{{ t.company_name if t.company_name else 'Firma Adı' }} *</label>
+                            <input type="text" name="name" id="supplierName" required class="form-control">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">{{ t.contact_person if t.contact_person else 'Yetkili Kişi' }}</label>
+                            <input type="text" name="contact_person" id="supplierContactPerson" class="form-control">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">{{ t.phone }}</label>
+                            <input type="tel" name="phone" id="supplierPhone" class="form-control">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">{{ t.email if t.email else 'E-posta' }}</label>
+                            <input type="email" name="email" id="supplierEmail" class="form-control">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">{{ t.tax_number if t.tax_number else 'Vergi Numarası' }}</label>
+                            <input type="text" name="tax_number" id="supplierTaxNumber" class="form-control">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">{{ t.status if t.status else 'Durum' }}</label>
+                            <select name="is_active" id="supplierIsActive" class="form-select">
+                                <option value="true">{{ t.active if t.active else 'Aktif' }}</option>
+                                <option value="false">{{ t.passive if t.passive else 'Pasif' }}</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">{{ t.address if t.address else 'Adres' }}</label>
+                        <textarea name="address" id="supplierAddress" rows="2" class="form-control"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">{{ t.notes }}</label>
+                        <textarea name="notes" id="supplierNotes" rows="2" class="form-control"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ t.cancel }}</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-1"></i>{{ t.save }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Tedarikçi İşlem Modal -->
+<div class="modal fade" id="transactionModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">{{ t.transactions }} - <span id="transactionSupplierName"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="transactionForm">
+                <div class="modal-body">
+                    <input type="hidden" name="supplier_id" id="transactionSupplierId">
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">{{ t.transaction_type }} *</label>
+                        <select name="type" id="transactionType" required class="form-select">
+                            <option value="">{{ t.all }}...</option>
+                            <option value="debt">📥 {{ t.debt }}</option>
+                            <option value="payment">📤 {{ t.payment }}</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">{{ t.amount }} (₺) *</label>
+                        <input type="number" name="amount" id="transactionAmount" step="0.01" min="0" required class="form-control">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">{{ t.date }} *</label>
+                        <input type="date" name="date" id="transactionDate" required class="form-control">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">{{ t.description }}</label>
+                        <input type="text" name="description" id="transactionDescription" class="form-control">
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ t.cancel }}</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-1"></i>{{ t.save }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const supplierModal = new bootstrap.Modal(document.getElementById('supplierModal'));
+const transactionModal = new bootstrap.Modal(document.getElementById('transactionModal'));
+
+function showAddModal() {
+    document.getElementById('supplierModalTitle').textContent = '{{ t.new_supplier if t.new_supplier else 'Yeni Tedarikçi' }}';
+    document.getElementById('supplierForm').reset();
+    document.getElementById('supplierId').value = '';
+    document.getElementById('supplierIsActive').value = 'true';
+    supplierModal.show();
+}
+
+function editSupplier(id) {
+    apiCall(`/api/suppliers/${id}`)
+        .then(s => {
+            document.getElementById('supplierModalTitle').textContent = '{{ t.edit_supplier if t.edit_supplier else 'Tedarikçi Düzenle' }}';
+            document.getElementById('supplierId').value = s.id;
+            document.getElementById('supplierName').value = s.name;
+            document.getElementById('supplierContactPerson').value = s.contact_person || '';
+            document.getElementById('supplierPhone').value = s.phone || '';
+            document.getElementById('supplierEmail').value = s.email || '';
+            document.getElementById('supplierTaxNumber').value = s.tax_number || '';
+            document.getElementById('supplierAddress').value = s.address || '';
+            document.getElementById('supplierNotes').value = s.notes || '';
+            document.getElementById('supplierIsActive').value = s.is_active ? 'true' : 'false';
+            supplierModal.show();
+        })
+        .catch(err => showNotification(err.message, 'error'));
+}
+
+function deleteSupplier(id) {
+    const modalHtml = `
+        <div class="modal fade show" id="deleteModal" style="display: block; background: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                    <div class="modal-header" style="border-bottom: 1px solid var(--border-color);">
+                        <h6 class="modal-title text-light">{{ t.delete_supplier if t.delete_supplier else 'Tedarikçiyi Sil' }}</h6>
+                        <button type="button" class="btn-close btn-close-white" onclick="closeDeleteModal()"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="text-warning small mb-3">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            {{ t.confirm_delete_supplier if t.confirm_delete_supplier else 'Bu tedarikçiyi silmek istediğinizden emin misiniz?' }}
+                        </p>
+                    </div>
+                    <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="closeDeleteModal()">{{ t.cancel if t.cancel else 'İptal' }}</button>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete(${id})">{{ t.delete if t.delete else 'Sil' }}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+function closeDeleteModal() {
+    const modal = document.getElementById('deleteModal');
+    if (modal) modal.remove();
+}
+
+function confirmDelete(id) {
+    closeDeleteModal();
+    apiCall(`/api/suppliers/${id}`, { method: 'DELETE' })
+        .then(() => {
+            showNotification('{{ t.supplier_deleted if t.supplier_deleted else 'Tedarikçi silindi' }}', 'success');
+            location.reload();
+        })
+        .catch(err => showNotification(err.message, 'error'));
+}
+
+function showTransactionModal(supplierId, supplierName) {
+    document.getElementById('transactionSupplierId').value = supplierId;
+    document.getElementById('transactionSupplierName').textContent = supplierName;
+    document.getElementById('transactionForm').reset();
+    document.getElementById('transactionDate').value = new Date().toISOString().split('T')[0];
+    transactionModal.show();
+}
+
+document.getElementById('supplierForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const id = document.getElementById('supplierId').value;
+    const data = {
+        name: document.getElementById('supplierName').value,
+        contact_person: document.getElementById('supplierContactPerson').value,
+        phone: document.getElementById('supplierPhone').value,
+        email: document.getElementById('supplierEmail').value,
+        tax_number: document.getElementById('supplierTaxNumber').value,
+        address: document.getElementById('supplierAddress').value,
+        notes: document.getElementById('supplierNotes').value,
+        is_active: document.getElementById('supplierIsActive').value === 'true'
+    };
+    
+    try {
+        if (id) {
+            await apiCall(`/api/suppliers/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+            showNotification('{{ t.supplier_updated if t.supplier_updated else 'Tedarikçi güncellendi' }}', 'success');
+        } else {
+            await apiCall('/api/suppliers', { method: 'POST', body: JSON.stringify(data) });
+            showNotification('{{ t.supplier_added if t.supplier_added else 'Tedarikçi eklendi' }}', 'success');
+        }
+        supplierModal.hide();
+        location.reload();
+    } catch (err) {
+        showNotification(err.message, 'error');
+    }
+});
+
+document.getElementById('transactionForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const supplierId = document.getElementById('transactionSupplierId').value;
+    const data = {
+        type: document.getElementById('transactionType').value,
+        amount: parseFloat(document.getElementById('transactionAmount').value),
+        date: document.getElementById('transactionDate').value,
+        description: document.getElementById('transactionDescription').value
+    };
+    
+    try {
+        await apiCall(`/api/suppliers/${supplierId}/transactions`, { method: 'POST', body: JSON.stringify(data) });
+        showNotification('{{ t.transaction_added if t.transaction_added else 'İşlem eklendi' }}', 'success');
+        transactionModal.hide();
+        location.reload();
+    } catch (err) {
+        showNotification(err.message, 'error');
+    }
+});
+
+// Arama
+document.getElementById('searchInput').addEventListener('input', function() {
+    const search = this.value.toLowerCase();
+    document.querySelectorAll('.supplier-row').forEach(row => {
+        row.style.display = row.textContent.toLowerCase().includes(search) ? '' : 'none';
+    });
+});
+</script>
+{% endblock %}

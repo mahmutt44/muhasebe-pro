@@ -213,7 +213,7 @@ class Customer(db.Model):
         }
 
 class CustomerTransaction(db.Model):
-    """Müşteri borç/ödeme işlemleri"""
+    """Müşteri borç/alacak işlemleri"""
     __tablename__ = 'customer_transactions'
     
     id = db.Column(db.Integer, primary_key=True)
@@ -235,8 +235,99 @@ class CustomerTransaction(db.Model):
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
 
+class Supplier(db.Model):
+    """Tedarikçiler"""
+    __tablename__ = 'suppliers'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)  # SaaS için
+    
+    # Firma bilgileri
+    name = db.Column(db.String(100), nullable=False)  # Firma adı
+    contact_person = db.Column(db.String(100))  # Yetkili kişi
+    phone = db.Column(db.String(20))
+    email = db.Column(db.String(100))
+    address = db.Column(db.Text)
+    tax_number = db.Column(db.String(50))  # Vergi numarası (opsiyonel)
+    notes = db.Column(db.Text)
+    
+    # Durum
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=get_turkey_time)
+    updated_at = db.Column(db.DateTime, default=get_turkey_time, onupdate=get_turkey_time)
+    
+    # İlişkiler
+    transactions = db.relationship('SupplierTransaction', backref='supplier', lazy=True, cascade='all, delete-orphan')
+    
+    def get_balance(self):
+        """Tedarikçinin güncel bakiyesini hesaplar (borç - ödeme)"""
+        total_debt = sum(t.amount for t in self.transactions if t.type == 'debt')
+        total_payment = sum(t.amount for t in self.transactions if t.type == 'payment')
+        return total_debt - total_payment
+    
+    @property
+    def balance(self):
+        """Tedarikçinin güncel bakiyesini property olarak döndürür"""
+        return self.get_balance()
+    
+    def to_json(self):
+        """Modeli JSON formatına çevirir"""
+        return {
+            'id': self.id,
+            'name': self.name,
+            'contact_person': self.contact_person,
+            'phone': self.phone,
+            'email': self.email,
+            'address': self.address,
+            'tax_number': self.tax_number,
+            'notes': self.notes,
+            'is_active': self.is_active,
+            'balance': float(self.balance),
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'contact_person': self.contact_person or '',
+            'phone': self.phone or '',
+            'email': self.email or '',
+            'address': self.address or '',
+            'tax_number': self.tax_number or '',
+            'notes': self.notes or '',
+            'is_active': self.is_active,
+            'balance': float(self.get_balance()) if self.get_balance() else 0.0,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+
+class SupplierTransaction(db.Model):
+    """Tedarikçi borç/ödeme işlemleri"""
+    __tablename__ = 'supplier_transactions'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    supplier_id = db.Column(db.Integer, db.ForeignKey('suppliers.id'), nullable=False)
+    type = db.Column(db.String(10), nullable=False)  # 'debt' (borç) veya 'payment' (ödeme)
+    amount = db.Column(db.Numeric(15, 2), nullable=False)
+    description = db.Column(db.Text)
+    date = db.Column(db.Date, nullable=False, default=get_turkey_date)
+    created_at = db.Column(db.DateTime, default=get_turkey_time)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'supplier_id': self.supplier_id,
+            'type': self.type,
+            'amount': float(self.amount) if self.amount else 0.0,
+            'description': self.description or '',
+            'date': self.date.isoformat() if self.date else None,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
+
 class Product(db.Model):
-    """Ürünler (stoksuz)"""
+    """Ürünler (stoklu)"""
     __tablename__ = 'products'
     
     id = db.Column(db.Integer, primary_key=True)
@@ -244,8 +335,21 @@ class Product(db.Model):
     name = db.Column(db.String(100), nullable=False)
     unit = db.Column(db.String(20), nullable=False)  # adet, kg, gram, paket vb.
     unit_price = db.Column(db.Numeric(15, 2), nullable=False)
+    purchase_price = db.Column(db.Numeric(15, 2), default=0)  # Alış fiyatı (stok değeri için)
+    stock_quantity = db.Column(db.Numeric(10, 2), default=0)  # Mevcut stok
+    stock_threshold = db.Column(db.Numeric(10, 2), default=10)  # Düşük stok uyarı eşiği
     created_at = db.Column(db.DateTime, default=get_turkey_time)
     updated_at = db.Column(db.DateTime, default=get_turkey_time, onupdate=get_turkey_time)
+    
+    @property
+    def is_low_stock(self):
+        """Stok düşük mü?"""
+        return float(self.stock_quantity or 0) < float(self.stock_threshold or 10)
+    
+    @property
+    def stock_value(self):
+        """Stok değeri (stok * alış fiyatı)"""
+        return float(self.stock_quantity or 0) * float(self.purchase_price or 0)
     
     def to_dict(self):
         return {
@@ -253,6 +357,11 @@ class Product(db.Model):
             'name': self.name,
             'unit': self.unit,
             'unit_price': float(self.unit_price) if self.unit_price else 0.0,
+            'purchase_price': float(self.purchase_price) if self.purchase_price else 0.0,
+            'stock_quantity': float(self.stock_quantity) if self.stock_quantity else 0.0,
+            'stock_threshold': float(self.stock_threshold) if self.stock_threshold else 10.0,
+            'is_low_stock': self.is_low_stock,
+            'stock_value': self.stock_value,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
@@ -264,6 +373,11 @@ class Product(db.Model):
             'name': self.name,
             'unit': self.unit,
             'unit_price': float(self.unit_price) if self.unit_price else 0.0,
+            'purchase_price': float(self.purchase_price) if self.purchase_price else 0.0,
+            'stock_quantity': float(self.stock_quantity) if self.stock_quantity else 0.0,
+            'stock_threshold': float(self.stock_threshold) if self.stock_threshold else 10.0,
+            'is_low_stock': self.is_low_stock,
+            'stock_value': self.stock_value,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }

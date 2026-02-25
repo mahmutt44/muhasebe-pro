@@ -1156,9 +1156,21 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'main.suppliers' or request.endpoint == 'main.supplier_detail' %}active{% endif %}" href="{{ url_for('main.suppliers') }}">
+                            <i class="bi bi-building"></i>
+                            <span>{{ t.suppliers if t.suppliers else 'Tedarikçiler' }}</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link {% if request.endpoint == 'main.products' %}active{% endif %}" href="{{ url_for('main.products') }}">
                             <i class="bi bi-box-seam"></i>
                             <span>{{ t.products }}</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint.startswith('reports.') %}active{% endif %}" href="{{ url_for('reports.reports_index') }}">
+                            <i class="bi bi-graph-up"></i>
+                            <span>{{ t.reports if t.reports else 'Raporlar' }}</span>
                         </a>
                     </li>
                     {% if current_user.is_authenticated and current_user.is_admin %}
