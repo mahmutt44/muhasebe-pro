@@ -11,23 +11,40 @@ api_bp = Blueprint('api', __name__)
 
 
 def get_current_company_id():
-    """Platform admin için None (işlem yapamaz), diğerleri için kendi şirketi."""
+    """Platform admin için None (işlem yapamaz), diğerleri için kendi şirketi.
+    
+    Güvenlik: Company_id'si olmayan kullanıcılar için None döner.
+    Bu durumda veri erişimi engellenmelidir.
+    """
     if current_user.is_platform_admin:
         return None
-    return current_user.company_id or 1
+    # Güvenlik: Company_id yoksa None döndür, varsayılan atama yapma!
+    return current_user.company_id
 
 
 def scoped_transactions_query():
-    """Platform admin tüm transactionları görebilir (salt-okunur)."""
+    """Platform admin tüm transactionları görebilir (salt-okunur).
+    
+    Güvenlik: Company_id'si olmayan normal kullanıcılar boş sonuç döner.
+    """
     if current_user.is_platform_admin:
         return Transaction.query
+    # Güvenlik: Company_id yoksa veri erişimini engelle
+    if not current_user.company_id:
+        return Transaction.query.filter_by(company_id=-1)  # Hiçbir veri döndürmez
     return Transaction.query.filter_by(company_id=current_user.company_id)
 
 
 def scoped_customers_query():
-    """Platform admin tüm müşterileri görebilir."""
+    """Platform admin tüm müşterileri görebilir.
+    
+    Güvenlik: Company_id'si olmayan normal kullanıcılar boş sonuç döner.
+    """
     if current_user.is_platform_admin:
         return Customer.query
+    # Güvenlik: Company_id yoksa veri erişimini engelle
+    if not current_user.company_id:
+        return Customer.query.filter_by(company_id=-1)  # Hiçbir veri döndürmez
     return Customer.query.filter_by(company_id=current_user.company_id)
 
 
@@ -35,20 +52,34 @@ def scoped_suppliers_query():
     """Platform admin tüm tedarikçileri görebilir."""
     if current_user.is_platform_admin:
         return Supplier.query
+    if not current_user.company_id:
+        return Supplier.query.filter_by(company_id=-1)  # Hiçbir veri döndürmez
     return Supplier.query.filter_by(company_id=current_user.company_id)
 
 
 def scoped_products_query():
-    """Platform admin tüm ürünleri görebilir."""
+    """Platform admin tüm ürünleri görebilir.
+    
+    Güvenlik: Company_id'si olmayan normal kullanıcılar boş sonuç döner.
+    """
     if current_user.is_platform_admin:
         return Product.query
+    # Güvenlik: Company_id yoksa veri erişimini engelle
+    if not current_user.company_id:
+        return Product.query.filter_by(company_id=-1)  # Hiçbir veri döndürmez
     return Product.query.filter_by(company_id=current_user.company_id)
 
 
 def scoped_receipts_query():
-    """Platform admin tüm fişleri görebilir."""
+    """Platform admin tüm fişleri görebilir.
+    
+    Güvenlik: Company_id'si olmayan normal kullanıcılar boş sonuç döner.
+    """
     if current_user.is_platform_admin:
         return Receipt.query
+    # Güvenlik: Company_id yoksa veri erişimini engelle
+    if not current_user.company_id:
+        return Receipt.query.filter_by(company_id=-1)  # Hiçbir veri döndürmez
     return Receipt.query.filter_by(company_id=current_user.company_id)
 
 
@@ -77,9 +108,14 @@ def create_transaction():
     """Yeni gelir/gider işlemi ekle - Sadece admin"""
     data = request.get_json()
     
+    # Güvenlik: Şirket ID'si olmayan kullanıcı işlem yapamaz
+    company_id = get_current_company_id()
+    if not company_id and not current_user.is_platform_admin:
+        return jsonify({'error': 'Bu işlem için şirket yetkisi gerekiyor.'}), 403
+    
     try:
         transaction = Transaction(
-            company_id=get_current_company_id(),
+            company_id=company_id,
             type=data['type'],
             amount=Decimal(str(data['amount'])),
             description=data.get('description', ''),
@@ -150,9 +186,14 @@ def create_customer():
     """Yeni müşteri ekle - Sadece admin"""
     data = request.get_json()
     
+    # Güvenlik: Şirket ID'si olmayan kullanıcı işlem yapamaz
+    company_id = get_current_company_id()
+    if not company_id and not current_user.is_platform_admin:
+        return jsonify({'error': 'Bu işlem için şirket yetkisi gerekiyor.'}), 403
+    
     try:
         customer = Customer(
-            company_id=get_current_company_id(),
+            company_id=company_id,
             name=data['name'],
             phone=data.get('phone', ''),
             notes=data.get('notes', '')

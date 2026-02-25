@@ -11,45 +11,78 @@ main_bp = Blueprint('main', __name__)
 
 
 def get_current_company_id():
-    """Platform admin için None (işlem yapamaz), diğerleri için kendi şirketi."""
+    """Platform admin için None (işlem yapamaz), diğerleri için kendi şirketi.
+    
+    Güvenlik: Company_id'si olmayan kullanıcılar için None döner.
+    Bu durumda veri erişimi engellenmelidir.
+    """
     if current_user.is_platform_admin:
         return None
-    return current_user.company_id or 1
+    return current_user.company_id
 
 
 def scoped_transactions_query():
-    """Platform admin veri görüntüleyebilir ama işlem yapamaz (company_id=None)."""
+    """Platform admin tüm transactionları görebilir (salt-okunur).
+    
+    Güvenlik: Company_id'si olmayan normal kullanıcılar boş sonuç döner.
+    """
     if current_user.is_platform_admin:
-        # Platform admin tüm transactionları görebilir ama kendi company_id'si yoktur
         return Transaction.query
+    # Güvenlik: Company_id yoksa veri erişimini engelle
+    if not current_user.company_id:
+        return Transaction.query.filter_by(company_id=-1)  # Hiçbir veri döndürmez
     return Transaction.query.filter_by(company_id=current_user.company_id)
 
 
 def scoped_customers_query():
-    """Platform admin tüm müşterileri görebilir."""
+    """Platform admin tüm müşterileri görebilir.
+    
+    Güvenlik: Company_id'si olmayan normal kullanıcılar boş sonuç döner.
+    """
     if current_user.is_platform_admin:
         return Customer.query
+    # Güvenlik: Company_id yoksa veri erişimini engelle
+    if not current_user.company_id:
+        return Customer.query.filter_by(company_id=-1)  # Hiçbir veri döndürmez
     return Customer.query.filter_by(company_id=current_user.company_id)
 
 
 def scoped_suppliers_query():
-    """Platform admin tüm tedarikçileri görebilir."""
+    """Platform admin tüm tedarikçileri görebilir.
+    
+    Güvenlik: Company_id'si olmayan normal kullanıcılar boş sonuç döner.
+    """
     if current_user.is_platform_admin:
         return Supplier.query
+    # Güvenlik: Company_id yoksa veri erişimini engelle
+    if not current_user.company_id:
+        return Supplier.query.filter_by(company_id=-1)  # Hiçbir veri döndürmez
     return Supplier.query.filter_by(company_id=current_user.company_id)
 
 
 def scoped_products_query():
-    """Platform admin tüm ürünleri görebilir."""
+    """Platform admin tüm ürünleri görebilir.
+    
+    Güvenlik: Company_id'si olmayan normal kullanıcılar boş sonuç döner.
+    """
     if current_user.is_platform_admin:
         return Product.query
+    # Güvenlik: Company_id yoksa veri erişimini engelle
+    if not current_user.company_id:
+        return Product.query.filter_by(company_id=-1)  # Hiçbir veri döndürmez
     return Product.query.filter_by(company_id=current_user.company_id)
 
 
 def scoped_receipts_query():
-    """Platform admin tüm fişleri görebilir."""
+    """Platform admin tüm fişleri görebilir.
+    
+    Güvenlik: Company_id'si olmayan normal kullanıcılar boş sonuç döner.
+    """
     if current_user.is_platform_admin:
         return Receipt.query
+    # Güvenlik: Company_id yoksa veri erişimini engelle
+    if not current_user.company_id:
+        return Receipt.query.filter_by(company_id=-1)  # Hiçbir veri döndürmez
     return Receipt.query.filter_by(company_id=current_user.company_id)
 
 
