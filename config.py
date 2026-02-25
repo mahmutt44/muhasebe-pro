@@ -4,7 +4,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Config:
-    SECRET_KEY = os.environ.get('FLASK_SECRET_KEY') or 'dev-secret-key-change-in-production'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     @staticmethod
@@ -13,6 +12,7 @@ class Config:
 
 class DevelopmentConfig(Config):
     DEBUG = True
+    SECRET_KEY = os.environ.get('FLASK_SECRET_KEY') or 'dev-secret-key-not-for-production'
     
 class ProductionConfig(Config):
     DEBUG = False
@@ -20,6 +20,16 @@ class ProductionConfig(Config):
     @classmethod
     def init_app(cls, app):
         Config.init_app(app)
+        
+        # Production'da SECRET_KEY zorunlu kontrolü
+        secret_key = os.environ.get('FLASK_SECRET_KEY')
+        if not secret_key or secret_key.strip() == '':
+            raise RuntimeError(
+                "ERROR: FLASK_SECRET_KEY environment variable is not set!\n"
+                "Production ortamında güvenlik için FLASK_SECRET_KEY tanımlanması zorunludur.\n"
+                "Örnek: export FLASK_SECRET_KEY=$(openssl rand -hex 32)"
+            )
+        app.config['SECRET_KEY'] = secret_key
         
         # Production için loglama ayarları
         import logging
@@ -37,6 +47,7 @@ class ProductionConfig(Config):
 
 class DemoConfig(Config):
     DEBUG = True
+    SECRET_KEY = os.environ.get('FLASK_SECRET_KEY') or 'demo-secret-key-not-for-production'
     
     @classmethod
     def init_app(cls, app):
