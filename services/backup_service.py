@@ -35,13 +35,22 @@ class BackupService:
             if not database_url:
                 logger.error("DATABASE_URL environment variable not found")
                 return None
-                
+            
+            # URL formatını normalize et (tüm formatları postgresql:// standardına çevir)
+            # Desteklenen formatlar: postgres://, postgresql://, postgresql+pg8000://
+            if database_url.startswith('postgres://'):
+                database_url = database_url.replace('postgres://', 'postgresql://', 1)
+            elif database_url.startswith('postgresql+pg8000://'):
+                database_url = database_url.replace('postgresql+pg8000://', 'postgresql://', 1)
+            elif database_url.startswith('postgresql+psycopg2://'):
+                database_url = database_url.replace('postgresql+psycopg2://', 'postgresql://', 1)
+            
             # URL'den bağlantı bilgilerini çıkar
             # Format: postgresql://username:password@host:port/database
             import re
             match = re.match(r'postgresql://([^:]+):([^@]+)@([^:]+):(\d+)/(.+)', database_url)
             if not match:
-                logger.error("Invalid DATABASE_URL format")
+                logger.error(f"Invalid DATABASE_URL format: {database_url[:20]}...")
                 return None
                 
             username, password, host, port, database = match.groups()
