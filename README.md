@@ -100,7 +100,38 @@ DATABASE_URL=postgresql+pg8000://user:pass@host/dbname
 FLASK_SECRET_KEY=your-secret-key
 ```
 
-## 📱 Telefonda Kullanım
+## � Production Deployment
+
+### Railway/Render/Heroku Deployment
+
+Uygulama başlatılırken otomatik olarak veritabanı migration'ları çalıştırılır:
+
+```
+1. flask db upgrade (migration'ları uygula)
+2. gunicorn --workers 1 --timeout 120 --bind 0.0.0.0:8080 "app:create_app()"
+```
+
+**Önemli:**
+- Eğer migration başarısız olursa uygulama **başlatılmaz**
+- Bu sayede veritabanı şeması her zaman güncel tutulur
+- Veri kaybı riski önlenir
+
+### Manual Production Deployment
+
+```bash
+# 1. Ortam değişkenlerini ayarla
+export ENV=production
+export DATABASE_URL=postgresql+pg8000://user:pass@host/dbname
+export FLASK_SECRET_KEY=$(openssl rand -hex 32)
+
+# 2. Migration'ları uygula
+flask db upgrade
+
+# 3. Uygulamayı başlat
+gunicorn --workers 1 --timeout 120 --bind 0.0.0.0:8080 "app:create_app()"
+```
+
+## �📱 Telefonda Kullanım
 
 1. Uygulamayı bir hosting servisine yükleyin (Railway, Render, vb.)
 2. Verilen URL'yi telefonun tarayıcısında açın
