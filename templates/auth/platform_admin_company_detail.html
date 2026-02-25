@@ -203,6 +203,7 @@
                     <h6 class="text-light mb-3">{{ t.actions if t.actions else 'İşlemler' }}</h6>
                     <div class="d-flex gap-2 flex-wrap">
                         <form method="POST" action="{{ url_for('auth.platform_admin_company_toggle', company_id=company.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn {% if company.status == 'approved' %}btn-warning{% else %}btn-success{% endif %}">
                                 <i class="bi {% if company.status == 'approved' %}bi-pause-circle{% else %}bi-play-circle{% endif %} me-2"></i>
                                 {% if company.status == 'approved' %}{{ t.suspend_company if t.suspend_company else 'Askıya Al' }}{% else %}{{ t.activate_company if t.activate_company else 'Aktif Et' }}{% endif %}
@@ -223,6 +224,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content" style="background: var(--card-bg); border: 1px solid var(--border-color);">
             <form method="POST" action="{{ url_for('auth.platform_admin_company_edit', company_id=company.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="modal-header" style="border-bottom: 1px solid var(--border-color);">
                     <h5 class="modal-title text-light">
                         <i class="bi bi-pencil me-2 text-primary"></i>{{ t.edit_company if t.edit_company else 'İşletme Düzenle' }}
@@ -318,6 +320,7 @@
             <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ t.cancel if t.cancel else 'İptal' }}</button>
                 <form method="POST" action="{{ url_for('auth.platform_admin_company_delete', company_id=company.id) }}" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="btn btn-danger">
                         <i class="bi bi-trash me-2"></i>{{ t.delete if t.delete else 'Sil' }}
                     </button>

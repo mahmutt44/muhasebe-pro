@@ -72,9 +72,6 @@ def create_app(config_name=None):
     # Hassas veri filtresi ekle
     add_sensitive_filter(app.logger)
     
-    # API endpointlerini CSRF korumasından muaf tut
-    csrf.exempt(api_bp)
-    
     # Flask-Login başlatma
     login_manager.init_app(app)
     
@@ -163,6 +160,9 @@ def create_app(config_name=None):
     app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(auth, url_prefix='/auth')
     app.register_blueprint(reports)
+    
+    # API endpointlerini CSRF korumasından muaf tut (blueprint kaydettikten sonra)
+    csrf.exempt(api_bp)
 
     # Context processor to inject global variables into all templates
     @app.context_processor

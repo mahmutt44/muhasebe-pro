@@ -76,6 +76,7 @@
                                             
                                             <!-- Aktif/Pasif Toggle -->
                                             <form method="POST" action="{{ url_for('auth.platform_admin_company_toggle', company_id=company.id) }}" class="d-inline">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                 <button type="submit" class="btn {% if company.status == 'approved' %}btn-warning{% else %}btn-success{% endif %}" 
                                                         title="{% if company.status == 'approved' %}{{ t.suspend if t.suspend else 'Askıya Al' }}{% else %}{{ t.activate if t.activate else 'Aktif Et' }}{% endif %}">
                                                     <i class="bi {% if company.status == 'approved' %}bi-pause-circle{% else %}bi-play-circle{% endif %}"></i>
@@ -129,6 +130,7 @@
             <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ t.cancel if t.cancel else 'İptal' }}</button>
                 <form method="POST" action="{{ url_for('auth.platform_admin_company_delete', company_id=company.id) }}" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="btn btn-danger">
                         <i class="bi bi-trash me-2"></i>{{ t.delete if t.delete else 'Sil' }}
                     </button>
