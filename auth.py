@@ -357,20 +357,21 @@ def approve_request(request_id):
         username=username,
         email=company_request.email,
         role='admin',
-        is_active=True
+        is_active=True,
+        force_password_change=True  # İlk girişte şifre değiştirme zorunluluğu
     )
     
-    # Rastgele şifre oluştur
+    # Rastgele şifre oluştur - sadece bu seferlik gösterilecek
     alphabet = string.ascii_letters + string.digits + '!@#$%&*'
-    password = ''.join(secrets.choice(alphabet) for _ in range(12))
-    admin_user.set_password(password)
+    temp_password = ''.join(secrets.choice(alphabet) for _ in range(12))
+    admin_user.set_password(temp_password)
     
     db.session.add(admin_user)
     
     # Talebi güncelle
     company_request.status = 'approved'
     company_request.approved_username = username
-    company_request.temporary_password = password
+    # NOT: temporary_password artık saklanmıyor - güvenlik riski
     
     try:
         db.session.commit()
@@ -379,11 +380,10 @@ def approve_request(request_id):
         flash('Talep onaylanamadı. Kullanıcı bilgileri çakışıyor.', 'danger')
         return redirect(url_for('auth.admin_company_requests'))
     
-    flash(get_translation('request_approved', session.get('lang', 'tr')), 'success')
-    
-    # TODO: E-posta ile giriş bilgilerini gönder
-    # Şimdilik flash mesajında göster
-    flash(f'{get_translation("login_credentials", session.get("lang", "tr"))}: {company_request.email} / {password}', 'info')
+    # Başarı mesajı - şifre sadece bu seferlik gösterilir
+    flash(f'İşletme başarıyla onaylandı!', 'success')
+    flash(f'Giriş bilgileri: Kullanıcı adı: {username} | Geçici şifre: {temp_password}', 'info')
+    flash(f'Not: Bu şifre sadece bir kez gösterilir. Lütfen not alın veya kullanıcıya iletin. İlk girişte şifre değiştirme zorunludur.', 'warning')
     
     return redirect(url_for('auth.admin_company_requests'))
 
@@ -455,6 +455,11 @@ def login():
             session['role'] = user.role
             user.last_login = datetime.now(TURKEY_TZ)
             db.session.commit()
+            
+            # İlk girişte şifre değiştirme zorunluluğu kontrolü
+            if user.force_password_change:
+                flash('Lütfen geçici şifrenizi değiştirin.', 'warning')
+                return redirect(url_for('auth.change_password'))
             
             # Platform admin kendi paneline, diğerleri ana sayfaya
             if user.is_platform_admin:
