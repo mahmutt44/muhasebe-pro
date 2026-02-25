@@ -139,16 +139,9 @@ def create_app(config_name=None):
             app.logger.error(f'CRITICAL: Production database connection failed: {e}')
             sys.exit(1)  # Uygulamayı durdur
     
-    # Development ortamında sadece tablo oluştur (migration yoksa)
-    elif is_development():
-        try:
-            with app.app_context():
-                db.create_all()
-                app.logger.info('Development database initialized')
-        except Exception as e:
-            app.logger.error(f'Development database initialization failed: {e}')
-            # Development'ta bile fallback yok - kullanıcı bilgilendirilsin
-            raise
+    # Development ortamında da migration-first yaklaşımı
+    # db.create_all() KALDIRILDI - tüm schema değişiklikleri Flask-Migrate ile yapılmalı
+    # Yeni geliştirici: flask db init, flask db migrate, flask db upgrade komutlarını kullanın
     
     # Route'ları kaydetme
     from routes.main import main_bp

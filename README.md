@@ -36,18 +36,26 @@ pip install -r requirements.txt
 
 ### 4. Veritabanı Migration'ları Çalıştırın
 
-**Geliştirme ortamında:**
+**⚠️ Önemli:** Geliştirme ve production ortamlarında tüm schema değişiklikleri Flask-Migrate migration sistemi üzerinden yapılmalıdır. `db.create_all()` kullanımı tamamen kaldırılmıştır.
+
+**İlk kurulum (Development ve Production):**
 ```bash
-# İlk migration oluştur (models.py değişikliklerinden)
+# Migration sistemini başlat (ilk kurulumda bir kez çalıştırın)
+flask db init
+
+# İlk migration oluştur
 flask db migrate -m "initial migration"
 
-# Migration'ları uygula
+# Migration'ları veritabanına uygula
 flask db upgrade
 ```
 
-**Production ortamında:**
+**Sonraki güncellemeler:**
 ```bash
-# Uygulamayı başlatmadan önce migration'ları çalıştır
+# Model değişikliklerinden yeni migration oluştur
+flask db migrate -m "add new feature"
+
+# Migration'ları uygula
 flask db upgrade
 ```
 
@@ -61,6 +69,11 @@ Tarayıcıda açın: `http://localhost:5000`
 ## 🗄️ Veritabanı Yönetimi
 
 ### Güvenlik Önlemleri
+
+✅ **Migration-First Yaklaşım:**
+- Geliştirme ve production ortamları aynı migration sistemini kullanır
+- `db.create_all()` otomatik çalıştırılmaz - migration zorunludur
+- Tüm schema değişiklikleri Flask-Migrate ile yönetilir
 
 ✅ **Production'da veri kaybı yok:**
 - Uygulama başlarken hiçbir durumda veritabanı DROP edilmez
