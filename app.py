@@ -171,12 +171,6 @@ def create_app(config_name=None):
             if Customer.query.count() == 0:
                 create_demo_data()
     
-    # Production için admin kullanıcısı oluştur
-    elif is_production():
-        with app.app_context():
-            if User.query.count() == 0:
-                create_production_admin()
-    
     return app
 
 
@@ -238,33 +232,6 @@ def ensure_saas_schema():
         conn.execute(text("UPDATE receipts SET company_id = 1 WHERE company_id IS NULL"))
         conn.execute(text("UPDATE users SET role = 'platform_admin' WHERE company_id IS NULL AND role = 'admin'"))
         conn.execute(text("UPDATE users SET company_id = 1 WHERE company_id IS NULL AND role = 'observer'"))
-
-def create_production_admin():
-    """Production ortamı için admin kullanıcısı oluşturur"""
-    # Production admin kullanıcısı
-    admin_user = User(
-        company_id=1,
-        username='admin',
-        email='admin@railway.com',
-        role='platform_admin',
-        is_active=True
-    )
-    admin_user.set_password('admin123')
-    db.session.add(admin_user)
-    
-    # Production gözlemci kullanıcısı
-    observer_user = User(
-        company_id=1,
-        username='gozlemci',
-        email='gozlemci@railway.com',
-        role='observer',
-        is_active=True
-    )
-    observer_user.set_password('gozlemci123')
-    db.session.add(observer_user)
-    
-    db.session.commit()
-    current_app.logger.info('Production admin kullanıcısı oluşturuldu!')
 
 def create_demo_data():
     """Demo ortamı için sahte veriler oluşturur"""
@@ -367,29 +334,21 @@ def create_demo_data():
     
     db.session.commit()
     
-    # Default admin kullanıcı
-    admin_user = User(
-        company_id=company.id,
-        username='admin',
-        email='admin@example.com',
-        role='platform_admin',
-        is_active=True
-    )
-    admin_user.set_password('admin123')
-    db.session.add(admin_user)
-    
-    # Demo gözlemci kullanıcı
-    observer_user = User(
-        company_id=company.id,
-        username='gozlemci',
-        email='gozlemci@example.com',
-        role='observer',
-        is_active=True
-    )
-    observer_user.set_password('gozlemci123')
-    db.session.add(observer_user)
-    
-    db.session.commit()
+    # Demo admin kullanıcı - şifre environment variable'dan alınır
+    admin_password = os.environ.get('DEMO_ADMIN_PASSWORD')
+    if admin_password:
+        admin_user = User(
+            company_id=company.id,
+            username='admin',
+            email='admin@example.com',
+            role='platform_admin',
+            is_active=True
+        )
+        admin_user.set_password(admin_password)
+        db.session.add(admin_user)
+        db.session.commit()
+    else:
+        current_app.logger.warning('DEMO_ADMIN_PASSWORD environment variable tanımlanmamış - demo admin oluşturulmadı')
 
 if __name__ == '__main__':
     app = create_app()
