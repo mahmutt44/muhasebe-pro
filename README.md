@@ -122,6 +122,38 @@ FLASK_SECRET_KEY=your-secret-key
 - **Veritabanı:** SQLite
 - **Font:** Inter (Google Fonts)
 
+## 🧪 Testing
+
+### Running Tests Locally
+
+```bash
+# Install dependencies (including test dependencies)
+pip install -r requirements.txt
+
+# Run all tests
+pytest
+
+# Run with verbose output
+pytest -v
+
+# Run specific test file
+pytest tests/test_auth.py
+
+# Run with coverage report
+pytest --cov=app --cov-report=html
+```
+
+### Test Structure
+
+- `tests/conftest.py` - Test fixtures and configuration
+- `tests/test_auth.py` - Authentication tests (login, user creation)
+- `tests/test_company.py` - Company and customer management tests
+- `tests/test_reports.py` - Report and API endpoint tests
+
+### CI/CD
+
+Tests run automatically on GitHub Actions for every push and pull request.
+
 ## 📁 Proje Yapısı
 
 ```
@@ -131,6 +163,11 @@ FLASK_SECRET_KEY=your-secret-key
 ├── backup.py           # Yedekleme scripti
 ├── requirements.txt    # Bağımlılıklar
 ├── Procfile           # Hosting için
+├── tests/             # Test dosyaları
+│   ├── conftest.py    # Test yapılandırması
+│   ├── test_auth.py   # Auth testleri
+│   ├── test_company.py # Şirket testleri
+│   └── test_reports.py # Rapor testleri
 ├── routes/
 │   ├── main.py        # Sayfa route'ları
 │   └── api.py         # API endpoint'leri
