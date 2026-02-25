@@ -156,7 +156,7 @@ class Transaction(db.Model):
         return {
             'id': self.id,
             'type': self.type,
-            'amount': float(self.amount) if self.amount else 0.0,
+            'amount': str(self.amount) if self.amount else '0.00',
             'description': self.description or '',
             'date': self.date.isoformat() if self.date else None,
             'created_at': self.created_at.isoformat() if self.created_at else None
@@ -196,7 +196,7 @@ class Customer(db.Model):
             'name': self.name,
             'phone': self.phone,
             'notes': self.notes,
-            'balance': float(self.balance),
+            'balance': str(self.balance) if self.balance else '0.00',
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
@@ -207,7 +207,7 @@ class Customer(db.Model):
             'name': self.name,
             'phone': self.phone or '',
             'notes': self.notes or '',
-            'balance': float(self.get_balance()) if self.get_balance() else 0.0,
+            'balance': str(self.get_balance()) if self.get_balance() else '0.00',
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
@@ -229,7 +229,7 @@ class CustomerTransaction(db.Model):
             'id': self.id,
             'customer_id': self.customer_id,
             'type': self.type,
-            'amount': float(self.amount) if self.amount else 0.0,
+            'amount': str(self.amount) if self.amount else '0.00',
             'description': self.description or '',
             'date': self.date.isoformat() if self.date else None,
             'created_at': self.created_at.isoformat() if self.created_at else None
@@ -282,7 +282,7 @@ class Supplier(db.Model):
             'tax_number': self.tax_number,
             'notes': self.notes,
             'is_active': self.is_active,
-            'balance': float(self.balance),
+            'balance': str(self.balance) if self.balance else '0.00',
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
@@ -298,7 +298,7 @@ class Supplier(db.Model):
             'tax_number': self.tax_number or '',
             'notes': self.notes or '',
             'is_active': self.is_active,
-            'balance': float(self.get_balance()) if self.get_balance() else 0.0,
+            'balance': str(self.get_balance()) if self.get_balance() else '0.00',
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
@@ -320,7 +320,7 @@ class SupplierTransaction(db.Model):
             'id': self.id,
             'supplier_id': self.supplier_id,
             'type': self.type,
-            'amount': float(self.amount) if self.amount else 0.0,
+            'amount': str(self.amount) if self.amount else '0.00',
             'description': self.description or '',
             'date': self.date.isoformat() if self.date else None,
             'created_at': self.created_at.isoformat() if self.created_at else None
@@ -349,19 +349,19 @@ class Product(db.Model):
     @property
     def stock_value(self):
         """Stok değeri (stok * alış fiyatı)"""
-        return float(self.stock_quantity or 0) * float(self.purchase_price or 0)
+        return Decimal(str(self.stock_quantity or 0)) * Decimal(str(self.purchase_price or 0))
     
     def to_dict(self):
         return {
             'id': self.id,
             'name': self.name,
             'unit': self.unit,
-            'unit_price': float(self.unit_price) if self.unit_price else 0.0,
-            'purchase_price': float(self.purchase_price) if self.purchase_price else 0.0,
-            'stock_quantity': float(self.stock_quantity) if self.stock_quantity else 0.0,
-            'stock_threshold': float(self.stock_threshold) if self.stock_threshold else 10.0,
+            'unit_price': str(self.unit_price) if self.unit_price else '0.00',
+            'purchase_price': str(self.purchase_price) if self.purchase_price else '0.00',
+            'stock_quantity': str(self.stock_quantity) if self.stock_quantity else '0.00',
+            'stock_threshold': str(self.stock_threshold) if self.stock_threshold else '10.00',
             'is_low_stock': self.is_low_stock,
-            'stock_value': self.stock_value,
+            'stock_value': str(self.stock_value),
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
@@ -372,12 +372,12 @@ class Product(db.Model):
             'id': self.id,
             'name': self.name,
             'unit': self.unit,
-            'unit_price': float(self.unit_price) if self.unit_price else 0.0,
-            'purchase_price': float(self.purchase_price) if self.purchase_price else 0.0,
-            'stock_quantity': float(self.stock_quantity) if self.stock_quantity else 0.0,
-            'stock_threshold': float(self.stock_threshold) if self.stock_threshold else 10.0,
+            'unit_price': str(self.unit_price) if self.unit_price else '0.00',
+            'purchase_price': str(self.purchase_price) if self.purchase_price else '0.00',
+            'stock_quantity': str(self.stock_quantity) if self.stock_quantity else '0.00',
+            'stock_threshold': str(self.stock_threshold) if self.stock_threshold else '10.00',
             'is_low_stock': self.is_low_stock,
-            'stock_value': self.stock_value,
+            'stock_value': str(self.stock_value),
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
@@ -407,10 +407,10 @@ class Receipt(db.Model):
             'customer_id': self.customer_id,
             'customer_name': self.customer.name if self.customer else None,
             'receipt_no': self.receipt_no,
-            'total_amount': float(self.total_amount),
-            'tax_rate': float(self.tax_rate) if self.tax_rate else 0,
-            'tax_amount': float(self.tax_amount) if self.tax_amount else 0,
-            'grand_total': float(self.grand_total) if self.grand_total else float(self.total_amount),
+            'total_amount': str(self.total_amount),
+            'tax_rate': str(self.tax_rate) if self.tax_rate else '0',
+            'tax_amount': str(self.tax_amount) if self.tax_amount else '0',
+            'grand_total': str(self.grand_total) if self.grand_total else str(self.total_amount),
             'notes': self.notes,
             'date': self.date.isoformat() if self.date else None,
             'created_at': self.created_at.isoformat() if self.created_at else None,
@@ -438,7 +438,7 @@ class ReceiptItem(db.Model):
             'product_id': self.product_id,
             'product_name': self.product.name if self.product else None,
             'product_unit': self.product.unit if self.product else None,
-            'quantity': float(self.quantity),
-            'unit_price': float(self.unit_price),
-            'total_price': float(self.total_price)
+            'quantity': str(self.quantity),
+            'unit_price': str(self.unit_price),
+            'total_price': str(self.total_price)
         }

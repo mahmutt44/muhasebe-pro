@@ -121,7 +121,7 @@ def update_transaction(transaction_id):
     
     try:
         transaction.type = data['type']
-        transaction.amount = float(data['amount'])
+        transaction.amount = Decimal(str(data['amount']))
         transaction.description = data['description']
         transaction.date = datetime.strptime(data['date'], '%Y-%m-%d').date()
         
@@ -205,7 +205,7 @@ def delete_customer(customer_id):
 def get_customer_balance(customer_id):
     """Müşteri bakiyesini getir"""
     customer = scoped_customers_query().filter_by(id=customer_id).first_or_404()
-    return jsonify({'balance': float(customer.get_balance())})
+    return jsonify({'balance': str(customer.get_balance())})
 
 # Müşteri İşlem API'leri
 @api_bp.route('/customers/<int:customer_id>/transactions', methods=['GET'])

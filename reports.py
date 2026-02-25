@@ -3,6 +3,7 @@ from flask_login import login_required, current_user
 from functools import wraps
 from sqlalchemy import func, extract, and_
 from datetime import datetime, date
+from decimal import Decimal
 import calendar
 from io import BytesIO
 
@@ -84,7 +85,7 @@ def profit_loss_report():
     ).scalar() or 0
     
     # Net kar
-    net_profit = float(income_total) - float(expense_total)
+    net_profit = Decimal(str(income_total)) - Decimal(str(expense_total))
     
     # Detaylı işlemler
     income_transactions = Transaction.query.filter(
