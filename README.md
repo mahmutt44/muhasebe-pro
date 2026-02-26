@@ -155,6 +155,15 @@ gunicorn --workers 1 --timeout 120 --bind 0.0.0.0:8080 "app:create_app()"
 
 ## 🧪 Testing
 
+### Test Ortamı (Migration-First)
+
+Test ortamı, geliştirme ve production ortamlarıyla aynı **migration-first** yaklaşımını kullanır:
+
+- Test veritabanı SQLite dosya tabanlıdır (`test.db`)
+- Migration'lar `flask db upgrade` ile uygulanır
+- `db.create_all()` kullanılmaz - migration sistemi zorunludur
+- Bu sayede testler gerçek migration yapısını doğrular
+
 ### Running Tests Locally
 
 ```bash
@@ -176,14 +185,14 @@ pytest --cov=app --cov-report=html
 
 ### Test Structure
 
-- `tests/conftest.py` - Test fixtures and configuration
+- `tests/conftest.py` - Test fixtures and configuration (migration-first setup)
 - `tests/test_auth.py` - Authentication tests (login, user creation)
 - `tests/test_company.py` - Company and customer management tests
 - `tests/test_reports.py` - Report and API endpoint tests
 
 ### CI/CD
 
-Tests run automatically on GitHub Actions for every push and pull request.
+Tests run automatically on GitHub Actions for every push and pull request. CI pipeline'da migration'lar otomatik olarak uygulanır ve testler migration yapısını doğrular.
 
 ## 📁 Proje Yapısı
 

@@ -13,6 +13,8 @@ class TestLogin:
         response = client.get('/auth/login')
         assert response.status_code == 200
         assert b'login' in response.data.lower() or b'giris' in response.data.lower()
+        # Must contain login form elements
+        assert b'<form' in response.data.lower()
     
     def test_successful_login(self, client, test_user):
         """Test successful login with valid credentials."""
@@ -22,8 +24,9 @@ class TestLogin:
         }, follow_redirects=True)
         
         assert response.status_code == 200
-        # Check if we're redirected to dashboard or index page
-        assert b'dashboard' in response.data.lower() or b'anasayfa' in response.data.lower()
+        # Check if we're redirected to dashboard or index page with proper content
+        response_text = response.data.lower()
+        assert b'dashboard' in response_text or b'anasayfa' in response_text or b'musteri' in response_text or b'customer' in response_text
     
     def test_failed_login_invalid_password(self, client, test_user):
         """Test login with invalid password."""
@@ -33,8 +36,9 @@ class TestLogin:
         }, follow_redirects=True)
         
         assert response.status_code == 200
-        # Should show error message
-        assert b'error' in response.data.lower() or b'hata' in response.data.lower() or b'password' in response.data.lower()
+        # Should show error message - check for error indicators in response
+        response_text = response.data.lower()
+        assert b'error' in response_text or b'hata' in response_text or b'gecersiz' in response_text
     
     def test_failed_login_invalid_username(self, client):
         """Test login with non-existent username."""
@@ -44,8 +48,9 @@ class TestLogin:
         }, follow_redirects=True)
         
         assert response.status_code == 200
-        # Should show error message
-        assert b'error' in response.data.lower() or b'hata' in response.data.lower() or b'username' in response.data.lower()
+        # Should show error message for invalid username
+        response_text = response.data.lower()
+        assert b'error' in response_text or b'hata' in response_text or b'bulunamadi' in response_text or b'not found' in response_text
     
     def test_login_redirects_when_already_logged_in(self, logged_in_client):
         """Test that login page redirects when user is already logged in."""

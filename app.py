@@ -3,7 +3,7 @@ from flask_login import LoginManager, current_user
 from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect
 from models import db, Transaction, Customer, CustomerTransaction, Product, Receipt, ReceiptItem, User, Company
-from config import config, get_database_url, is_production, is_demo, is_development
+from config import config, is_production, is_demo, is_testing, is_development, get_database_url
 from translations import get_all_translations, get_translation
 from logging_config import setup_logging, add_sensitive_filter
 from datetime import datetime, date, timedelta, timezone
@@ -171,9 +171,10 @@ def create_app(config_name=None):
             context['pending_requests_count'] = 0
         return context
     
-    # SaaS şema bootstrap (eski DB'ler için güvenli)
-    with app.app_context():
-        ensure_saas_schema()
+    # SaaS şema bootstrap (eski DB'ler için güvenli) - Test ortamında atla
+    if not is_testing():
+        with app.app_context():
+            ensure_saas_schema()
     
     # Demo verisi ekleme (sadece demo ortamında)
     if is_demo():
@@ -186,12 +187,22 @@ def create_app(config_name=None):
 
 def ensure_saas_schema():
     """Eski veritabanlarını company_id alanlarıyla uyumlu hale getirir."""
-    inspector = inspect(db.engine)
-
-    table_columns = {
-        table: {c['name'] for c in inspector.get_columns(table)}
-        for table in inspector.get_table_names()
-    }
+    try:
+        inspector = inspect(db.engine)
+        
+        # Tablolar var mı kontrol et - yoksa çık
+        existing_tables = inspector.get_table_names()
+        if 'companies' not in existing_tables:
+            app.logger.info("Tablolar henüz oluşturulmamış, ensure_saas_schema atlanıyor")
+            return
+        
+        table_columns = {
+            table: {c['name'] for c in inspector.get_columns(table)}
+            for table in existing_tables
+        }
+    except Exception as e:
+        app.logger.warning(f"ensure_saas_schema tablo kontrolü hatası: {e}")
+        return
 
     alter_statements = []
 

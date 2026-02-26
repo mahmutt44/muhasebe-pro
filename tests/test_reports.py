@@ -27,7 +27,7 @@ class TestReports:
         response = logged_in_client.get('/reports/customer-debts', follow_redirects=True)
         assert response.status_code == 200
         # Should contain customer data
-        assert b'Test Customer' in response.data or response.status_code == 200
+        assert b'Test Customer' in response.data
     
     def test_profit_loss_report(self, logged_in_client):
         """Test profit/loss report endpoint."""
@@ -46,30 +46,34 @@ class TestAPIEndpoints:
     def test_api_customers_requires_auth(self, client):
         """Test that API customers endpoint requires authentication."""
         response = client.get('/api/customers')
-        # API endpoints should return 401 or redirect
-        assert response.status_code in [401, 302, 200]
+        # Should return 401 (Unauthorized) or redirect to login (302)
+        assert response.status_code == 401 or response.status_code == 302
+        assert response.status_code != 200
     
     def test_api_customers_with_auth(self, logged_in_client, test_customer):
         """Test API customers endpoint with authentication."""
         response = logged_in_client.get('/api/customers')
         assert response.status_code == 200
         
-        # Parse JSON response
+        # Parse JSON response - must contain 'items' key
         data = json.loads(response.data)
-        assert 'items' in data or 'customers' in str(data).lower()
+        assert 'items' in data
     
     def test_api_products_with_auth(self, logged_in_client, test_product):
         """Test API products endpoint with authentication."""
         response = logged_in_client.get('/api/products')
         assert response.status_code == 200
-        
+        # Parse JSON response - must contain 'items' key
         data = json.loads(response.data)
-        assert 'items' in data or 'products' in str(data).lower()
+        assert 'items' in data
     
     def test_api_suppliers_with_auth(self, logged_in_client):
         """Test API suppliers endpoint with authentication."""
         response = logged_in_client.get('/api/suppliers')
         assert response.status_code == 200
+        # Parse JSON response - must contain 'suppliers' key
+        data = json.loads(response.data)
+        assert 'suppliers' in data
     
     def test_api_transactions_with_auth(self, logged_in_client):
         """Test API transactions endpoint with authentication."""

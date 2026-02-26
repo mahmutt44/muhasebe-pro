@@ -10,6 +10,8 @@ import sys
 import pytest
 from datetime import datetime, timedelta
 
+from flask_migrate import Migrate
+
 # Add project root to path
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, project_root)
@@ -20,27 +22,50 @@ from models import User, Company, Customer, Product, Receipt, ReceiptItem
 
 @pytest.fixture(scope='session')
 def app():
-    """Create application for testing with SQLite database."""
+    """Create application for testing with SQLite database using migrations."""
     # Set test environment variables
-    os.environ['ENV'] = 'development'
+    os.environ['ENV'] = 'testing'
     os.environ['FLASK_SECRET_KEY'] = 'test-secret-key'
     
     # Create app with test configuration
     app = create_app()
     
-    # Configure test database
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    # Configure test database (file-based for migration compatibility)
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['TESTING'] = True
     app.config['WTF_CSRF_ENABLED'] = False  # Disable CSRF for testing
     
+    # Initialize migration
+    migrate = Migrate(app, db)
+    
     with app.app_context():
-        # Create all tables
-        db.create_all()
+        # Remove old test database if exists
+        import os as os_module
+        if os_module.path.exists('test.db'):
+            os_module.remove('test.db')
+        
+        # Apply migrations (migration-first approach)
+        from flask import current_app
+        from alembic.config import Config
+        from alembic import command
+        
+        alembic_cfg = Config()
+        alembic_cfg.set_main_option('script_location', 'migrations')
+        alembic_cfg.set_main_option('sqlalchemy.url', app.config['SQLALCHEMY_DATABASE_URI'])
+        
+        # Upgrade to latest migration
+        command.upgrade(alembic_cfg, 'head')
+        
         yield app
+        
         # Clean up after tests
         db.session.remove()
         db.drop_all()
+        
+        # Remove test database
+        if os_module.path.exists('test.db'):
+            os_module.remove('test.db')
 
 
 @pytest.fixture(scope='function')
@@ -118,8 +143,7 @@ def test_customer(app, test_db, test_company):
         customer = Customer(
             company_id=test_company.id,
             name='Test Customer',
-            phone='05559876543',
-            email='customer@test.com'
+            phone='05559876543'
         )
         test_db.session.add(customer)
         test_db.session.commit()

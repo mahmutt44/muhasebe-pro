@@ -58,10 +58,21 @@ class DemoConfig(Config):
         app.logger.setLevel(logging.INFO)
         app.logger.info('Demo ortamı başlatıldı')
 
+class TestingConfig(Config):
+    TESTING = True
+    DEBUG = True
+    SECRET_KEY = 'test-secret-key'
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+    
+    @classmethod
+    def init_app(cls, app):
+        Config.init_app(app)
+
 config = {
     'development': DevelopmentConfig,
     'production': ProductionConfig,
     'demo': DemoConfig,
+    'testing': TestingConfig,
     'default': DevelopmentConfig
 }
 
@@ -87,6 +98,10 @@ def is_production():
 def is_demo():
     """Demo ortamında mı çalıştığını kontrol eder"""
     return os.environ.get('ENV') == 'demo'
+
+def is_testing():
+    """Test ortamında mı çalıştığını kontrol eder"""
+    return os.environ.get('ENV') == 'testing'
 
 def is_development():
     """Development ortamında mı çalıştığını kontrol eder"""

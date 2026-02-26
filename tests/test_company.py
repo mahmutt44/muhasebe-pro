@@ -81,8 +81,7 @@ class TestCustomerManagement:
                 company_id=test_company.id,
                 name='Test Customer',
                 phone='05559876543',
-                email='customer@example.com',
-                address='Test Address'
+                notes='Test Address'
             )
             test_db.session.add(customer)
             test_db.session.commit()
