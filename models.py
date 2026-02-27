@@ -17,6 +17,7 @@ def auto_filter_by_company(query):
     """
     Otomatik tenant izolasyonu - company_id filtresi ekler.
     Platform admin kullanıcılar için filtre uygulanmaz.
+    limit() veya offset() varsa filtre eklenmez (manual scoped queries kullanılır).
     """
     # Kullanıcı giriş yapmamış veya platform admin ise filtreleme
     if not hasattr(g, 'is_platform_admin'):
@@ -28,6 +29,21 @@ def auto_filter_by_company(query):
     # company_id yoksa filtreleme yapma
     if not hasattr(g, 'company_id') or g.company_id is None:
         return query
+    
+    # Query'de limit veya offset varsa filtreleme yapma (hata önlemi)
+    try:
+        # SQLAlchemy 1.4+ iç limit/offset kontrolü
+        if hasattr(query, '_limit_clause') and query._limit_clause is not None:
+            return query
+        if hasattr(query, '_offset_clause') and query._offset_clause is not None:
+            return query
+        # Eski SQLAlchemy versiyonları için
+        if hasattr(query, '_limit') and query._limit is not None:
+            return query
+        if hasattr(query, '_offset') and query._offset is not None:
+            return query
+    except (AttributeError, TypeError):
+        pass
     
     # Tenant modelleri için company_id filtresi ekle
     if query.column_descriptions:

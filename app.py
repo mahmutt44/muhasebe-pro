@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session, current_app
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session, current_app, g
 from flask_login import LoginManager, current_user
 from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect
