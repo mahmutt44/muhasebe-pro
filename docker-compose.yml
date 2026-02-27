@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Veritabanı
+  db:
+    image: postgres:15-alpine
+    container_name: muhasebe_db
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-muhasebe}
+      POSTGRES_USER: ${POSTGRES_USER:-muhasebe_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secure_password_change_me}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - muhasebe_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-muhasebe_user} -d ${POSTGRES_DB:-muhasebe}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Flask Uygulaması (Gunicorn)
+  app:
+    build: .
+    container_name: muhasebe_app
+    restart: always
+    environment:
+      FLASK_ENV: production
+      ENV: production
+      SECRET_KEY: ${SECRET_KEY}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-muhasebe_user}:${POSTGRES_PASSWORD:-secure_password_change_me}@db:5432/${POSTGRES_DB:-muhasebe}
+      DEMO_ADMIN_PASSWORD: ${DEMO_ADMIN_PASSWORD:-admin123}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - muhasebe_network
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/auth/login"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: muhasebe_nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"  # SSL için hazır
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro  # SSL sertifikaları
+    depends_on:
+      - app
+    networks:
+      - muhasebe_network
+
+# Kalıcı volumes
+volumes:
+  postgres_data:
+    driver: local
+
+# Network
+networks:
+  muhasebe_network:
+    driver: bridge
