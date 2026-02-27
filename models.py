@@ -509,3 +509,57 @@ class ReceiptItem(db.Model):
             'unit_price': str(self.unit_price),
             'total_price': str(self.total_price)
         }
+
+
+class LoginAttempt(db.Model):
+    """Brute force koruması için giriş denemeleri"""
+    __tablename__ = 'login_attempts'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    ip_address = db.Column(db.String(45), nullable=False)  # IPv6 desteği için 45 karakter
+    username = db.Column(db.String(100))  # Opsiyonel - kullanıcı bazlı takip için
+    attempt_count = db.Column(db.Integer, default=1)
+    last_attempt_at = db.Column(db.DateTime, default=get_turkey_time)
+    locked_until = db.Column(db.DateTime)  # Kilitleme süresi
+    created_at = db.Column(db.DateTime, default=get_turkey_time)
+    
+    def is_locked(self):
+        """Hesabın kilitli olup olmadığını kontrol et"""
+        if self.locked_until is None:
+            return False
+        return get_turkey_time() < self.locked_until
+    
+    def get_remaining_lockout_seconds(self):
+        """Kalan kilitleme süresini saniye olarak döndür"""
+        if not self.is_locked():
+            return 0
+        remaining = (self.locked_until - get_turkey_time()).total_seconds()
+        return max(0, int(remaining))
+    
+    def increment_attempt(self, max_attempts=5, lockout_minutes=15):
+        """Başarısız giriş denemesini artır ve gerekirse kilitle"""
+        self.attempt_count += 1
+        self.last_attempt_at = get_turkey_time()
+        
+        # Maksimum deneme sayısı aşıldıysa kilitle
+        if self.attempt_count >= max_attempts:
+            self.locked_until = get_turkey_time() + timedelta(minutes=lockout_minutes)
+        
+        return self.is_locked()
+    
+    def reset_attempts(self):
+        """Başarılı giriş sonrası denemeleri sıfırla"""
+        self.attempt_count = 0
+        self.locked_until = None
+        self.last_attempt_at = get_turkey_time()
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'ip_address': self.ip_address,
+            'username': self.username or '',
+            'attempt_count': self.attempt_count,
+            'is_locked': self.is_locked(),
+            'locked_until': self.locked_until.isoformat() if self.locked_until else None,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }

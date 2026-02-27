@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session
 from flask_login import login_user, logout_user, login_required, current_user
-from models import db, User, Company, CompanyRequest, Customer, Transaction, Product, Receipt
+from models import db, User, Company, CompanyRequest, Customer, Transaction, Product, Receipt, LoginAttempt
 from datetime import datetime, timezone, timedelta
 from functools import wraps
 from translations import get_translation
@@ -450,18 +450,47 @@ def delete_request(request_id):
 
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
-    """Kullanıcı girişi"""
+    """Kullanıcı girişi - Brute force koruması ile"""
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
+    
+    # Brute force koruması - IP bazlı kontrol
+    ip_address = request.remote_addr or 'unknown'
+    MAX_ATTEMPTS = 5
+    LOCKOUT_MINUTES = 15
+    
+    # IP bazlı giriş denemesini kontrol et
+    ip_attempt = LoginAttempt.query.filter_by(ip_address=ip_address, username=None).first()
+    if ip_attempt and ip_attempt.is_locked():
+        remaining = ip_attempt.get_remaining_lockout_seconds()
+        minutes = remaining // 60
+        flash(f'Çok fazla başarısız giriş denemesi. Lütfen {minutes} dakika sonra tekrar deneyin.', 'danger')
+        return render_template('auth/login.html')
     
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
         password = request.form.get('password', '')
         remember = request.form.get('remember', False)
         
+        # Kullanıcı bazlı kilitleme kontrolü
+        if username:
+            user_attempt = LoginAttempt.query.filter_by(ip_address=ip_address, username=username).first()
+            if user_attempt and user_attempt.is_locked():
+                remaining = user_attempt.get_remaining_lockout_seconds()
+                minutes = remaining // 60
+                flash(f'Bu hesap kilitlendi. Lütfen {minutes} dakika sonra tekrar deneyin.', 'danger')
+                return render_template('auth/login.html')
+        
         user = User.query.filter_by(username=username).first()
         
         if user and user.check_password(password):
+            # Başarılı giriş - deneme sayılarını sıfırla
+            if ip_attempt:
+                ip_attempt.reset_attempts()
+            if user_attempt:
+                user_attempt.reset_attempts()
+            db.session.commit()
+            
             if not user.is_active:
                 flash('Hesabınız devre dışı bırakılmış.', 'danger')
                 return render_template('auth/login.html')
@@ -485,7 +514,28 @@ def login():
             next_page = request.args.get('next')
             return redirect(get_safe_redirect(next_page, 'main.index'))
         else:
-            flash('Kullanıcı adı veya şifre hatalı.', 'danger')
+            # Başarısız giriş - deneme sayısını artır
+            if not ip_attempt:
+                ip_attempt = LoginAttempt(ip_address=ip_address)
+                db.session.add(ip_attempt)
+            
+            ip_attempt.increment_attempt(MAX_ATTEMPTS, LOCKOUT_MINUTES)
+            
+            # Kullanıcı bazlı takip de yap
+            if username:
+                user_attempt = LoginAttempt.query.filter_by(ip_address=ip_address, username=username).first()
+                if not user_attempt:
+                    user_attempt = LoginAttempt(ip_address=ip_address, username=username)
+                    db.session.add(user_attempt)
+                user_attempt.increment_attempt(MAX_ATTEMPTS, LOCKOUT_MINUTES)
+            
+            db.session.commit()
+            
+            remaining_attempts = MAX_ATTEMPTS - ip_attempt.attempt_count
+            if remaining_attempts > 0:
+                flash(f'Kullanıcı adı veya şifre hatalı. Kalan deneme: {remaining_attempts}', 'danger')
+            else:
+                flash(f'Çok fazla başarısız giriş denemesi. Hesap {LOCKOUT_MINUTES} dakika kilitlendi.', 'danger')
     
     return render_template('auth/login.html')
 
