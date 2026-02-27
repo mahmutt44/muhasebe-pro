@@ -23,15 +23,16 @@ from models import User, Company, Customer, Product, Receipt, ReceiptItem
 @pytest.fixture(scope='session')
 def app():
     """Create application for testing with SQLite database using migrations."""
-    # Set test environment variables
+    # Set test environment variables BEFORE create_app() call
     os.environ['ENV'] = 'testing'
     os.environ['FLASK_SECRET_KEY'] = 'test-secret-key'
+    # Set test database URI before create_app() so it's used during db.init_app()
+    os.environ['TEST_DATABASE_URL'] = 'sqlite:///test.db'
     
     # Create app with test configuration
     app = create_app()
     
-    # Configure test database (file-based for migration compatibility)
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
+    # Additional test configs (these don't affect db connection)
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['TESTING'] = True
     app.config['WTF_CSRF_ENABLED'] = False  # Disable CSRF for testing

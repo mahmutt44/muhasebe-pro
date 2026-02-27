@@ -50,8 +50,10 @@ def create_app(config_name=None):
     app.config.from_object(config[config_name])
     config[config_name].init_app(app)
     
-    # Veritabanı URL'i
-    app.config['SQLALCHEMY_DATABASE_URI'] = get_database_url()
+    # Veritabanı URL'i - testing modunda config'den gelen değeri koru
+    if not is_testing():
+        app.config['SQLALCHEMY_DATABASE_URI'] = get_database_url()
+    
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
         'pool_pre_ping': True,
         'pool_recycle': 300,
@@ -160,6 +162,19 @@ def create_app(config_name=None):
     
     # API endpointlerini CSRF korumasından muaf tut (blueprint kaydettikten sonra)
     csrf.exempt(api_bp)
+
+    # Tenant izolasyonu için before_request hook
+    @app.before_request
+    def set_tenant_context():
+        """Her request'te tenant context'i ayarla (company_id ve is_platform_admin)"""
+        from flask_login import current_user
+        
+        if current_user.is_authenticated:
+            g.company_id = current_user.company_id
+            g.is_platform_admin = current_user.is_platform_admin
+        else:
+            g.company_id = None
+            g.is_platform_admin = False
 
     # Context processor to inject global variables into all templates
     @app.context_processor

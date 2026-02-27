@@ -62,7 +62,8 @@ class TestingConfig(Config):
     TESTING = True
     DEBUG = True
     SECRET_KEY = 'test-secret-key'
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+    # Allow override via environment variable for migration compatibility
+    SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL', 'sqlite:///:memory:')
     
     @classmethod
     def init_app(cls, app):

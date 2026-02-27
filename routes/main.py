@@ -222,7 +222,7 @@ def products():
     products = scoped_products_query().order_by(Product.name).all()
     return render_template('products.html', products=products)
 
-@main_bp.route('/receipt')
+@main_bp.route('/receipts')
 @login_required
 @password_change_required
 @admin_required
@@ -248,7 +248,15 @@ def receipt():
                          selected_customer_id=selected_customer_id,
                          today_date=date.today())
 
-@main_bp.route('/receipt/<int:receipt_id>')
+@main_bp.route('/receipts/create')
+@login_required
+@password_change_required
+@admin_required
+def receipt_create():
+    """Fiş kesme sayfası - /receipts/create endpoint"""
+    return receipt()
+
+@main_bp.route('/receipts/<int:receipt_id>')
 @login_required
 @password_change_required
 def receipt_detail(receipt_id):

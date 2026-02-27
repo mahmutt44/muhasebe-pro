@@ -3,8 +3,43 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
+from sqlalchemy import event
+from sqlalchemy.orm import Query
+from flask import g
 
 db = SQLAlchemy()
+
+# Tenant izolasyonu için modeller listesi
+TENANT_MODELS = {'customers', 'products', 'suppliers', 'receipts', 'transactions'}
+
+@event.listens_for(Query, "before_compile", retval=True)
+def auto_filter_by_company(query):
+    """
+    Otomatik tenant izolasyonu - company_id filtresi ekler.
+    Platform admin kullanıcılar için filtre uygulanmaz.
+    """
+    # Kullanıcı giriş yapmamış veya platform admin ise filtreleme
+    if not hasattr(g, 'is_platform_admin'):
+        return query
+    
+    if g.is_platform_admin:
+        return query
+    
+    # company_id yoksa filtreleme yapma
+    if not hasattr(g, 'company_id') or g.company_id is None:
+        return query
+    
+    # Tenant modelleri için company_id filtresi ekle
+    if query.column_descriptions:
+        entity = query.column_descriptions[0]['entity']
+        if entity is not None:
+            table_name = getattr(entity, '__tablename__', None)
+            if table_name in TENANT_MODELS:
+                # Company column'u var mı kontrol et
+                if hasattr(entity, 'company_id'):
+                    query = query.filter(entity.company_id == g.company_id)
+    
+    return query
 
 # Türkiye saat dilimi (UTC+3)
 TURKEY_TZ = timezone(timedelta(hours=3))
