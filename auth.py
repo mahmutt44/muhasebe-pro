@@ -540,10 +540,10 @@ def login():
     return render_template('auth/login.html')
 
 
-@auth.route('/logout')
+@auth.route('/logout', methods=['POST'])
 @login_required
 def logout():
-    """Kullanıcı çıkışı"""
+    """Kullanıcı çıkışı - CSRF korumalı POST endpoint"""
     logout_user()
     session.pop('company_id', None)
     session.pop('role', None)
