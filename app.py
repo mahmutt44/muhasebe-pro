@@ -261,6 +261,20 @@ def ensure_saas_schema():
     if 'company_requests' in table_columns and 'temporary_password' not in table_columns['company_requests']:
         alter_statements.append("ALTER TABLE company_requests ADD COLUMN temporary_password VARCHAR(100)")
 
+    if 'login_attempts' not in existing_tables:
+        # LoginAttempt tablosu henüz yok - oluştur
+        alter_statements.append("""
+            CREATE TABLE login_attempts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                ip_address VARCHAR(45) NOT NULL,
+                username VARCHAR(100),
+                attempt_count INTEGER DEFAULT 1,
+                last_attempt_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                locked_until TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
     with db.engine.begin() as conn:
         for stmt in alter_statements:
             conn.execute(text(stmt))
