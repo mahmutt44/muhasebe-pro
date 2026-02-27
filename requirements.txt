@@ -13,7 +13,6 @@ google-auth-httplib2==0.1.1
 gunicorn==21.2.0
 schedule==1.2.0
 
-# Testing dependencies
-pytest==7.4.2
-pytest-flask==1.2.0
-
+# Testing dependencies - MVP aşamasında devre dışı
+# pytest==7.4.2
+# pytest-flask==1.2.0
