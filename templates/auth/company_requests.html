@@ -255,7 +255,23 @@
                     {% if request.approved_username %}
                     <div class="alert alert-success" style="background: rgba(25,135,84,0.1); border-color: rgba(25,135,84,0.3);">
                         <label class="text-secondary small">{{ t.login_credentials if t.login_credentials else 'Giriş Bilgileri' }}</label>
-                        <p class="mb-0"><strong class="text-light">{{ request.approved_username }}</strong> / <code class="text-warning">{{ request.temporary_password }}</code></p>
+                        <div class="mb-2">
+                            <strong class="text-light">Kullanıcı:</strong> 
+                            <span class="text-warning">{{ request.approved_username }}</span>
+                        </div>
+                        {% if request.temporary_password %}
+                        <div>
+                            <strong class="text-light">Şifre:</strong>
+                            <span class="badge bg-warning text-dark fs-6" style="font-family: monospace; letter-spacing: 2px; user-select: all;">
+                                {%- for char in request.temporary_password -%}{{ char }}{%- endfor -%}
+                            </span>
+                            <button type="button" class="btn btn-sm btn-outline-light ms-2" onclick="navigator.clipboard.writeText('{{ request.temporary_password }}'); this.textContent='Kopyalandı!'; setTimeout(() => this.textContent='Kopyala', 2000);">Kopyala</button>
+                        </div>
+                        {% else %}
+                        <div class="text-warning">
+                            <small>Şifre görüntülenemiyor (eski talep)</small>
+                        </div>
+                        {% endif %}
                     </div>
                     {% endif %}
                 </div>

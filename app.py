@@ -59,6 +59,10 @@ def create_app(config_name=None):
         'max_overflow': 0
     }
     
+    # CSRF token timeout - 1 saat (3600 saniye)
+    app.config['WTF_CSRF_TIME_LIMIT'] = 3600
+    app.config['WTF_CSRF_SSL_STRICT'] = False
+    
     # Veritabanı başlatma
     db.init_app(app)
     migrate.init_app(app, db)
@@ -179,8 +183,16 @@ def create_app(config_name=None):
     # Demo verisi ekleme (sadece demo ortamında)
     if is_demo():
         with app.app_context():
-            if Customer.query.count() == 0:
-                create_demo_data()
+            try:
+                inspector = inspect(db.engine)
+                existing_tables = inspector.get_table_names()
+                if 'customers' in existing_tables:
+                    if Customer.query.count() == 0:
+                        create_demo_data()
+                else:
+                    current_app.logger.info("Tablolar henüz oluşturulmamış, demo verisi atlanıyor")
+            except Exception as e:
+                current_app.logger.warning(f"Demo verisi kontrolü hatası: {e}")
     
     return app
 
@@ -193,7 +205,7 @@ def ensure_saas_schema():
         # Tablolar var mı kontrol et - yoksa çık
         existing_tables = inspector.get_table_names()
         if 'companies' not in existing_tables:
-            app.logger.info("Tablolar henüz oluşturulmamış, ensure_saas_schema atlanıyor")
+            current_app.logger.info("Tablolar henüz oluşturulmamış, ensure_saas_schema atlanıyor")
             return
         
         table_columns = {
@@ -201,7 +213,7 @@ def ensure_saas_schema():
             for table in existing_tables
         }
     except Exception as e:
-        app.logger.warning(f"ensure_saas_schema tablo kontrolü hatası: {e}")
+        current_app.logger.warning(f"ensure_saas_schema tablo kontrolü hatası: {e}")
         return
 
     alter_statements = []
@@ -374,5 +386,5 @@ def create_demo_data():
 if __name__ == '__main__':
     app = create_app()
     # Debug modu sadece development ortamında
-    debug_mode = True  # Geçici olarak debug modu açık - hatayı görmek için
+    debug_mode = os.environ.get('FLASK_DEBUG', '0') == '1'
     app.run(host='0.0.0.0', port=5000, debug=debug_mode)

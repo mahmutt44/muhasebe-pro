@@ -69,7 +69,7 @@ class CompanyRequest(db.Model):
     status = db.Column(db.String(20), default='pending')  # pending, approved, rejected
     rejection_reason = db.Column(db.Text)
     approved_username = db.Column(db.String(100))
-    # NOT: temporary_password artık saklanmıyor - güvenlik riski
+    temporary_password = db.Column(db.String(100))  # Geçici şifre - onay anında gösterilir
     created_at = db.Column(db.DateTime, default=get_turkey_time)
     updated_at = db.Column(db.DateTime, default=get_turkey_time, onupdate=get_turkey_time)
     
@@ -86,6 +86,7 @@ class CompanyRequest(db.Model):
             'status': self.status,
             'rejection_reason': self.rejection_reason or '',
             'approved_username': self.approved_username or '',
+            'temporary_password': self.temporary_password or '',
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }

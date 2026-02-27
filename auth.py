@@ -133,6 +133,22 @@ def company_read_only(f):
     return decorated_function
 
 
+def password_change_required(f):
+    """Şifre değiştirme zorunluluğu kontrolü - force_password_change=True ise sadece change_password'e izin ver"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated:
+            return redirect(url_for('auth.login'))
+        
+        # Şifre değiştirme zorunluluğu varsa ve şu an change_password sayfasında değilse
+        if current_user.force_password_change and request.endpoint != 'auth.change_password':
+            flash('Lütfen önce şifrenizi değiştirin.', 'warning')
+            return redirect(url_for('auth.change_password'))
+        
+        return f(*args, **kwargs)
+    return decorated_function
+
+
 @auth.route('/request-account', methods=['GET', 'POST'])
 def request_account():
     """İşletme hesabı talep formu"""
@@ -371,7 +387,7 @@ def approve_request(request_id):
     # Talebi güncelle
     company_request.status = 'approved'
     company_request.approved_username = username
-    # NOT: temporary_password artık saklanmıyor - güvenlik riski
+    company_request.temporary_password = temp_password  # Şifreyi sakla ki kullanıcı görebilsin
     
     try:
         db.session.commit()
@@ -487,6 +503,7 @@ def logout():
 
 @auth.route('/admin/users')
 @login_required
+@password_change_required
 @company_read_only
 def admin_users():
     """Şirket kullanıcı yönetimi paneli - admin ve observer görüntüleyebilir"""
@@ -496,6 +513,7 @@ def admin_users():
 
 @auth.route('/admin/users/add', methods=['POST'])
 @login_required
+@password_change_required
 @company_required
 def admin_add_user():
     """Yeni kullanıcı ekle - Sadece admin"""
@@ -555,6 +573,7 @@ def admin_add_user():
 
 @auth.route('/admin/users/<int:user_id>/toggle', methods=['POST'])
 @login_required
+@password_change_required
 @company_required
 def admin_toggle_user(user_id):
     """Kullanıcı durumunu değiştir (aktif/pasif) - Sadece admin"""
@@ -580,6 +599,7 @@ def admin_toggle_user(user_id):
 
 @auth.route('/admin/users/<int:user_id>/reset-password', methods=['POST'])
 @login_required
+@password_change_required
 @company_required
 def admin_reset_password(user_id):
     """Kullanıcı şifresini sıfırla - Sadece admin"""
@@ -604,6 +624,7 @@ def admin_reset_password(user_id):
 
 @auth.route('/admin/users/<int:user_id>/delete', methods=['POST'])
 @login_required
+@password_change_required
 @company_required
 def admin_delete_user(user_id):
     """Kullanıcı sil - Sadece admin"""
@@ -628,6 +649,7 @@ def admin_delete_user(user_id):
 
 @auth.route('/admin/users/<int:user_id>/change-role', methods=['POST'])
 @login_required
+@password_change_required
 @company_required
 def admin_change_role(user_id):
     """Kullanıcı rolünü değiştir - Sadece admin"""
@@ -654,3 +676,44 @@ def admin_change_role(user_id):
     
     flash(f'Kullanıcı {user.username} rolü {new_role} olarak değiştirildi.', 'success')
     return redirect(url_for('auth.admin_users'))
+
+
+@auth.route('/change-password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    """Kullanıcı kendi şifresini değiştirir (ilk girişte zorunlu)"""
+    if request.method == 'POST':
+        current_password = request.form.get('current_password', '')
+        new_password = request.form.get('new_password', '')
+        confirm_password = request.form.get('confirm_password', '')
+        
+        # Validasyon
+        if not current_password:
+            flash('Mevcut şifrenizi girin.', 'danger')
+            return render_template('auth/change_password.html')
+        
+        if not current_user.check_password(current_password):
+            flash('Mevcut şifreniz hatalı.', 'danger')
+            return render_template('auth/change_password.html')
+        
+        if len(new_password) < 6:
+            flash('Yeni şifre en az 6 karakter olmalı.', 'danger')
+            return render_template('auth/change_password.html')
+        
+        if new_password != confirm_password:
+            flash('Yeni şifreler eşleşmiyor.', 'danger')
+            return render_template('auth/change_password.html')
+        
+        # Şifreyi güncelle
+        current_user.set_password(new_password)
+        current_user.force_password_change = False  # İlk giriş kontrolünü kapat
+        db.session.commit()
+        
+        flash('Şifreniz başarıyla değiştirildi!', 'success')
+        
+        # Platform admin kendi paneline, diğerleri ana sayfaya
+        if current_user.is_platform_admin:
+            return redirect(url_for('auth.platform_admin_dashboard'))
+        return redirect(url_for('main.index'))
+    
+    return render_template('auth/change_password.html')

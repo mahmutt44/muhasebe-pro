@@ -6,6 +6,7 @@ from decimal import Decimal
 from config import is_production, is_demo
 from functools import wraps
 from translations import get_translation
+from auth import password_change_required
 
 main_bp = Blueprint('main', __name__)
 
@@ -106,6 +107,7 @@ def observer_read_only():
 
 @main_bp.route('/')
 @login_required
+@password_change_required
 def index():
     """Ana sayfa - Kasa durumu"""
     company_id = get_current_company_id()
@@ -144,6 +146,7 @@ def index():
 
 @main_bp.route('/transactions')
 @login_required
+@password_change_required
 def transactions():
     """Gelir/Gider işlemleri sayfası"""
     company_id = get_current_company_id()
@@ -168,6 +171,7 @@ def transactions():
 
 @main_bp.route('/customers')
 @login_required
+@password_change_required
 def customers():
     """Müşteri defteri sayfası"""
     customers = scoped_customers_query().order_by(Customer.name).all()
@@ -179,6 +183,7 @@ def customers():
 
 @main_bp.route('/customer/<int:customer_id>')
 @login_required
+@password_change_required
 def customer_detail(customer_id):
     """Müşteri detay sayfası"""
     customer = scoped_customers_query().filter_by(id=customer_id).first_or_404()
@@ -189,6 +194,7 @@ def customer_detail(customer_id):
 
 @main_bp.route('/suppliers')
 @login_required
+@password_change_required
 def suppliers():
     """Tedarikçi defteri sayfası"""
     suppliers = scoped_suppliers_query().order_by(Supplier.name).all()
@@ -200,6 +206,7 @@ def suppliers():
 
 @main_bp.route('/supplier/<int:supplier_id>')
 @login_required
+@password_change_required
 def supplier_detail(supplier_id):
     """Tedarikçi detay sayfası"""
     supplier = scoped_suppliers_query().filter_by(id=supplier_id).first_or_404()
@@ -209,6 +216,7 @@ def supplier_detail(supplier_id):
 
 @main_bp.route('/products')
 @login_required
+@password_change_required
 def products():
     """Ürün yönetimi sayfası"""
     products = scoped_products_query().order_by(Product.name).all()
@@ -216,6 +224,7 @@ def products():
 
 @main_bp.route('/receipt')
 @login_required
+@password_change_required
 @admin_required
 def receipt():
     """Fiş kesme sayfası - sadece admin"""
@@ -241,6 +250,7 @@ def receipt():
 
 @main_bp.route('/receipt/<int:receipt_id>')
 @login_required
+@password_change_required
 def receipt_detail(receipt_id):
     """Fiş detay sayfası"""
     receipt = scoped_receipts_query().filter_by(id=receipt_id).first_or_404()
