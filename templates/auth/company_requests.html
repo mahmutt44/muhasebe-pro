@@ -259,13 +259,13 @@
                             <strong class="text-light">Kullanıcı:</strong> 
                             <span class="text-warning">{{ request.approved_username }}</span>
                         </div>
-                        {% if request.temporary_password %}
+                        {% if request.temporary_password_plain %}
                         <div>
                             <strong class="text-light">Şifre:</strong>
                             <span class="badge bg-warning text-dark fs-6" style="font-family: monospace; letter-spacing: 2px; user-select: all;">
-                                {%- for char in request.temporary_password -%}{{ char }}{%- endfor -%}
+                                {%- for char in request.temporary_password_plain -%}{{ char }}{%- endfor -%}
                             </span>
-                            <button type="button" class="btn btn-sm btn-outline-light ms-2" onclick="navigator.clipboard.writeText('{{ request.temporary_password }}'); this.textContent='Kopyalandı!'; setTimeout(() => this.textContent='Kopyala', 2000);">Kopyala</button>
+                            <button type="button" class="btn btn-sm btn-outline-light ms-2" onclick="navigator.clipboard.writeText('{{ request.temporary_password_plain }}'); this.textContent='Kopyalandı!'; setTimeout(() => this.textContent='Kopyala', 2000);">Kopyala</button>
                         </div>
                         {% else %}
                         <div class="text-warning">

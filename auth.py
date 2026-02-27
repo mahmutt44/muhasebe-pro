@@ -387,7 +387,7 @@ def approve_request(request_id):
     # Talebi güncelle
     company_request.status = 'approved'
     company_request.approved_username = username
-    company_request.temporary_password = temp_password  # Şifreyi sakla ki kullanıcı görebilsin
+    company_request.set_temporary_password(temp_password)  # Şifreyi hash'le ve sakla
     
     try:
         db.session.commit()

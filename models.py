@@ -120,10 +120,26 @@ class CompanyRequest(db.Model):
     status = db.Column(db.String(20), default='pending')  # pending, approved, rejected
     rejection_reason = db.Column(db.Text)
     approved_username = db.Column(db.String(100))
-    temporary_password = db.Column(db.String(100))  # Geçici şifre - onay anında gösterilir
+    temporary_password_hash = db.Column(db.String(256))  # Geçici şifre hash'i
+    temporary_password_plain = db.Column(db.String(100))  # Tek seferlik gösterim için (onay sonrası silinir)
     created_at = db.Column(db.DateTime, default=get_turkey_time)
     updated_at = db.Column(db.DateTime, default=get_turkey_time, onupdate=get_turkey_time)
     
+    def set_temporary_password(self, password):
+        """Geçici şifreyi hash'le ve plaintext olarak sakla (tek seferlik gösterim için)"""
+        self.temporary_password_hash = generate_password_hash(password)
+        self.temporary_password_plain = password
+    
+    def verify_temporary_password(self, password):
+        """Geçici şifre doğrulama"""
+        if not self.temporary_password_hash:
+            return False
+        return check_password_hash(self.temporary_password_hash, password)
+    
+    def clear_temporary_password_plain(self):
+        """Plaintext şifreyi temizle (kullanıcıya gösterildikten sonra)"""
+        self.temporary_password_plain = None
+
     def to_dict(self):
         return {
             'id': self.id,
@@ -137,7 +153,6 @@ class CompanyRequest(db.Model):
             'status': self.status,
             'rejection_reason': self.rejection_reason or '',
             'approved_username': self.approved_username or '',
-            'temporary_password': self.temporary_password or '',
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
