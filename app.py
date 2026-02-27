@@ -54,12 +54,19 @@ def create_app(config_name=None):
     if not is_testing():
         app.config['SQLALCHEMY_DATABASE_URI'] = get_database_url()
     
-    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-        'pool_pre_ping': True,
-        'pool_recycle': 300,
-        'pool_timeout': 30,
-        'max_overflow': 0
-    }
+    # SQLite için pool parametreleri uygulanmaz (SQLite connection pooling desteklemez)
+    # PostgreSQL gibi production veritabanları için pool ayarları
+    db_url = app.config.get('SQLALCHEMY_DATABASE_URI', '')
+    if db_url and not db_url.startswith('sqlite'):
+        app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+            'pool_pre_ping': True,
+            'pool_recycle': 300,
+            'pool_timeout': 30,
+            'max_overflow': 0
+        }
+    else:
+        # SQLite için boş veya minimal engine options
+        app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {}
     
     # CSRF token timeout - 1 saat (3600 saniye)
     app.config['WTF_CSRF_TIME_LIMIT'] = 3600
