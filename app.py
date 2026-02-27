@@ -261,6 +261,12 @@ def ensure_saas_schema():
     if 'company_requests' in table_columns and 'temporary_password' not in table_columns['company_requests']:
         alter_statements.append("ALTER TABLE company_requests ADD COLUMN temporary_password VARCHAR(100)")
 
+    if 'company_requests' in table_columns and 'temporary_password_hash' not in table_columns['company_requests']:
+        alter_statements.append("ALTER TABLE company_requests ADD COLUMN temporary_password_hash VARCHAR(256)")
+
+    if 'company_requests' in table_columns and 'temporary_password_plain' not in table_columns['company_requests']:
+        alter_statements.append("ALTER TABLE company_requests ADD COLUMN temporary_password_plain VARCHAR(100)")
+
     if 'login_attempts' not in existing_tables:
         # LoginAttempt tablosu henüz yok - oluştur
         alter_statements.append("""
