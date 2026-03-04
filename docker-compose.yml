@@ -21,9 +21,9 @@ services:
       retries: 5
 
   # Flask Uygulaması (Gunicorn)
-  app:
+  web:
     build: .
-    container_name: muhasebe_app
+    container_name: muhasebe_web
     restart: always
     environment:
       FLASK_ENV: production
@@ -58,7 +58,7 @@ services:
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
       - ./nginx/ssl:/etc/nginx/ssl:ro  # SSL sertifikaları
     depends_on:
-      - app
+      - web
     networks:
       - muhasebe_network
 

@@ -1,158 +1,245 @@
-# Hetzner VPS Production Deployment Guide
+# DigitalOcean Droplet Production Deployment Guide
 
-Bu rehber, Flask SaaS Muhasebe uygulamasının Hetzner VPS üzerinde Docker ile production ortamına kurulumunu açıklar.
+Bu rehber, Flask SaaS Muhasebe uygulamasının DigitalOcean Droplet üzerinde Docker ile production ortamına kurulumunu açıklar.
 
 ## 📋 Gereksinimler
 
-- Hetzner VPS (Ubuntu 22.04+ önerilir)
-- Minimum 2 GB RAM, 20 GB SSD
-- Public IP adresi
+- DigitalOcean hesabı
+- DigitalOcean Droplet (Ubuntu 22.04)
+- Minimum 2 GB RAM, 20 GB SSD (Basic Droplet yeterli)
 - Domain (SSL için isteğe bağlı)
 
-## 🚀 Hızlı Kurulum (Tek Komut)
+## 🚀 Hızlı Kurulum
+
+### 1. DigitalOcean Droplet Oluşturma
+
+1. **DigitalOcean Console**'a giriş yapın
+2. **Create** → **Droplets** seçin
+3. **Region**: En yakın lokasyon ( Frankfurt, Amsterdam, vs.)
+4. **Image**: Ubuntu 22.04 (LTS) x64
+5. **Plan**: Basic
+   - **CPU Options**: Regular Intel with SSD
+   - **Size**: $6/month (1 GB RAM / 1 CPU / 25 GB SSD) - Minimal
+   - Veya $12/month (2 GB RAM / 1 CPU / 50 GB SSD) - Önerilen
+6. **Authentication**: SSH Key (önerilir) veya Password
+7. **Hostname**: muhasebe-app (veya istediğiniz isim)
+8. **Create Droplet**
+
+### 2. Sunucuya Bağlanma
+
+Droplet IP adresini DigitalOcean panelinden alın:
 
 ```bash
-# Sunucunuza SSH ile bağlandıktan sonra:
-curl -fsSL https://raw.githubusercontent.com/mahmutt44/muhasebe-pro/main/deploy-hetzner.sh | sudo bash
+ssh root@DROPLET_IP_ADRESI
+
+# Örnek:
+ssh root@167.172.123.45
 ```
 
-## 🛠️ Manuel Kurulum Adımları
-
-### 1. Sunucu Güncelleme
+### 3. Docker Kurulumu
 
 ```bash
-sudo apt update && sudo apt upgrade -y
-```
+# Sistem güncelleme
+apt update && apt upgrade -y
 
-### 2. Docker Kurulumu
-
-```bash
+# Docker kurulumu
 curl -fsSL https://get.docker.com -o get-docker.sh
-sudo sh get-docker.sh
-sudo usermod -aG docker $USER
-newgrp docker
+sh get-docker.sh
+
+# Docker Compose kurulumu
+apt install -y docker-compose-plugin
+
+# Docker'ı test kullanıcısına ekle (opsiyonel)
+usermod -aG docker root
 ```
 
-### 3. Docker Compose Kurulumu
+### 4. Proje Kurulumu
 
 ```bash
-sudo apt install -y docker-compose-plugin
-```
-
-### 4. Projeyi Klonlama
-
-```bash
+# Proje dizini
 cd /opt
-sudo git clone https://github.com/mahmutt44/muhasebe-pro.git muhasebe
+
+# GitHub'dan klonla
+git clone https://github.com/mahmutt44/muhasebe-pro.git muhasebe
 cd muhasebe
+
+# Environment dosyası oluştur
+cp .env.example .env
+nano .env
 ```
 
-### 5. Environment Dosyası
-
-```bash
-sudo cp .env.example .env
-sudo nano .env
-```
-
-Aşağıdaki değerleri güncelleyin:
+`.env` dosyasını düzenleyin:
 
 ```env
-SECRET_KEY=your-super-secure-secret-key-here
-POSTGRES_PASSWORD=your-secure-postgres-password
+FLASK_ENV=production
+SECRET_KEY=your-super-secure-secret-key-here-change-this-min-32-chars
+POSTGRES_DB=muhasebe
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=your-secure-postgres-password-here
 DEMO_ADMIN_PASSWORD=your-demo-admin-password
 ```
 
-### 6. Container'ları Başlatma
-
+**SECRET_KEY** için güçlü bir key oluşturun:
 ```bash
-sudo docker-compose up -d
+openssl rand -hex 32
 ```
 
-### 7. Database Migration
+### 5. Container'ları Başlatma
 
 ```bash
-sudo docker-compose exec app flask db upgrade
+# Container'ları arka planda başlat
+docker-compose up -d
+
+# Logları kontrol et
+docker-compose logs -f
 ```
+
+### 6. Database Migration
+
+```bash
+# Migration'ları çalıştır
+docker-compose exec web flask db upgrade
+```
+
+### 7. Erişim Testi
+
+Tarayıcınızda şu adresi açın:
+```
+http://DROPLET_IP
+```
+
+Örnek: `http://167.172.123.45`
 
 ## 🔒 Güvenlik Yapılandırması
 
 ### Firewall (UFW)
 
 ```bash
-sudo ufw default deny incoming
-sudo ufw default allow outgoing
-sudo ufw allow 22/tcp   # SSH
-sudo ufw allow 80/tcp   # HTTP
-sudo ufw allow 443/tcp  # HTTPS
-sudo ufw enable
+# UFW kurulumu
+apt install -y ufw
+
+# Varsayılan kurallar
+ufw default deny incoming
+ufw default allow outgoing
+
+# Portlar
+ufw allow 22/tcp    # SSH
+ufw allow 80/tcp    # HTTP
+ufw allow 443/tcp   # HTTPS
+
+# Firewall'u aktif et
+ufw enable
 ```
 
 ### Fail2Ban
 
 ```bash
-sudo apt install -y fail2ban
-sudo systemctl enable fail2ban
-sudo systemctl start fail2ban
+# Kurulum
+apt install -y fail2ban
+
+# Otomatik başlatma
+systemctl enable fail2ban
+systemctl start fail2ban
 ```
 
-### SSL Sertifikası (Let's Encrypt)
+## 🔐 SSL Sertifikası (HTTPS)
+
+Domain'iniz varsa Let's Encrypt ile ücretsiz SSL:
+
+### 1. Domain DNS Ayarları
+
+Domain sağlayıcınızdan:
+- **A Record**: `@` → `DROPLET_IP`
+- **A Record**: `www` → `DROPLET_IP`
+
+DNS yayılımı 24 saat sürebilir.
+
+### 2. Certbot Kurulumu
 
 ```bash
-sudo apt install -y certbot python3-certbot-nginx
-sudo certbot --nginx -d muhasebeniz.com
+# Certbot kurulumu
+apt install -y certbot
+
+# Nginx container'ını durdur
+docker-compose stop nginx
+
+# Sertifika al
+# Örnek: certbot certonly --standalone -d muhasebeniz.com
+certbot certonly --standalone -d your-domain.com
+
+# Nginx config'i domain için güncelle
+nano nginx/conf.d/default.conf
 ```
 
-## 📁 Dosya Yapısı
-
-```
-muhasebe/
-├── app.py                 # Ana Flask uygulaması
-├── Dockerfile             # Flask container image
-├── docker-compose.yml     # Multi-container yapılandırma
-├── .env.example           # Environment şablonu
-├── nginx/
-│   ├── nginx.conf         # Ana Nginx yapılandırması
-│   └── conf.d/
-│       └── default.conf   # Server blok yapılandırması
-├── deploy-hetzner.sh      # Otomatik deployment scripti
-└── ...
+`server_name` satırını domain'inizle güncelleyin:
+```nginx
+server_name your-domain.com;
 ```
 
-## 🔧 Yararlı Komutlar
+### 3. SSL için Nginx Güncelleme
+
+SSL sertifikalarını Nginx container'ına bağlamak için `docker-compose.yml` güncelleme:
+
+```yaml
+  nginx:
+    image: nginx:alpine
+    container_name: muhasebe_nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro  # SSL sertifikaları
+      - /etc/ssl/certs:/etc/ssl/certs:ro
+    depends_on:
+      - web
+    networks:
+      - muhasebe_network
+```
+
+### 4. Container'ları Yeniden Başlat
+
+```bash
+docker-compose up -d
+```
+
+## 📊 Yararlı Komutlar
 
 ### Container Yönetimi
 
 ```bash
 # Container'ları başlat
-sudo docker-compose up -d
+docker-compose up -d
 
 # Container'ları durdur
-sudo docker-compose down
+docker-compose down
 
 # Container'ları yeniden başlat
-sudo docker-compose restart
+docker-compose restart
 
 # Container durumlarını görüntüle
-sudo docker-compose ps
+docker-compose ps
 
 # Logları görüntüle
-sudo docker-compose logs -f
+docker-compose logs -f
 
 # Belirli servisin loglarını görüntüle
-sudo docker-compose logs -f app
+docker-compose logs -f web
 ```
 
 ### Database İşlemleri
 
 ```bash
 # Database backup al
-sudo docker-compose exec db pg_dump -U muhasebe_user muhasebe > backup.sql
+docker-compose exec db pg_dump -U postgres muhasebe > backup_$(date +%Y%m%d_%H%M%S).sql
 
 # Database restore et
-cat backup.sql | sudo docker-compose exec -T db psql -U muhasebe_user muhasebe
+cat backup.sql | docker-compose exec -T db psql -U postgres -d muhasebe
 
 # Database shell'e gir
-sudo docker-compose exec db psql -U muhasebe_user -d muhasebe
+docker-compose exec db psql -U postgres -d muhasebe
 ```
 
 ### Güncelleme
@@ -163,11 +250,50 @@ cd /opt/muhasebe
 git pull origin main
 
 # Container'ları yeniden oluştur
-sudo docker-compose down
-sudo docker-compose up -d --build
+docker-compose down
+docker-compose up -d --build
 
 # Migration'ları çalıştır
-sudo docker-compose exec app flask db upgrade
+docker-compose exec web flask db upgrade
+```
+
+## 💾 Backup Otomasyonu
+
+### Backup Script
+
+`/opt/backup.sh` dosyası oluşturun:
+
+```bash
+#!/bin/bash
+BACKUP_DIR="/backups"
+DATE=$(date +%Y%m%d_%H%M%S)
+RETENTION_DAYS=7
+
+mkdir -p $BACKUP_DIR
+
+cd /opt/muhasebe
+
+# Database backup
+docker-compose exec -T db pg_dump -U postgres muhasebe > $BACKUP_DIR/muhasebe_$DATE.sql
+
+# Eski backup'ları sil (7 günden eski)
+find $BACKUP_DIR -name "muhasebe_*.sql" -mtime +$RETENTION_DAYS -delete
+
+echo "Backup completed: $BACKUP_DIR/muhasebe_$DATE.sql"
+```
+
+### Cron Job
+
+Her gün 02:00'de otomatik backup:
+
+```bash
+chmod +x /opt/backup.sh
+
+# Crontab düzenle
+crontab -e
+
+# Şu satırı ekle:
+0 2 * * * /opt/backup.sh >> /var/log/backup.log 2>&1
 ```
 
 ## 🌐 Servisler ve Portlar
@@ -175,8 +301,8 @@ sudo docker-compose exec app flask db upgrade
 | Servis | Port | Açıklama |
 |--------|------|----------|
 | Nginx | 80/443 | Reverse Proxy |
-| Flask App | 8000 | Gunicorn (internal) |
-| PostgreSQL | 5432 | Database (internal) |
+| Flask (Gunicorn) | 8000 | Internal only |
+| PostgreSQL | 5432 | Internal only |
 
 ## 🐛 Sorun Giderme
 
@@ -184,69 +310,64 @@ sudo docker-compose exec app flask db upgrade
 
 ```bash
 # Logları kontrol et
-sudo docker-compose logs
+docker-compose logs
 
 # Container'ların durumunu kontrol et
-sudo docker-compose ps
+docker-compose ps
 ```
 
 ### Database bağlantı hatası
 
 ```bash
 # Database container'ının sağlıklı olduğundan emin ol
-sudo docker-compose exec db pg_isready
+docker-compose exec db pg_isready
 
 # Migration'ları tekrar çalıştır
-sudo docker-compose exec app flask db upgrade
+docker-compose exec web flask db upgrade
 ```
 
 ### 502 Bad Gateway
 
 ```bash
-# App container'ının çalıştığından emin ol
-sudo docker-compose ps
+# Web container'ının çalıştığından emin ol
+docker-compose ps
 
-# App loglarını kontrol et
-sudo docker-compose logs app
+# Web loglarını kontrol et
+docker-compose logs web
 ```
 
-## 📊 Monitoring
+## 📈 Monitoring
 
 ### System Resources
 
 ```bash
 # CPU ve Memory kullanımı
-sudo docker stats
+docker stats
 
 # Disk kullanımı
-sudo df -h
-```
-
-### Health Check
-
-```bash
-curl http://localhost/health
+df -h
 ```
 
 ## 🔐 Güvenlik Notları
 
-1. **SECRET_KEY**: Production için güçlü ve benzersiz bir key kullanın
+1. **SECRET_KEY**: Production için güçlü ve benzersiz bir key kullanın (min 32 karakter)
 2. **POSTGRES_PASSWORD**: Güçlü bir database şifresi kullanın
 3. **Firewall**: Sadece gerekli portları açın (22, 80, 443)
 4. **SSL**: Production için mutlaka SSL kullanın
 5. **Backup**: Düzenli database backup'ları alın
+6. **Updates**: Düzenli olarak sistem ve Docker image güncellemeleri yapın
 
 ## 📞 Destek
 
 Sorun yaşarsanız:
 
-1. Logları kontrol edin: `sudo docker-compose logs`
-2. Container durumlarını kontrol edin: `sudo docker-compose ps`
+1. Logları kontrol edin: `docker-compose logs`
+2. Container durumlarını kontrol edin: `docker-compose ps`
 3. GitHub Issues üzerinden destek alın
 
 ## 📝 Changelog
 
-- **v1.0**: İlk production deployment yapılandırması
+- **v1.0**: DigitalOcean Droplet deployment yapılandırması
 - Docker + Gunicorn + Nginx + PostgreSQL stack
 - Let's Encrypt SSL desteği
-- Otomatik deployment scripti
+- Otomatik backup scripti
